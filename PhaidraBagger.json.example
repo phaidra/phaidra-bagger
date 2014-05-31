@@ -30,23 +30,43 @@
     	"metadata_field_language": "de"
     	        
 	},
-	
-    "bag_dir_path": {
-        "p1": "/path/to/p1",
-        "p2": "/path/to/p2"
-    },
 
     "projects": {
         "p1": {
             "account": "username",
-            "members": ["username"]
+            "members": ["username"],
+            "bags": {
+                "in": "/var/www/bagger/data/p1/bags/in",
+                "out": "/var/www/bagger/data/p1/bags/out"
+            },            
+            "thumbnails": {
+		    	"dir": "/var/www/bagger/public/thumbnails/p1",
+		    	"url_path": "thumbnails/p2",
+		    	"convert_cmd": "convert",
+		    	"thumbnail_medium_cmd": "/var/www/bagger/lib/downsize -s 2048 -t 20",
+		    	"thumbnail_small_cmd": "/var/www/bagger/lib/downsize -s 60 -t 20"
+		    },
+		    "redmine_baseurl": "https://redmine.phaidra.org/redmine/"
+            
         },
         "p2": {
             "account": "username",
-            "members": ["username"]
+            "members": ["username", "username"],
+            "bags": {
+                "in": "/var/www/bagger/data/p2/bags/in",
+                "out": "/var/www/bagger/data/p2/bags/out"
+            },            
+            "thumbnails": {
+		    	"dir": "/var/www/bagger/thumbnails/p2",
+		    	"url_path": "thumbnails/p2"
+		    	"convert_cmd": "convert",
+		    	"thumbnail_medium_cmd": "/var/www/bagger/lib/downsize -s 2048 -t 20",
+		    	"thumbnail_small_cmd": "/var/www/bagger/lib/downsize -s 60 -t 20"
+		    },
+		    "redmine_baseurl": "https://redmine.phaidra.org/redmine/"
         }
     },
-
+    
 	"directory_class": "Phaidra::Directory::Univie",
 	
 	"directory": {	        

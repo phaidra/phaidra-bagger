@@ -12,7 +12,9 @@ use base 'Mojolicious::Controller';
 
 sub bag_editor {
     my $self = shift;
-    my $init_data = { bagid => $self->stash('bagid'), current_user => $self->current_user };
+    my $thumb_path = $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path};
+    my $redmine_baseurl = $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl};
+    my $init_data = { bagid => $self->stash('bagid'), current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl};
     $self->stash(init_data => encode_json($init_data));  	 
     $self->render('bageditor');	
 }
@@ -22,20 +24,22 @@ sub import {
 	
 	my $res = { alerts => [], status => 200 };
 	
-	my $bagdirpath = $self->config->{bag_dir_path}->{$self->current_user->{project}};
+	my $projectconfig = $self->config->{projects}->{$self->current_user->{project}};
+	my $bagdirpath = $projectconfig->{bags}->{in};
+	
 	my $bags = list_bags($bagdirpath);
 	
 	foreach my $bag (keys %{$bags}){
 		$self->app->log->info("Importing bag ".$bag);		
 
-		my $path = $bagdirpath;
+		my $bagpath = $bagdirpath;
 		
-		$path .= '/' unless substr($path, -1) eq '/';
-		$path .= $bag;
+		$bagpath .= '/' unless substr($bagpath, -1) eq '/';
+		$bagpath .= $bag;
 		
 		# read bag metadata
 		my $content;
-		my $metadatapath = "$path/data/metadata.json";
+		my $metadatapath = "$bagpath/data/metadata.json";
 		open my $fh, "<", $metadatapath or push @{$res->{alerts}}, "Error reading metadata.json of bag $bag, ".$!;
 	    local $/;
 	    $content = <$fh>;
@@ -67,7 +71,7 @@ sub import {
 			next;
 		}
 		
-		my $reply  = $self->mango->db->collection('bags')->insert({ bagid => $bagid, path => $path, metadata => $metadata, created => bson_time, updated => bson_time, owner => $owner } );
+		my $reply  = $self->mango->db->collection('bags')->insert({ bagid => $bagid, owner => $owner, path => $bagpath, metadata => $metadata, created => bson_time, updated => bson_time } );
 		
 		my $oid = $reply->{oid};
 		if($oid){
@@ -75,9 +79,87 @@ sub import {
 		}else{
 			push @{$res->{alerts}}, "Importing bag $bagid failed";
 		}
+		
+		if(exists($projectconfig->{thumbnails})){
+			$self->app->log->info("Generating thumbnails for bag ".$bag);
+			$self->generate_thumbnails($projectconfig, $bags, $bag, $bagid);			
+		}
 	}
 	
 	$self->render(json => $res, status => $res->{status});
+}
+
+sub generate_thumbnails {
+	my $self = shift;
+	my $projectconfig = shift;
+	my $bags = shift;
+	my $bag = shift;
+	my $bagid = shift;
+	
+	my $bagdirpath = $projectconfig->{bags}->{in};
+	my $bagpath = $bagdirpath;		
+	$bagpath .= '/' unless substr($bagpath, -1) eq '/';
+	$bagpath .= $bag;
+	
+	my $thumb_dir = $projectconfig->{thumbnails}->{dir};
+	
+	my $thumb_dir_path = $thumb_dir;
+	$thumb_dir_path .= '/' unless substr($thumb_dir_path, -1) eq '/';
+	
+	my $c_cmd = $projectconfig->{thumbnails}->{convert_cmd};
+	my $m_cmd = $projectconfig->{thumbnails}->{thumbnail_medium_cmd};
+	my $s_cmd = $projectconfig->{thumbnails}->{thumbnail_small_cmd};	
+	
+	# if the thumbnails are needed than there is an /images folder (assumption)
+	my $idx = 0;
+	foreach my $img (@{$bags->{$bag}->{data}->{images}->{'.'}}){
+		$idx++;
+		
+		$img =~ m/(^.*)\.([a-zA-Z0-9]*)$/;
+		my $name = $1;
+		my $ext = $2;
+		my $newname = $bagid.'_'.$idx;
+		
+		my $imgpath = "$bagpath/data/images/$img";
+		my $thumb_c_path = $thumb_dir_path."c_".$newname.'.png';
+		my $thumb_m_path = $thumb_dir_path."m_".$newname.'.png';
+		my $thumb_s_path = $thumb_dir_path."s_".$newname.'.png';		
+		
+		my $generate_from_path = $imgpath;
+		
+		$self->app->log->info("Generating thumbnail for img $img");
+		
+		unless($ext eq 'png' || $ext eq 'PNG'){
+			$self->app->log->debug("Converting $img to png");
+			# first convert to png			
+			system("$c_cmd $imgpath $thumb_c_path");
+			if( $? == -1 ){
+			  $self->app->log->error("failed to convert image $imgpath to png: $!");
+			}		
+			
+			$generate_from_path = $thumb_c_path;
+		} 
+		
+		# medium, for bag detail
+		$self->app->log->debug("Generating medium thumbnail from $generate_from_path");
+		system("$m_cmd $generate_from_path $thumb_m_path");
+		if( $? == -1 ){
+		  $self->app->log->error("failed to generate medium thumbnail for $imgpath: $!");
+		}
+		
+		# small, for bag list
+		$self->app->log->debug("Generating small thumbnail from $generate_from_path");
+		system("$s_cmd $generate_from_path $thumb_s_path");
+		if( $? == -1 ){
+		  $self->app->log->error("failed to generate small thumbnail for $imgpath: $!");
+		}
+		
+		unless($ext eq 'png' || $ext eq 'PNG'){
+			$self->app->log->debug("Deleting temp conversion file $thumb_c_path");
+			# delete the png conversion file
+			unlink $thumb_c_path or $self->app->log->error("failed to delete $thumb_c_path: $!");;
+		}
+	}
 }
 
 sub load {
@@ -153,8 +235,9 @@ sub delete {
 
 sub bags {
     my $self = shift;  	 
-
-	my $init_data = { current_user => $self->current_user };
+	my $thumb_path = $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path};
+	my $redmine_baseurl = $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl};
+    my $init_data = { bagid => $self->stash('bagid'), current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl};
     $self->stash(init_data => encode_json($init_data));
       
 	$self->render('bags/list');

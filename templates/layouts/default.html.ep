@@ -120,7 +120,7 @@
           <a href="" class="dropdown-toggle" data-toggle="dropdown">My <b class="caret"></b></a>
           <ul class="dropdown-menu">            
             <li><a href="/templates/">Templates</a></li>            
-            <li><a href="/search/">Bags</a></li>
+            <li><a href="/bags/">Bags</a></li>
             <li class="disabled"><a href="/settings/">Settings</a></li>
           </ul>
         </li>
