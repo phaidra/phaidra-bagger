@@ -1,0 +1,173 @@
+% layout 'default', title => 'Metadataeditor';
+
+% content_for header => begin
+   
+   <script type="text/javascript" src="<%= url_for '/js/controllers/uwmetadataeditor.js' %>"></script>
+   <link href="<%= url_for '/css/uwmetadataeditor.css' %>" rel="stylesheet">
+  
+    <script type="text/javascript">
+            $(document).ready(function(){
+                
+				$('#resetEditor').click(function(){
+					var app = document.getElementById('UwmetadataeditorCtrl');
+					var scope = angular.element(app).scope();
+					scope.$apply(function() {
+						scope.resetEditor();
+					});     
+				});
+				
+				$('.datepicker').datepicker();
+                
+            });
+        </script>
+        
+% end
+
+	<%# template for 'save as..' modal %>
+	<script type="text/ng-template" id="save_template_modal.html">
+        <div class="modal-header">
+            <h3>New template title</h3>
+        </div>
+        <div class="modal-body">
+	        <div class="form-group">
+			    <div class="col-sm-10">
+			    	<input class="form-control" placeholder="Untitled" type="text" data-ng-model="newtemplatetitle.value"></input>
+			    </div>        
+			</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" ng-click="ok()">OK</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+        </div>
+    </script>
+    
+    	
+	<div class="container uwmetadataeditor_full" role="main" data-ng-controller="UwmetadataeditorCtrl" data-ng-init="init('<%= $init_data %>')">
+		<div class="row">
+			
+			<div class="col-md-6"><img src="<%= $init_data_perl->{thumb_path}.'/m_'.$init_data_perl->{bagid}.'_1.png' %>" class="img-rounded" title="<%= $init_data_perl->{bagid} %>" alt="<%= $init_data_perl->{bagid} %>"></div>	
+		
+			<div class="col-md-6">		
+				<nav ng-if="fields" id="control-panel" class="navbar navbar-default">
+					<div class="navbar-header">
+					    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+					      <span class="sr-only">Toggle navigation</span>
+					      <span class="icon-bar"></span>
+					      <span class="icon-bar"></span>
+					      <span class="icon-bar"></span>
+					    </button>
+				   	</div>
+		
+					<!-- Collect the nav links, forms, and other content for toggling -->
+					<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+					
+					      <div class="navbar-form navbar-left">
+					        <button ng-disabled="form.$invalid || form_disabled" data-ng-click="saveTemplateAs()" class="btn btn-primary navbar-btn"><span class="glyphicon glyphicon-file"></span> Create template</button>					        
+					      	<select class="form-control" data-ng-model="selectedtemplate" data-ng-change="loadDifabTemplate()" ng-options="template as template.title for template in initdata.templates">
+					      		<option value="">Load template...</option>
+					      	</select>			      						     				    							
+					      </div>			
+					      
+					      <p class="navbar-text">Bag ID:{{bag.bagid}}</p>      
+					      			      
+					      <div class="navbar-form navbar-right">			             
+							<button ng-disabled="form.$invalid || form_disabled" data-ng-click="save()" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-save"></span> Save</button>									   
+						  </div>				  
+						  
+			    	</div>				
+				</nav>		
+				
+		
+				<alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert($index)">{{alert.msg}}</alert>
+				
+				
+				<div class="well" id="UwmetadataeditorCtrl" data-ng-show="fields" data-ng-cloak >
+				
+					<form name="form" class="form-horizontal" novalidate role="form">
+					
+						<fieldset ng-disabled="form_disabled">
+						
+							<tabset>
+							
+								<!-- 1.st level are tabs -->
+								<tab  data-ng-repeat="field in fields | filter:filterHidden" active="field.active" disabled="field.disabled">
+						      		
+						      		<tab-heading>
+			        					<span phaidra-help phaidra-help-id="{{field.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>{{field.labels.en}}</span>        					
+			      					</tab-heading>
+			      					
+							      		<!-- name of the tab -->
+							      		<!-- {{field.xmlname}} -->
+							      		
+							      		<!-- children fields of the tab -->
+							      		<ul data-ng-show="field.children.length">		      		
+							      			<li data-ng-repeat="child in field.children" data-ng-include="'field_renderer.html'" class="form-li"></li>
+							      		</ul>
+							      		
+							      		<script type="text/ng-template" id="field_renderer.html">
+							      		
+											<!--<span class="muted">{{child.xmlname}} - {{child.input_type}} - {{child.included}}</span>--> 
+											
+											<div ng-switch="child.input_type">
+											
+									          <div ng-switch-when="node">
+									          
+										          <div ng-if="child.included" class="panel panel-default">
+										          
+													  <div class="panel-heading" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>
+													    <h3 class="panel-title pull-left"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.labels.en}}</h3>
+													    <span class="btn-group pull-right">    
+														    <button ng-if="child.cardinality === '*' || child.cardinality > '1'" class="btn btn-default" ng-click="addNewElement(child)"><span class="glyphicon glyphicon-plus"></span></button>
+														    <button ng-if="(child.cardinality === '*' || child.cardinality > '1') && canDelete(child)" class="btn btn-default" ng-click="deleteElement(child)"><span class="glyphicon glyphicon-minus"></span></button>
+														    <button class="btn btn-default" ng-click="upElement(child)" ng-if="child.ordered == 1 && canUpElement(child)"><span class="glyphicon glyphicon-chevron-up"></span></button>
+					   										<button class="btn btn-default" ng-click="downElement(child)" ng-if="child.ordered == 1 && canDownElement(child)"><span class="glyphicon glyphicon-chevron-down"></span></button>
+													    </span>
+													    
+													    <div class="clearfix"></div>
+													  </div>
+													  
+													  <div class="panel-body">
+		
+														<div data-ng-hide="child.hidden" data-ng-include="'/views/partials/' + child.input_type + '.html'"></div>
+														
+														<!-- children fields of the field -->
+														<ul data-ng-show="child.children.length">
+														    <li data-ng-repeat="child in child.children" data-ng-include="'field_renderer.html'"></li>
+														</ul>
+																
+												
+													  </div>
+													  
+													  <div class="panel-footer" data-ng-if="child.xmlname == 'curriculum' && child.study_name">{{ child.study_name.en }}</div>
+													  
+												</div>
+									          
+									          </div>
+									          
+									          <div ng-switch-default>
+									        
+									        	<div ng-if="child.included" data-ng-hide="child.hidden" data-ng-include="'/views/partials/' + child.input_type + '.html'"></div>
+												
+												<!-- children fields of the field -->
+												<ul data-ng-show="child.children.length">
+												    <li data-ng-repeat="child in child.children" data-ng-include="'field_renderer.html'"></li>
+												</ul>
+									          
+									          </div>
+				      						</div>
+											
+											
+										</script>
+									
+									
+						    	</tab>
+							</tabset>
+						</fieldset>
+					</form>
+					
+		        </div>
+		        
+		       
+			</div>
+		</div>	
+	</div>

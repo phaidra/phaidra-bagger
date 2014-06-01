@@ -84,7 +84,7 @@
 	    <td>{{bag.created | date:'dd.MM.yyyy HH:mm:ss'}}</td>
 	    <td>{{bag.updated | date:'dd.MM.yyyy HH:mm:ss'}}</td>
 	    <td>
-	      <a href="/bag_editor/{{bag.bagid}}"><i class="glyphicon glyphicon-pencil"></i></a>
+	      <a href="/bag/{{bag.bagid}}/edit"><i class="glyphicon glyphicon-pencil"></i></a>
 	    </td>
 	  </tr>	  
 	  </tbody>

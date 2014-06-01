@@ -244,6 +244,12 @@ sub startup {
     $auth->route('bags') ->via('get')   ->to('bag#bags');
     $auth->route('bags/my') ->via('get')   ->to('bag#my');    
     $auth->route('bags/import') ->via('get')   ->to('bag#import');
+    $auth->route('bag/:bagid/edit') ->via('get')   ->to('bag#edit');
+    $auth->route('bag/:bagid') ->via('get')   ->to('bag#load');
+    #$auth->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
+    $auth->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');
+    
+    $auth->route('bag/template/:tid/difab') ->via('get')   ->to('bag#load_difab_template');
     
     return $self;
 }

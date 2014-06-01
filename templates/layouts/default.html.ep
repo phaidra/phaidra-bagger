@@ -158,7 +158,7 @@
   		<div class="container-fluid">
                   <div class="row">
                           <div class="col-md-3">
-                          	<a href="https://github.com/phaidra/phaidra-ui"><i class="glyphicon icon-github"></i> Code</a> licensed under <a href="https://github.com/phaidra/phaidra-ui/blob/master/LICENSE">Apache License</a>. <a href="https://github.com/phaidra/phaidra-ui/issues?state=open">Issues</a>
+                          	<a href="https://github.com/phaidra/phaidra-bagger"><i class="glyphicon icon-github"></i> Code</a> licensed under <a href="https://github.com/phaidra/phaidra-bagger/blob/master/LICENSE">Apache License</a>. <a href="https://github.com/phaidra/phaidra-bagger/issues?state=open">Issues</a>
                           </div>
                           <div class="col-md-6"></div>
                           <div class="col-md-3"></div>                          

@@ -142,9 +142,12 @@ strong {
 	min-width: 100px;
 }
 
+/*
 .uwmetadataeditor_full input[type='text'],textarea {
 	min-width: 300px;
 }
+*/
+
 /*
 .uwmetadataeditor_full input[type='text'],textarea {
 	max-width: 50%;
@@ -203,7 +206,8 @@ strong {
 
 .input-text-lang .input-group {
 	min-width: 60%;
-	max-width: 70%;
+/* difab */
+/* 	max-width: 70%; */
 }
 
 .input-text-lang .input-group input {
@@ -218,7 +222,8 @@ strong {
 
 .input-text-lang-multi .input-group {
 	min-width: 60%;
-	max-width: 70%;
+/* difab */
+/*	max-width: 70%; */
 }
 
 .input-text-lang-multi .input-group input {
@@ -252,7 +257,8 @@ strong {
 
 .input-select .input-group {
 	min-width: 40%;
-	max-width: 51%;
+/* difab */
+/*	max-width: 51%;*/
 }
 
 .input-select .input-group select {
@@ -392,4 +398,19 @@ reenable disabled radius
 .template-title {
     font-size: 18px;
     padding: 5px;
+}
+
+.img-rounded {
+	-webkit-box-shadow: 2px 2px 5px rgba(0, 0, 0, .5);
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, .5);
+    max-width: 100%;
+	margin: 15px 0 15px 0;
+}
+
+.container {
+width: 100%;
+}
+
+#control-panel .navbar-text{
+	margin-top: 23px;
 }

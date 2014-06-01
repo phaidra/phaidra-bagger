@@ -11,6 +11,13 @@ angular.module('metadataService', [])
 	         });
 	    },
 	
+	    loadBag: function(bagid) {
+	        return $http({
+	            method  : 'GET',
+	            url     : $('head base').attr('href')+'bag/'+bagid
+	        });	        
+	    },
+	    
 		getUwmetadataTree: function() {
 	        return $http({
 	            method  : 'GET',
@@ -32,6 +39,14 @@ angular.module('metadataService', [])
 	           data    : { uwmetadata: uwmetadata }
 		   });	        
 	    },
+	    
+		saveUwmetadataToBag: function(bagid, uwmetadata){
+			   return $http({
+				   method  : 'POST',
+		        url     : $('head base').attr('href')+'bag/'+bagid+'/uwmetadata/',
+		        data    : { uwmetadata: uwmetadata }
+			   });	        
+		 },
 
 	    saveTemplateAs: function(title, uwmetadata){
 		   return $http({
@@ -62,6 +77,13 @@ angular.module('metadataService', [])
 				url     : $('head base').attr('href')+'template/'+tid
 			});	        
 	    },
+	    
+		loadDifabTemplate: function(tid){
+			return $http({
+				method  : 'GET',
+				url     : $('head base').attr('href')+'bag/template/'+tid+'/difab'
+			});	        
+		},
 	    
 		getMyTemplates: function(){
 			return $http({

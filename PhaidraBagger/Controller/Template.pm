@@ -99,7 +99,7 @@ sub create {
 	
 	$self->app->log->info("[".$self->current_user->{username}."] Creating template ".$title);
 	
-	my $reply = $self->mango->db->collection('templates.uwmetadata')->insert({ title => $title, created => bson_time, updated => bson_time, created_by => $self->current_user->{username}, uwmetadata => $self->req->json->{uwmetadata} } );
+	my $reply = $self->mango->db->collection('templates.uwmetadata')->insert({ title => $title, created => bson_time, updated => bson_time, project => $self->current_user->{project}, created_by => $self->current_user->{username}, uwmetadata => $self->req->json->{uwmetadata} } );
 	
 	my $oid = $reply->{oid};
 	if($oid){
@@ -143,5 +143,7 @@ sub my {
 	);
 
 }
+
+
 
 1;

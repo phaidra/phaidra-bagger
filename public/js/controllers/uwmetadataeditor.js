@@ -15,8 +15,12 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
 	$scope.initdata = '';
 	$scope.current_user = '';
 
+	$scope.selectedtemplate = '';
 	$scope.templatetitle = '';
 	$scope.tid = '';
+	
+	$scope.bagid = '';
+	$scope.bag = [];
 
     $scope.fields = [];
     $scope.languages = [];
@@ -35,6 +39,8 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     $scope.init = function (initdata) {
     	$scope.initdata = angular.fromJson(initdata);
     	$scope.current_user = $scope.initdata.current_user;
+    	$scope.bagid = $scope.initdata.bagid;
+    	/*
     	if($scope.initdata.pid){    		
     		$scope.pid = $scope.initdata.pid;
     		$scope.loadObject($scope.pid);
@@ -43,9 +49,11 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     			$scope.tid = $scope.initdata.tid;
     			$scope.loadTemplate($scope.tid);
     		}else{
-    			$scope.getUwmetadataTree();	
+    			
     		}    		
-    	}    	
+    	}
+    	*/
+    	$scope.loadBag();	
     };
     
     $scope.reset_values = function (node, default_value){
@@ -309,6 +317,25 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     	);
     };
     
+    $scope.loadBag = function(){
+    	$scope.resetEditor();
+        var promise = MetadataService.loadBag($scope.bagid);        
+        $scope.loadingTracker.addPromise(promise);
+        promise.then(
+    		function(response) { 
+    			$scope.alerts = response.data.alerts;
+    			$scope.languages = response.data.metadata.languages;
+    			$scope.fields = response.data.metadata.uwmetadata;
+    			$scope.bag = response.data;    	
+    			$scope.load_init();
+    		}
+    		,function(response) {
+           		$scope.alerts = response.data.alerts;
+           		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
+           	}
+    	);
+    };
+    
     $scope.loadObject = function(pid){
     	$scope.resetEditor();
     	var promise = MetadataService.getUwmetadataFromObject(pid);
@@ -326,11 +353,10 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
            	}
     	);    	
     };
-        
-        
+
  $scope.save = function() {
     	$scope.form_disabled = true;
-    	var promise = MetadataService.saveUwmetadataToObject($scope.pid, $scope.fields)
+    	var promise = MetadataService.saveUwmetadataToBag($scope.bagid, $scope.fields)
     	$scope.loadingTracker.addPromise(promise);
     	promise.then(
         	function(response) { 
@@ -356,6 +382,26 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
      promise.then(
       	function(response) { 
       		$scope.alerts = response.data.alerts;
+      		$scope.form_disabled = false;
+      	}
+      	,function(response) {
+      		$scope.alerts = response.data.alerts;
+      		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
+      		$scope.form_disabled = false;
+      	}
+     );    	      
+ };   
+ 
+ $scope.loadDifabTemplate = function() {
+	 $scope.form_disabled = true;
+     var promise = MetadataService.loadDifabTemplate(this.selectedtemplate._id);
+     $scope.loadingTracker.addPromise(promise);
+     promise.then(
+      	function(response) { 
+      		$scope.alerts = response.data.alerts;
+      		$scope.fields = response.data.uwmetadata;
+      		$scope.templatetitle = response.data.title;
+      		$scope.loadLanguages();
       		$scope.form_disabled = false;
       	}
       	,function(response) {
@@ -425,7 +471,7 @@ $scope.saveTemplateAs = function () {
     // used to filter array of elements: if 'hidden' is set, the field will not be included in the array
     $scope.filterHidden = function(e)
     {
-        return !e.hidden;        
+        return !e.hidden && e.included;        
     };
     
 
