@@ -380,9 +380,21 @@ sub load {
 	
 	$self->app->log->info("[".$self->current_user->{username}."] Loading bag $bagid");	
 	
+	
+	
+=cut	
+
+cannot use non-blocking?
+im gettin
+[Mon Jun  2 13:13:14 2014] [error] Non-blocking operations in progress at /usr/local/share/perl/5.14.2/Mango/Cursor.pm line 206
+when the operation is running and the browser tries to access a picture
+
 	$self->render_later;
+
 	my $reply = $self->mango->db->collection('bags')->find_one(
 		{bagid => $bagid, owner => $owner} => 	
+		
+		
 			sub {
 				    my ($reply, $error, $bag) = @_;
 	
@@ -417,6 +429,43 @@ sub load {
 				   
 				}
 	);
+	
+=cut	
+
+	my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, owner => $owner});
+	
+	if(defined($bag)){
+		
+		$self->app->log->info("[".$self->current_user->{username}."] Loaded bag $bagid: ".$self->app->dumper($bag));
+				    unless($bag->{metadata}->{uwmetadata}){
+				    	if($self->current_user->{project} eq 'DiFaB'){		
+				    				    						    				    		
+				    		my $rs = $self->get_uwmetadata_tree();				    		
+				    		
+				    		$self->difab_filter($rs->{tree}, 0, 1);
+				    						    		
+				    		if($rs->{status} eq 200){
+				    			$bag->{metadata}->{uwmetadata} = $rs->{tree};
+				    			$bag->{metadata}->{languages} = $rs->{languages};
+				    		}	
+				    	}
+				    }
+				    
+				    $self->app->log->info("[".$self->current_user->{username}."] Loaded bag $bagid");
+					$self->render(json => $bag, status => 200);
+		
+	}else{
+		$self->app->log->error("[".$self->current_user->{username}."] Error loading bag ".$bagid);
+						$self->render(
+								json => { 
+									metadata => '', 
+									created => '',
+									updated => '',
+									alerts => [{ type => 'danger', msg => "Bag with id ".$bagid." was not found" }] 
+								}, 
+		status => 500);		
+		
+	}
 		
 }
 

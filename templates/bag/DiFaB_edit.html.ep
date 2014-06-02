@@ -1,4 +1,6 @@
-% layout 'default', title => 'Metadataeditor';
+% layout 'default', title => 'Bag editor';
+
+%= include 'partials_cache'
 
 % content_for header => begin
    
@@ -19,9 +21,10 @@
 				$('.datepicker').datepicker();
                 
             });
-        </script>
+    </script>
         
 % end
+
 
 	<%# template for 'save as..' modal %>
 	<script type="text/ng-template" id="save_template_modal.html">
@@ -103,6 +106,8 @@
 							      		<ul data-ng-show="field.children.length">		      		
 							      			<li data-ng-repeat="child in field.children" data-ng-include="'field_renderer.html'" class="form-li"></li>
 							      		</ul>
+							      		
+
 							      		
 							      		<script type="text/ng-template" id="field_renderer.html">
 							      		
