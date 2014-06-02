@@ -7,6 +7,11 @@ use Mango 0.24;
 use Mojo::JSON qw(encode_json);
 use base 'Mojolicious::Controller';
 
+sub chillin {
+	my $self = shift;
+	$self->render('chillin');	
+}
+
 sub home {
     my $self = shift;  	 
     
@@ -16,7 +21,8 @@ sub home {
     }
     
     my $init_data = { current_user => $self->current_user };
-    $self->stash(init_data => encode_json($init_data));  
+    $self->stash(init_data => encode_json($init_data));
+    $self->stash(init_data_perl => $init_data);   
 
     $self->render('home');	
 }

@@ -36,13 +36,7 @@ sub startup {
 			my $username  = shift;
 			$self->app->log->info("Loading user: ".$username);
 			
-			# FIXME
-			my $login_data;
-			if($username eq 'hudakr4'){
-				$login_data = { username => 'hudakr4', firstname => 'rasta', lastname => 'blasta', org_units_l2 => [], org_units_l1 => [] };	
-			}else{
-				$login_data = $self->directory->get_login_data($self, $username);
-			}
+			my $login_data = $self->directory->get_login_data($self, $username);
 			
 			foreach my $p (keys %{$self->app->config->{projects}}){
 				foreach my $u (@{$self->app->config->{projects}->{$p}->{members}}){
@@ -200,6 +194,7 @@ sub startup {
     $r->namespaces(['PhaidraBagger::Controller']);
     
     $r->route('') 			  		->via('get')   ->to('frontend#home');
+    
     $r->route('signin') 			  	->via('get')   ->to('authentication#signin');
     $r->route('signout') 			->via('get')   ->to('authentication#signout');
     $r->route('loginform') 			->via('get')   ->to('authentication#loginform');
@@ -250,6 +245,8 @@ sub startup {
     $auth->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');
     
     $auth->route('bag/template/:tid/difab') ->via('get')   ->to('bag#load_difab_template');
+    
+    $auth->route('chillin') ->via('get')   ->to('frontend#chillin');
     
     return $self;
 }

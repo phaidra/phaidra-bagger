@@ -121,6 +121,7 @@
           <ul class="dropdown-menu">            
             <li><a href="/templates/">Templates</a></li>            
             <li><a href="/bags/">Bags</a></li>
+            <li><a href="/chillin/">Chill out page</a></li>
             <li class="disabled"><a href="/settings/">Settings</a></li>
           </ul>
         </li>

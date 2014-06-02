@@ -20,13 +20,7 @@
         </div>
     </script>
     
-    <div class="home-div">
-	    <% if(current_user){ %> 
-	    	<% if(current_user->{project} eq 'DiFaB') { %>
-	    		<center><img src="img/home/difab_logo.jpg" class="img-rounded" title="DiFaB" alt="DiFaB"></center>
-	    	<% } %>
-	   <%  }else{ %>
-	   		<center><img src="img/home/please-sign-in.jpg" height="250px" class="img-rounded" title="Sing in please" alt="Sign in please"></center>
-	   <% } %>
+    
+   <div>
+   	<center><img src="thumbnails/DiFaB/m_4383_1.png" class="img-rounded" title="chillin' like a villain"></center>
    </div>
-   

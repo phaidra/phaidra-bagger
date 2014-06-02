@@ -5,16 +5,45 @@ use warnings;
 use v5.10;
 use Mango::BSON ':bson';
 use Mango::BSON::ObjectID;
+use Mojo::Home;
 use Mojo::JSON qw(encode_json decode_json);
 use lib "lib";
 use PhaidraBagMan qw(list_bags print_bags);
+my $home = Mojo::Home->new;
+$home->detect('PhaidraBagger');
 
 use base 'Mojolicious::Controller';
 
-sub get_difab_init_uwmetadata {
+sub get_uwmetadata_tree {
     my $self = shift;
     
 	my $res = { alerts => [], status => 200 };
+	
+	if($self->app->config->{phaidra}->{local_uwmetadata_tree}){
+		
+		$self->app->log->debug("Reading uwmetadata tree from file");
+		
+		# read metadata tree
+		my $content;
+		my $metadatapath = $home->rel_file('public/uwmetadata/tree.json');
+		open my $fh, "<", $metadatapath or push @{$res->{alerts}}, "Error reading uwmetadata/tree.json, ".$!;
+	    local $/;
+	    $content = <$fh>;
+	    close $fh;  
+	    
+	    unless(defined($content)){	    	
+	    	push @{$res->{alerts}}, "Error reading uwmetadata/tree.json, no content";
+	    	next;
+	    }
+
+		my $metadata = decode_json($content);
+ 		$res->{tree} = $metadata->{tree};
+ 		$res->{languages} = $metadata->{languages};
+ 		
+ 		return $res;
+	}
+	
+	$self->app->log->debug("Reading uwmetadata tree from api");
 	
 	my $url = Mojo::URL->new;
 	$url->scheme('https');	
@@ -30,14 +59,10 @@ sub get_difab_init_uwmetadata {
 	 my $tx = $self->ua->get($url);
 
 		  	if (my $rs = $tx->success) {
-		  		
-		  		my $uwmetadata = $rs->json;
-		  		
-		  		# mark fields we don't need and set defaults
-		  		$self->difab_filter($uwmetadata->{tree}, 0, 1);
-		  		
-		  		$res->{uwmetadata} = $uwmetadata->{tree};
-		  		$res->{languages} = $uwmetadata->{languages};
+
+				$res->{languages} = $rs->json->{languages};
+				$res->{tree} = $rs->json->{tree};
+				push @{$res->{alerts}}, $rs->json->{alerts}; 
 		  		return $res;
 		  		
 		  	}else {
@@ -374,11 +399,15 @@ sub load {
 				    }
 				    $self->app->log->info("[".$self->current_user->{username}."] Loaded bag $bagid: ".$self->app->dumper($bag));
 				    unless($bag->{metadata}->{uwmetadata}){
-				    	if($self->current_user->{project} eq 'DiFaB'){				    		
-				    		my $res = $self->get_difab_init_uwmetadata();
-				    		if($res->{status} eq 200){
-				    			$bag->{metadata}->{uwmetadata} = $res->{uwmetadata};
-				    			$bag->{metadata}->{languages} = $res->{languages};
+				    	if($self->current_user->{project} eq 'DiFaB'){		
+				    				    						    				    		
+				    		my $rs = $self->get_uwmetadata_tree();				    		
+				    		
+				    		$self->difab_filter($rs->{tree}, 0, 1);
+				    						    		
+				    		if($rs->{status} eq 200){
+				    			$bag->{metadata}->{uwmetadata} = $rs->{tree};
+				    			$bag->{metadata}->{languages} = $rs->{languages};
 				    		}	
 				    	}
 				    }
@@ -434,7 +463,6 @@ sub edit {
 		
     my $init_data = { bagid => $self->stash('bagid'), templates => $templates, current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl};
     $self->stash(init_data => encode_json($init_data));
-    $self->stash(init_data_perl => $init_data);
     
 	$self->render('bag/'.$self->current_user->{project}.'_edit');
 }

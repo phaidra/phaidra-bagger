@@ -85,7 +85,8 @@
     "phaidra": {
     	"baseurl": "phaidra-instance.univie.ac.at",    
     	"apibaseurl": "services.phaidra-instance.univie.ac.at",
-	"metadata_format_version": "1"
+	    "metadata_format_version": "1",
+	    "local_uwmetadata_tree": "1"
     
     },              
     
