@@ -7,6 +7,7 @@ use Mango::BSON ':bson';
 use Mango::BSON::ObjectID;
 use Mojo::Home;
 use Mojo::JSON qw(encode_json decode_json);
+use File::Find;
 use lib "lib";
 use PhaidraBagMan qw(list_bags print_bags);
 my $home = Mojo::Home->new;
@@ -284,7 +285,7 @@ sub import {
 		
 		my $oid = $reply->{oid};
 		if($oid){
-			push @{$res->{alerts}}, "Imported bag ".$bagid." [oid: $oid]";			
+			push @{$res->{alerts}}, "Imported bag $bagid [oid: $oid]";			
 		}else{
 			push @{$res->{alerts}}, "Importing bag $bagid failed";
 		}
@@ -296,6 +297,19 @@ sub import {
 	}
 	
 	$self->render(json => $res, status => $res->{status});
+}
+
+sub hashdir {
+    my $dir = shift;
+    opendir my $dh, $dir or die $!;
+    my $tree = {}->{$dir} = {};
+    while( my $file = readdir($dh) ) {
+        next if $file =~ m[^\.{1,2}$];
+        my $path = $dir .'/' . $file;
+        $tree->{$file} = hashdir($path), next if -d $path;
+        push @{$tree->{'.'}}, $file;
+    }
+    return $tree;
 }
 
 sub generate_thumbnails {

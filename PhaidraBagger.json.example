@@ -34,11 +34,23 @@
     "projects": {
         "p1": {
             "account": "username",
-            "members": ["username"],
+            "members": [
+	            		{
+		            		"username": "username",
+		            		"role": "manager"
+	            		},
+	            		{
+		            		"username": "username",
+		            		"role": "member"
+	            		}
+            		],
             "bags": {
                 "in": "/var/www/bagger/data/p1/bags/in",
                 "out": "/var/www/bagger/data/p1/bags/out"
-            },            
+            },
+            "folders": {
+                "in": "/var/www/bagger/data/p1/folders/in",                
+            },              
             "thumbnails": {
 		    	"dir": "/var/www/bagger/public/thumbnails/p1",
 		    	"url_path": "thumbnails/p2",
@@ -51,7 +63,16 @@
         },
         "p2": {
             "account": "username",
-            "members": ["username", "username"],
+            "members":  [
+	            		{
+		            		"username": "username",
+		            		"role": "manager"
+	            		},
+	            		{
+		            		"username": "username",
+		            		"role": "manager"
+	            		}
+            		],
             "bags": {
                 "in": "/var/www/bagger/data/p2/bags/in",
                 "out": "/var/www/bagger/data/p2/bags/out"

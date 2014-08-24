@@ -34,20 +34,29 @@ sub startup {
 		load_user => sub {
 			my $self = shift;
 			my $username  = shift;
-			$self->app->log->info("Loading user: ".$username);
-			
-			my $login_data = $self->directory->get_login_data($self, $username);
-			
-			foreach my $p (keys %{$self->app->config->{projects}}){
-				foreach my $u (@{$self->app->config->{projects}->{$p}->{members}}){
-					if($u eq $username){
-						$login_data->{project} = $p;							
-					}	
-				}	
-			}
-			
-			$self->app->log->info("Loaded user: ".$self->app->dumper($login_data));
 						
+	 		my $login_data = $self->app->chi->get($username);	  		
+
+	    	unless($login_data->{username} eq $username){
+	    		$self->app->log->debug("[cache miss] $username");	
+	    		my $login_data = $self->directory->get_login_data($self, $username);			
+				foreach my $p (keys %{$self->app->config->{projects}}){
+					foreach my $u (@{$self->app->config->{projects}->{$p}->{members}}){
+						if($u->{username} eq $username){
+							$login_data->{project} = $p;
+							$login_data->{role} = $u->{role};						
+						}	
+					}	
+				}
+				$self->app->log->info("Loaded user: ".$self->app->dumper($login_data));    			
+	    		$self->app->chi->set($username, $login_data, '1 day');    
+	    		# keep this here, the set method may change the structure a bit
+	    		# so we better read it again 		
+	    		$login_data = $self->app->chi->get($username);			
+	    	}else{
+	    		$self->app->log->debug("[cache hit] $username");
+	    	}    	
+
 			return $login_data;
 		},
 		validate_user => sub {
@@ -244,9 +253,22 @@ sub startup {
     #$auth->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
     $auth->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');
     
+    $auth->route('folders/import') ->via('get')   ->to('file#import');
+    $auth->route('folders') ->via('get')   ->to('file#folders');
+    $auth->route('folders/list') ->via('get')   ->to('file#get_folders');
+    $auth->route('folder/:folderid') ->via('get')   ->to('file#folder_files');    
+    $auth->route('folder/:folderid/deactivate') ->via('put')   ->to('file#deactivate_folder');
+    
+    $auth->route('files') ->via('post')   ->to('file#get_files');
+    
+    $auth->route('file/:fileid/assignee/:username') ->via('put')   ->to('file#change_assignee');              
+    
     $auth->route('bag/template/:tid/difab') ->via('get')   ->to('bag#load_difab_template');
     
     $auth->route('chillin') ->via('get')   ->to('frontend#chillin');
+    
+    $auth->route('log') ->via('get')   ->to('log#log');
+    $auth->route('log/events') ->via('get')   ->to('log#events');
     
     return $self;
 }

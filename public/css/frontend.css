@@ -129,3 +129,11 @@ margin-top: 5px;
 .home-div{
 	min-height: 500px;
 }
+
+.navtitle {
+    margin-top: 3px;
+}
+
+.tag {
+    margin: 0 2px;
+}

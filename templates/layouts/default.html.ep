@@ -76,7 +76,8 @@
 	<script type="text/javascript" src="<%= url_for '/js/services/directory.js' %>"></script>
 	<script type="text/javascript" src="<%= url_for '/js/services/metadata.js' %>"></script>
 	<script type="text/javascript" src="<%= url_for '/js/services/frontend.js' %>"></script>
-	<script type="text/javascript" src="<%= url_for '/js/services/bag.js' %>"></script>    
+	<script type="text/javascript" src="<%= url_for '/js/services/bag.js' %>"></script>   
+	<script type="text/javascript" src="<%= url_for '/js/services/file.js' %>"></script>	 
   	<script type="text/javascript" src="<%= url_for '/js/controllers/frontend.js' %>"></script>
   	
   	<!-- Custom Phaidra CSS --> 
@@ -107,28 +108,36 @@
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand" href=""><img src="<%= url_for '/img/phaidra_shadow_small.png' %>" height="25"></a>
+      
     </div>
 
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 
-      
-      <% if (is_user_authenticated) { %>
-      <ul class="nav navbar-nav">
+	  <% if (is_user_authenticated) { %>
+      <ul class="nav navbar-nav navbar-left">
         
+        <% if (my $navtitle = stash 'navtitle') { %>
+        	<li class="active"><a href=""><%= $navtitle %></a></li>
+        <% } %>
+        <li><a href="/templates/">Templates</a></li>
+        <li><a href="/folders/">Folders</a></li>
+        <li class="disabled"><a href="/settings/">Settings</a></li>
+        
+        <!--
         <li class="dropdown">
           <a href="" class="dropdown-toggle" data-toggle="dropdown">My <b class="caret"></b></a>
           <ul class="dropdown-menu">            
             <li><a href="/templates/">Templates</a></li>            
-            <li><a href="/bags/">Bags</a></li>
+            <li><a href="/files/">Files</a></li>
             <li><a href="/chillin/">Chill out page</a></li>
             <li class="disabled"><a href="/settings/">Settings</a></li>
           </ul>
         </li>
-                
+            -->    
       </ul>
       <% } %>
-      
+
       <ul class="nav navbar-right">      
       	<% if (is_user_authenticated) { %>
       		<a href="/signout" id="signout" class="btn btn-default navbar-btn signin-btn" ng-click="sign_out()">Sign out</a>      		
@@ -144,6 +153,7 @@
       <ul class="nav navbar-right">
       <img class="load-spinner" ng-show="loadingTracker.active()" src="../img/ajax-loader.gif">
       </ul>
+      
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
 </nav>
