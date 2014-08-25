@@ -58,7 +58,7 @@ sub get_selection {
 		return;	
 	}	
 
-	my $res = $self->mango->db->collection('selections')->find_one({username => $username});
+	my $res = $self->mango->db->collection('selections')->find_one({username => $username});	
 
 	$self->render(json => { selection => $res->{selection} }, status => 200);	
 }

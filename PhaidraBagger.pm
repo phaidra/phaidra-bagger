@@ -102,7 +102,21 @@ sub startup {
 		},
 	});
 	
-	$self->helper(mango => sub { state $mango = Mango->new('mongodb://'.$config->{mongodb}->{username}.':'.$config->{mongodb}->{password}.'@'.$config->{mongodb}->{host}.'/'.$config->{mongodb}->{database}) });
+	#$self->attr(mango => sub { 
+    #    Mango->new('mongodb://'.$config->{mongodb}->{username}.':'.$config->{mongodb}->{password}.'@'.$config->{mongodb}->{host}.'/'.$config->{mongodb}->{database});
+    #});
+    #$self->helper('mango' => sub { shift->app->mango });
+=cut	
+	$self->attr(_mango => sub 
+		{ 
+			return Mango->new('mongodb://'.$config->{mongodb}->{username}.':'.$config->{mongodb}->{password}.'@'.$config->{mongodb}->{host}.'/'.$config->{mongodb}->{database});			
+		}
+	);
+=cut
+	$self->attr(_mango => sub { return Mango->new('mongodb://'.$config->{mongodb}->{username}.':'.$config->{mongodb}->{password}.'@'.$config->{mongodb}->{host}.'/'.$config->{mongodb}->{database}) });
+	$self->helper(mango => sub { return shift->app->_mango});
+
+#	$self->helper(mango => sub { state $mango = Mango->new('mongodb://'.$config->{mongodb}->{username}.':'.$config->{mongodb}->{password}.'@'.$config->{mongodb}->{host}.'/'.$config->{mongodb}->{database}) });
 	
     # we might possibly save a lot of data to session 
     # so we are not going to use cookies, but a database instead
@@ -246,25 +260,29 @@ sub startup {
     $auth->route('templates/my') ->via('get')   ->to('template#my');
     
     $auth->route('bags') ->via('get')   ->to('bag#bags');
-    $auth->route('bags/my') ->via('get')   ->to('bag#my');    
+    $auth->route('bags/folder/:folderid') ->via('get')   ->to('bag#folder_bags');
+    $auth->route('bags/search') ->via('post')   ->to('bag#search');    
+    $auth->route('bags/search/:filterfield/:filtervalue') ->via('post')   ->to('bag#search');    
+    #$auth->route('bags/my') ->via('get')   ->to('bag#my');    
     $auth->route('bags/import') ->via('get')   ->to('bag#import');
     $auth->route('bag/:bagid/edit') ->via('get')   ->to('bag#edit');
     $auth->route('bag/:bagid') ->via('get')   ->to('bag#load');
     #$auth->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
     $auth->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');
+    $auth->route('bag/:bagid/assignee/:username') ->via('put')   ->to('bag#change_assignee');
+    $auth->route('bag/template/:tid/difab') ->via('get')   ->to('bag#load_difab_template');    
     
-    $auth->route('folders/import') ->via('get')   ->to('file#import');
-    $auth->route('folders') ->via('get')   ->to('file#folders');
-    $auth->route('folders/list') ->via('get')   ->to('file#get_folders');
-    $auth->route('folder/:folderid') ->via('get')   ->to('file#folder_files');    
-    $auth->route('folder/:folderid/deactivate') ->via('put')   ->to('file#deactivate_folder');
     
-    $auth->route('files') ->via('post')   ->to('file#get_files');
-    
-    $auth->route('file/:fileid/assignee/:username') ->via('put')   ->to('file#change_assignee');              
-    
-    $auth->route('bag/template/:tid/difab') ->via('get')   ->to('bag#load_difab_template');
-    
+    $auth->route('folders') ->via('get')   ->to('folder#folders');    
+    $auth->route('folders/import') ->via('get')   ->to('folder#import');
+    $auth->route('folder/:folderid/deactivate') ->via('put')   ->to('folder#deactivate_folder');    
+    $auth->route('folders/list') ->via('get')   ->to('folder#get_folders');    
+=cut    
+    $auth->route('file/:fileid/edit') ->via('get')   ->to('file#edit');
+    $auth->route('file/:fileid/assignee/:username') ->via('put')   ->to('file#change_assignee'); 
+    $auth->route('file/:fileid/uwmetadata') ->via('post')   ->to('file#save_uwmetadata');             
+    $auth->route('file/template/:tid/difab') ->via('get')   ->to('file#load_difab_template');    
+=cut    
     $auth->route('chillin') ->via('get')   ->to('frontend#chillin');
     
     $auth->route('log') ->via('get')   ->to('log#log');

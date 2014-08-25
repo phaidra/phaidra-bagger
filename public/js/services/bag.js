@@ -10,11 +10,12 @@ angular.module('bagService', [])
 				data  : { selection: selection }
 			});	        
 		},
-				
-		getUserBags: function(){
+
+		search: function(filter, from, limit, sortfield, sortvalue){
 			return $http({
-				method  : 'GET',
-				url     : $('head base').attr('href')+'bags/my'
+				method  : 'POST',
+				url     : $('head base').attr('href')+'bags/search',
+			    data: { query: { filter: filter, from: from, limit: limit, sortfield: sortfield, sortvalue: sortvalue } }
 			});	        
 		}
 	}

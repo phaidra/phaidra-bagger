@@ -76,8 +76,7 @@
 	<script type="text/javascript" src="<%= url_for '/js/services/directory.js' %>"></script>
 	<script type="text/javascript" src="<%= url_for '/js/services/metadata.js' %>"></script>
 	<script type="text/javascript" src="<%= url_for '/js/services/frontend.js' %>"></script>
-	<script type="text/javascript" src="<%= url_for '/js/services/bag.js' %>"></script>   
-	<script type="text/javascript" src="<%= url_for '/js/services/file.js' %>"></script>	 
+	<script type="text/javascript" src="<%= url_for '/js/services/bag.js' %>"></script>   	 
   	<script type="text/javascript" src="<%= url_for '/js/controllers/frontend.js' %>"></script>
   	
   	<!-- Custom Phaidra CSS --> 
@@ -120,8 +119,8 @@
         <% if (my $navtitle = stash 'navtitle') { %>
         	<li class="active"><a href=""><%= $navtitle %></a></li>
         <% } %>
-        <li><a href="/templates/">Templates</a></li>
         <li><a href="/folders/">Folders</a></li>
+        <li><a href="/templates/">Templates</a></li>        
         <li class="disabled"><a href="/settings/">Settings</a></li>
         
         <!--
