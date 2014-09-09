@@ -11,6 +11,8 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 	$scope.items = [];
 	$scope.itemstype = '';
 	
+	$scope.members = [];		
+
 	$scope.initdata = '';
 	$scope.current_user = '';
 	$scope.folderid = '';
@@ -27,7 +29,8 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 	$scope.init = function (initdata) {
 		$scope.initdata = angular.fromJson(initdata);
 		$scope.current_user = $scope.initdata.current_user;
-		$scope.folderid = $scope.initdata.folderid;	
+		$scope.folderid = $scope.initdata.folderid;
+		$scope.members = $scope.initdata.members;	
 
 		$scope.filter = { folderid: $scope.folderid };
 		
@@ -132,8 +135,6 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
     	
     	$scope.currentPage = page;
     };
-
-
   
  $scope.searchBags = function(filter, from, limit, sortfield, sortvalue) {
 	 
@@ -151,6 +152,31 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
       	}
      );    	      
  }; 
+ 
+ $scope.addFilter = function (type, value) {
+	 if($scope.filter){
+		 $scope.filter[type] = value;
+		 $scope.searchBags($scope.filter, $scope.from, $scope.limit, $scope.sortfield, $scope.sortvalue);
+	 }
+ }
+ 
+ $scope.removeFilter = function (type, value) {
+	 if($scope.filter){
+		 delete $scope.filter[type];
+		 $scope.searchBags($scope.filter, $scope.from, $scope.limit, $scope.sortfield, $scope.sortvalue);
+	 }
+ }
+/*
+ $scope.statusNew = function (type, value) {
+	 
+	 if($scope.filter){
+		if($scope.filter.status){
+			if($scope.filter.status == 'new') return true;
+		}		
+	 }
+	 return false;
+ }
+*/ 
  
  $scope.changeStatus = function () {
 	 

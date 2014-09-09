@@ -37,10 +37,12 @@
             "members": [
 	            		{
 		            		"username": "username",
+		            		"displayname": "chuck",
 		            		"role": "manager"
 	            		},
 	            		{
 		            		"username": "username",
+		            		"displayname": "steven",
 		            		"role": "member"
 	            		}
             		],

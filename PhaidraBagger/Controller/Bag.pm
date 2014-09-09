@@ -520,8 +520,9 @@ sub my {
 sub bags {
     my $self = shift;  	 
 	my $thumb_path = $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path};
+	my $members = $self->config->{projects}->{$self->current_user->{project}}->{members};
 	my $redmine_baseurl = $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl};
-    my $init_data = { current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl};
+    my $init_data = { current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl, members => $members };
     $self->stash(init_data => encode_json($init_data));
       
 	$self->render('bags/list');
@@ -529,12 +530,13 @@ sub bags {
 
 sub folder_bags {
     my $self = shift;
-    my $folderid = $self->stash('folderid');  	 
+    my $folderid = $self->stash('folderid');  	
+    my $members = $self->config->{projects}->{$self->current_user->{project}}->{members}; 
 	my $thumb_path = $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path};
 	my $redmine_baseurl = $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl};
 	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
 	my $folder = $self->mango->db->collection('folders')->find_one({folderid => $folderid, owner => $owner},{ name => 1 });
-    my $init_data = { folderid => $folderid, navtitle => $folder->{name}, current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl};
+    my $init_data = { folderid => $folderid, navtitle => $folder->{name}, current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl, members => $members };
     $self->stash(init_data => encode_json($init_data), navtitle => $folder->{name});
       
 	$self->render('bags/list');
