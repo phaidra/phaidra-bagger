@@ -23,14 +23,13 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
     $scope.filter = '';
     $scope.from = 0;
     $scope.limit = 5;
-    $scope.sortfield = 'created';
+    $scope.sortfield = 'updated';
     $scope.sortvalue = 1;
     			
 	$scope.init = function (initdata) {
 		$scope.initdata = angular.fromJson(initdata);
 		$scope.current_user = $scope.initdata.current_user;
-		$scope.folderid = $scope.initdata.folderid;
-		$scope.members = $scope.initdata.members;	
+		$scope.folderid = $scope.initdata.folderid;		
 
 		$scope.filter = { folderid: $scope.folderid };
 		
@@ -40,11 +39,11 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
     		$scope.loadSelection();
     	}
     	
-    };    
+    }; 
 
     $scope.closeAlert = function(index) {
     	$scope.alerts.splice(index, 1);
-    };
+    };    
     
     $scope.selectNone = function(event){
     	$scope.selection = [];	
@@ -103,12 +102,10 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 	     	function(response) { 
 	      		$scope.alerts = response.data.alerts;
 	      		$scope.selection = response.data.selection;
-	      		$scope.form_disabled = false;
 	      	}
 	      	,function(response) {
 	      		$scope.alerts = response.data.alerts;
 	      		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
-	      		$scope.form_disabled = false;
 	      	}
 	    );
     }
@@ -160,31 +157,52 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 	 }
  }
  
+ $scope.toggleSort = function (sortfield, sortvalue) {	 
+	 if($scope.sortfield == sortfield){
+		 $scope.sortvalue = $scope.sortvalue == 1 ? -1 : 1;
+	 }else{
+		 $scope.sortvalue = 1;
+	 }	 
+	 $scope.sortfield = sortfield; 
+	 $scope.searchBags($scope.filter, $scope.from, $scope.limit, $scope.sortfield, $scope.sortvalue);
+ }
+ 
  $scope.removeFilter = function (type, value) {
 	 if($scope.filter){
 		 delete $scope.filter[type];
 		 $scope.searchBags($scope.filter, $scope.from, $scope.limit, $scope.sortfield, $scope.sortvalue);
 	 }
- }
-/*
- $scope.statusNew = function (type, value) {
-	 
-	 if($scope.filter){
-		if($scope.filter.status){
-			if($scope.filter.status == 'new') return true;
-		}		
-	 }
-	 return false;
- }
-*/ 
+ } 
  
- $scope.changeStatus = function () {
-	 
- }
+ $scope.setAttribute = function (bag, attribute, value) {
+	 var promise = BagService.setAttribute(bag.bagid, attribute, value);
+     $scope.loadingTracker.addPromise(promise);
+     promise.then(
+      	function(response) { 
+      		$scope.alerts = response.data.alerts;
+      		bag[attribute] = value;
+      	}
+      	,function(response) {
+      		$scope.alerts = response.data.alerts;
+      		//$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
+      	}
+     );
+ } 
  
- $scope.changeAssignee = function () {
-	 
- }
+ $scope.setAttributeMass = function (attribute, value) {
+	 var promise = BagService.setAttributeMass($scope.selection, attribute, value);
+     $scope.loadingTracker.addPromise(promise);
+     promise.then(
+      	function(response) { 
+      		$scope.alerts = response.data.alerts;
+      		$scope.searchBags($scope.filter, $scope.from, $scope.limit, $scope.sortfield, $scope.sortvalue);
+      	}
+      	,function(response) {
+      		$scope.alerts = response.data.alerts;
+      		//$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
+      	}
+     );
+ } 
  
  $scope.addTag = function () {
 	 
@@ -208,8 +226,23 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 			  }
 		    }
 	  });
-  };
+  }
  
+  $scope.getMemberDisplayname = function (username) {
+	  
+	  for( var i = 0 ; i < $scope.initdata.members.length ; i++ ){
+		  if($scope.initdata.members[i].username == username){
+			  return $scope.initdata.members[i].displayname; 
+		  }		  
+	  }
+	  
+  }
+  
+  $scope.canSetAttribute = function (attribute) {
+	  return $scope.initdata.restricted_ops.indexOf('set_'+attribute) == -1 || $scope.current_user.role == 'manager';
+  }
+  
+
 });
 
 

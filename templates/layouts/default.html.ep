@@ -117,7 +117,9 @@
       <ul class="nav navbar-nav navbar-left">
         
         <% if (my $navtitle = stash 'navtitle') { %>
-        	<li class="active"><a href=""><%= $navtitle %></a></li>
+        	<% if (my $navtitlelink = stash 'navtitlelink' ) { %>
+        		<li class="active" data-ng-click="forceLoadPage('<%= $navtitlelink %>')"><a ><%= $navtitle %></a></li>
+        	<% } %>
         <% } %>
         <li><a href="/folders/">Folders</a></li>
         <li><a href="/templates/">Templates</a></li>        

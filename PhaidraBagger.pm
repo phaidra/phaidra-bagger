@@ -268,8 +268,9 @@ sub startup {
     $auth->route('bag/:bagid/edit') ->via('get')   ->to('bag#edit');
     $auth->route('bag/:bagid') ->via('get')   ->to('bag#load');
     #$auth->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
-    $auth->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');
-    $auth->route('bag/:bagid/assignee/:username') ->via('put')   ->to('bag#change_assignee');
+    $auth->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');    
+    $auth->route('bag/:bagid/:attribute/:value') ->via('put')   ->to('bag#set_attribute');
+    $auth->route('bag/:attribute/:value') ->via('post')   ->to('bag#set_attribute_mass');
     $auth->route('bag/template/:tid/difab') ->via('get')   ->to('bag#load_difab_template');    
     
     

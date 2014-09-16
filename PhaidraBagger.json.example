@@ -75,6 +75,17 @@
 		            		"role": "manager"
 	            		}
             		],
+            "statuses":  [
+	            		{
+		            		"label": "New",
+		            		"value": "new"
+	            		},
+	            		{
+		            		"label": "Fixed",
+		            		"value": "fixed"
+	            		}
+            		],
+            "restricted_operations": ["set_assignee"],
             "bags": {
                 "in": "/var/www/bagger/data/p2/bags/in",
                 "out": "/var/www/bagger/data/p2/bags/out"

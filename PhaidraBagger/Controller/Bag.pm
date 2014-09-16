@@ -530,14 +530,29 @@ sub bags {
 
 sub folder_bags {
     my $self = shift;
+
     my $folderid = $self->stash('folderid');  	
-    my $members = $self->config->{projects}->{$self->current_user->{project}}->{members}; 
-	my $thumb_path = $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path};
-	my $redmine_baseurl = $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl};
+
 	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
 	my $folder = $self->mango->db->collection('folders')->find_one({folderid => $folderid, owner => $owner},{ name => 1 });
-    my $init_data = { folderid => $folderid, navtitle => $folder->{name}, current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl, members => $members };
-    $self->stash(init_data => encode_json($init_data), navtitle => $folder->{name});
+    
+    my $init_data = { 
+    	folderid => $folderid, 
+    	navtitlelink => 'bags/folder/'.$folderid, 
+    	navtitle => $folder->{name}, 
+    	current_user => $self->current_user, 
+    	thumb_path => $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path}, 
+    	redmine_baseurl => $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl}, 
+    	members => $self->config->{projects}->{$self->current_user->{project}}->{members}, 
+    	statuses => $self->config->{projects}->{$self->current_user->{project}}->{statuses},
+    	restricted_ops => $self->config->{projects}->{$self->current_user->{project}}->{restricted_operations} 
+    };
+    
+    $self->stash(
+    	init_data => encode_json($init_data), 
+    	navtitle => $folder->{name}, 
+    	navtitlelink => 'bags/folder/'.$folderid
+    );
       
 	$self->render('bags/list');
 }
@@ -565,7 +580,7 @@ sub search {
     	$sortvalue = -1;
     }
     
-    $self->app->log->info("Filter:".$self->app->dumper($query));
+    #$self->app->log->info("Filter:".$self->app->dumper($query));
     
     my $folderid = $filter->{folderid};
     my $assignee = $filter->{assignee};
@@ -584,9 +599,16 @@ sub search {
     if($status){
     	$find{status} = $status;	
     }
+    
     if($tag){
-    	$find{tags} = { '$in' => $tag };	
-    }
+    	my @tags;
+    	if(ref($tag) eq 'ARRAY'){    	
+    		@tags = @{$tag};
+    	}else{			   
+			push @tags, $tag; 		
+    	}
+    	$find{tags} = { '$all' => \@tags };
+    }    
     
     if($filterfield && $filtervalue){
     	$find{$filterfield} = $filtervalue;
@@ -594,11 +616,11 @@ sub search {
         
     $self->render_later;
 
-	$self->app->log->info("Find:".$self->app->dumper(\%find));
+	#$self->app->log->info("Find:".$self->app->dumper(\%find));
 
 	my $cursor = $self->mango->db->collection('bags')->find(\%find);
 
-	# bug? count needs to be executed before the additional sorts,limits etc although in mogno it does not matter!
+	# bug? count needs to be executed before the additional sorts, limits etc although in mongo it does not matter!
 	my $hits = $cursor->count;
 	
 	$cursor
@@ -608,6 +630,9 @@ sub search {
 		->limit($limit);
 					
 	my $coll = $cursor->all();	
+	
+	#$self->app->log->info("coll:".$self->app->dumper($coll));
+	
 	$self->render(json => { items => $coll, hits => $hits, alerts => [] , status => 200 });
 
 =cut
@@ -633,26 +658,63 @@ https://groups.google.com/forum/#!topic/mojolicious/4_X9FPPlaVw
 	
 }
 
-sub change_assignee {
+sub set_attribute {
 	
 	my $self = shift;  	
 	my $bagid = $self->stash('bagid');
-	my $username = $self->stash('username');
+	my $attribute = $self->stash('attribute');
+	my $value = $self->stash('value');
 	
-	unless($self->current_user->{role} eq 'manager'){
-		$self->render(json => { alerts => [{ type => 'danger', msg => "You are not authorized for this operation" }] }, status => 403);
-		return;	
+	my $restricted_ops = $self->app->config->{projects}->{$self->current_user->{project}}->{restricted_operations};
+	
+	foreach my $op (@{$restricted_ops}){
+		if($op eq "set_$attribute"){				
+			unless($self->current_user->{role} eq 'manager'){
+				$self->render(json => { alerts => [{ type => 'danger', msg => "You are not authorized for this operation" }] }, status => 403);
+				return;	
+			}
+			last;
+		}
 	}
 	
 	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
 	
-	$self->app->log->info("[".$self->current_user->{username}."] Changing assignee of file $bagid to $username");
+	$self->app->log->info("[".$self->current_user->{username}."] Changing $attribute of bag $bagid to $value");
 	
-	my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => bson_time, 'assignee' => $username }} );
+	my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => bson_time, $attribute => $value }} );
 	
 	$self->render(json => { alerts => [] }, status => 200);
-
 }
 
+sub set_attribute_mass {
+	
+	my $self = shift;
+	
+	my $payload = $self->req->json;
+	my $selection = $payload->{selection};		
+	  	
+	my $attribute = $self->stash('attribute');
+	my $value = $self->stash('value');
+	
+	my $restricted_ops = $self->app->config->{projects}->{$self->current_user->{project}}->{restricted_operations};
+	
+	foreach my $op (@{$restricted_ops}){
+		if($op eq "set_$attribute"){				
+			unless($self->current_user->{role} eq 'manager'){
+				$self->render(json => { alerts => [{ type => 'danger', msg => "You are not authorized for this operation" }] }, status => 403);
+				return;	
+			}
+			last;
+		}
+	}
+	
+	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
+	
+	$self->app->log->info("[".$self->current_user->{username}."] Changing $attribute to $value for bags:".$self->app->dumper($selection));
+	
+	my $reply = $self->mango->db->collection('bags')->update({bagid => $selection, owner => $owner},{ '$set' => {updated => bson_time, $attribute => $value }} );
+	
+	$self->render(json => { alerts => [] }, status => 200);
+}
 
 1;
