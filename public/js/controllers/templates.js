@@ -34,7 +34,7 @@ app.controller('TemplatesCtrl',  function($scope, $modal, $location, DirectorySe
     $scope.deleteTemplate = function (tid) {
 
     	var modalInstance = $modal.open({
-            templateUrl: $('head base').attr('href')+'views/partials/confirm_delete.html',
+            templateUrl: $('head base').attr('href')+'views/modals/confirm_delete.html',
             controller: ConfirmDeleteModalCtrl
     	});
     	

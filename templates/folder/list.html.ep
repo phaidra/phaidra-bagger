@@ -1,0 +1,32 @@
+% layout 'default', title => 'Folders';
+
+% content_for header => begin
+   
+   <script type="text/javascript" src="<%= url_for '/js/controllers/folders.js' %>"></script>    
+        
+% end
+
+%= include 'alerts'
+
+	
+<div class="container" data-ng-controller="FoldersCtrl" data-ng-init="init('<%= $init_data %>')">
+
+	<table class="table">
+	  <thead>
+	  <tr>
+	  	<th>Folder</th>
+	    <th>Created</th>		
+	    <th></th>
+	  </tr>
+	  </thead>
+	  <tbody>
+	  <tr ng-repeat="folder in items | orderBy:'created'">	  
+	  	<td><a href="bags/folder/{{folder.folderid}}" target="_blank">{{folder.name}}</a></td>  
+	    <td>{{folder.created | date:'dd.MM.yyyy HH:mm:ss'}}</td>
+	    <td ng-if="current_user.role == 'manager'"><a href="" data-ng-click="deactivateFolder(folder.folderid)">Deactivate</a></td>
+	  </tr>	  
+	  </tbody>
+	</table>
+	
+</div>
+

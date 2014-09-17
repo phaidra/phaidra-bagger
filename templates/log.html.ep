@@ -1,0 +1,24 @@
+% layout 'default', title => 'Log';
+
+	%= include 'alerts'
+
+    <script>
+      var events = new EventSource('<%= url_for->path('log/events')->to_abs %>');
+
+  
+	events.onmessage = function(event) {
+	    jQuery('#log').append(event.data + '<br/>');
+	};
+
+      // Subscribe to "log" event
+      events.addEventListener('log', function(event) {
+      alert(event.data);
+        jQuery('#log').append(event.data + '<br/>');
+      }, false);
+      
+    </script>
+
+	<div id="log"></div>
+
+
+   

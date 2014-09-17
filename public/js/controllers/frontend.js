@@ -40,7 +40,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
     $scope.signin_open = function () {
 
     	var modalInstance = $modal.open({
-            templateUrl: $('head base').attr('href')+'views/partials/loginform.html',
+            templateUrl: $('head base').attr('href')+'views/modals/loginform.html',
             controller: SigninModalCtrl
     	});
     };

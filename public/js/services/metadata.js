@@ -81,7 +81,7 @@ angular.module('metadataService', [])
 		loadDifabTemplate: function(tid){
 			return $http({
 				method  : 'GET',
-				url     : $('head base').attr('href')+'bag/template/'+tid+'/difab'
+				url     : $('head base').attr('href')+'template/'+tid+'/difab'
 			});	        
 		},
 	    

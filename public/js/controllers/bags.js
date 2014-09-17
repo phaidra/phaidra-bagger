@@ -24,7 +24,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
     $scope.from = 0;
     $scope.limit = 5;
     $scope.sortfield = 'updated';
-    $scope.sortvalue = 1;
+    $scope.sortvalue = -1;
     			
 	$scope.init = function (initdata) {
 		$scope.initdata = angular.fromJson(initdata);
@@ -203,30 +203,26 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
       	}
      );
  } 
- 
- $scope.addTag = function () {
-	 
- }
- 
+
  $scope.removeTag = function () {
 	 
  }
-
- $scope.defineTag = function () {
+ 
+  $scope.editTag = function (add) {
 
 	  var modalInstance = $modal.open({
-            templateUrl: $('head base').attr('href')+'views/partials/define_tag.html',
+            templateUrl: $('head base').attr('href')+'views/modals/define_tag.html',
             controller: TagModalCtrl,
             resolve: {
-		      current_user: function(){
-		        return $scope.current_user;
-		      },
+		      add: function(){
+			    return add;
+			  },
 		      selection: function(){
 			    return $scope.selection;
 			  }
 		    }
 	  });
-  }
+  };
  
   $scope.getMemberDisplayname = function (username) {
 	  
@@ -244,5 +240,61 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
   
 
 });
+
+var TagModalCtrl = function ($scope, $modalInstance, FrontendService, BagService, promiseTracker, add, selection) {
+			
+	$scope.alerts = [];
+
+	$scope.selection = selection;
+	$scope.modaldata = { tag: '' };	
+	
+	$scope.operation = add ? 'Add' : 'Remove';
+
+	$scope.loadingTracker = promiseTracker('loadingTrackerFrontend');	
+
+	$scope.closeAlert = function(index) {
+    	$scope.alerts.splice(index, 1);
+    };
+    
+    $scope.hitEnterAdd = function(evt){
+    	if(angular.equals(evt.keyCode,13)){
+    		$scope.addTag();
+    	}
+    };
+    	
+	$scope.editTag = function () {
+		
+		$scope.form_disabled = true;
+
+		var promise;
+		if(add){
+			promise = BagService.setAttributeMass($scope.selection, 'tags', $scope.modaldata.tag);
+		}else{
+			promise = BagService.unsetAttributeMass($scope.selection, 'tags', $scope.modaldata.tag);
+		}		
+		
+    	$scope.loadingTracker.addPromise(promise);
+    	promise.then(
+    		function(response) { 
+    			$scope.form_disabled = false;
+    			$scope.alerts = response.data.alerts;
+    			$modalInstance.close();
+    			//$window.location.reload();
+    			$scope.$parent.searchBags($scope.$parent.filter, $scope.$parent.from, $scope.$parent.limit, $scope.$parent.sortfield, $scope.$parent.sortvalue);
+    			
+    		}
+    		,function(response) {
+    			$scope.form_disabled = false;
+    			$scope.alerts = response.data.alerts;
+            }
+        );
+		return;
+		
+	};
+
+	$scope.cancel = function () {
+		$modalInstance.dismiss('cancel');
+	};
+};
 
 

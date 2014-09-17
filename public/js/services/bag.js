@@ -7,7 +7,7 @@ angular.module('bagService', [])
 			return $http({
 				method  : 'POST',
 				url     : $('head base').attr('href')+'selection',
-				data  : { selection: selection }
+				data    : { selection: selection }
 			});	        
 		},
 
@@ -15,7 +15,7 @@ angular.module('bagService', [])
 			return $http({
 				method  : 'POST',
 				url     : $('head base').attr('href')+'bags/search',
-			    data: { query: { filter: filter, from: from, limit: limit, sortfield: sortfield, sortvalue: sortvalue } }
+			    data    : { query: { filter: filter, from: from, limit: limit, sortfield: sortfield, sortvalue: sortvalue } }
 			});	        
 		},
 
@@ -26,11 +26,26 @@ angular.module('bagService', [])
 			});	        
 		},
 		
+		unsetAttribute: function(bagid, attribute, value){
+			return $http({
+				method  : 'DELETE',
+				url     : $('head base').attr('href')+'bag/'+bagid+'/'+attribute+'/'+value 
+			});	        
+		},
+		
 		setAttributeMass: function(selection, attribute, value){
 			return $http({
 				method  : 'POST',
-				url     : $('head base').attr('href')+'bag/'+attribute+'/'+value,
-				data  : { selection: selection }
+				url     : $('head base').attr('href')+'bags/set/'+attribute+'/'+value,
+				data    : { selection: selection }
+			});	        
+		},
+		
+		unsetAttributeMass: function(selection, attribute, value){
+			return $http({
+				method  : 'POST',
+				url     : $('head base').attr('href')+'bags/unset/'+attribute+'/'+value,
+				data    : { selection: selection }
 			});	        
 		}
 	}

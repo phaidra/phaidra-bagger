@@ -54,8 +54,8 @@
 			                    <li ng-repeat="status in initdata.statuses"><a href="" data-ng-click="setAttributeMass('status', status.value)">{{status.label}}</a></li>
 			                  </ul>
 			                </li>
-						    <li><a href="" data-ng-click="addTag()">Add tag</a></li>
-						    <li><a href="" data-ng-click="removeTag()">Remove tag</a></li>						    					    						    
+						    <li><a href="" data-ng-click="editTag(1)">Add tag</a></li>
+						    <li><a href="" data-ng-click="editTag(0)">Remove tag</a></li>						    					    						    
 						  </ul>
 					  </div>		
 					  
@@ -65,7 +65,7 @@
 			      
 			      <!--<p class="navbar-text" data-ng-if="filter">Filter: </p>-->
 			      <div class="navbar-form navbar-right">	
-				  	<span data-ng-if="filter" class="label tag-filter label-default" ng-class="{'label-danger': (type == 'status' && value == 'new'), 'label-warning': (type == 'status' && value == 'to_check'), 'label-primary': (type == 'status' && value == 'checked'), 'label-success': (type == 'status' && value == 'to_ingest'), 'label-info': (type == 'tag') }" ng-repeat="(type, value) in filter" title="{{type}}">{{value}}<span data-role="remove" data-ng-click="removeFilter(type, value)"></span></span>
+				  	<a data-ng-if="filter" data-ng-hide="type == 'folderid'" class="btn btn-sm tag-filter btn-default" ng-class="{'btn-danger': (type == 'status' && value == 'new'), 'btn-warning': (type == 'status' && value == 'to_check'), 'btn-primary': (type == 'status' && value == 'checked'), 'btn-success': (type == 'status' && value == 'to_ingest'), 'btn-info': (type == 'tag') }" ng-repeat="(type, value) in filter" title="{{type}}">{{value}} <span class="glyphicon glyphicon-remove" data-role="tag-remove" data-ng-click="removeFilter(type, value)"></span></a>
 				  </div>						   
 	    	</div>
 		
@@ -119,7 +119,7 @@
 			  	<span class="caret"></span>
 			  </button>
 			  <ul class="dropdown-menu" role="menu" ng-show="canSetAttribute('status')">
-			  	<li ng-repeat="status in initdata.statuses"><a href="" data-ng-click="setAttribute(bag, 'status', status.value)">{{status.label}}</a></li>
+			  	<li ng-repeat="status in initdata.statuses" ng-hide="bag.status == status.value"><a href="" data-ng-click="setAttribute(bag, 'status', status.value)">{{status.label}}</a></li>
 			  </ul>
 			</div>
 	  	</td>	  	
@@ -132,7 +132,7 @@
 				<span class="caret"></span>
 			  </button>
 			  <ul class="dropdown-menu" role="menu" ng-show="canSetAttribute('assignee')">
-				<li ng-repeat="member in initdata.members"><a href="" data-ng-click="setAttribute(bag, 'assignee', member.username)">{{member.displayname}}</a></li> 
+				<li ng-repeat="member in initdata.members" ng-hide="bag.assignee == member.username"><a href="" data-ng-click="setAttribute(bag, 'assignee', member.username)">{{member.displayname}}</a></li> 
 			  </ul>			  
 			</div>	  	
 	  	</td>

@@ -254,7 +254,8 @@ sub startup {
     $auth->route('template') ->via('put')   ->to('template#create');
     $auth->route('template/:tid') ->via('post')   ->to('template#save');    
     $auth->route('template/:tid') ->via('get')   ->to('template#load');
-    $auth->route('template/:tid') ->via('delete')   ->to('template#delete');    
+    $auth->route('template/:tid') ->via('delete')   ->to('template#delete');
+    $auth->route('template/:tid/difab') ->via('get')   ->to('template#load_difab');    
     
     $auth->route('templates') ->via('get')   ->to('template#templates');
     $auth->route('templates/my') ->via('get')   ->to('template#my');
@@ -262,18 +263,19 @@ sub startup {
     $auth->route('bags') ->via('get')   ->to('bag#bags');
     $auth->route('bags/folder/:folderid') ->via('get')   ->to('bag#folder_bags');
     $auth->route('bags/search') ->via('post')   ->to('bag#search');    
-    $auth->route('bags/search/:filterfield/:filtervalue') ->via('post')   ->to('bag#search');    
-    #$auth->route('bags/my') ->via('get')   ->to('bag#my');    
+    $auth->route('bags/search/:filterfield/:filtervalue') ->via('post')   ->to('bag#search');            
     $auth->route('bags/import') ->via('get')   ->to('bag#import');
+    $auth->route('bags/set/:attribute/:value') ->via('post')   ->to('bag#set_attribute_mass');
+    $auth->route('bags/unset/:attribute/:value') ->via('post')   ->to('bag#unset_attribute_mass');
+    #$auth->route('bags/my') ->via('get')   ->to('bag#my');
+        
     $auth->route('bag/:bagid/edit') ->via('get')   ->to('bag#edit');
     $auth->route('bag/:bagid') ->via('get')   ->to('bag#load');
-    #$auth->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
     $auth->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');    
     $auth->route('bag/:bagid/:attribute/:value') ->via('put')   ->to('bag#set_attribute');
-    $auth->route('bag/:attribute/:value') ->via('post')   ->to('bag#set_attribute_mass');
-    $auth->route('bag/template/:tid/difab') ->via('get')   ->to('bag#load_difab_template');    
-    
-    
+    $auth->route('bag/:bagid/:attribute/:value') ->via('delete')   ->to('bag#unset_attribute');    
+    #$auth->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
+
     $auth->route('folders') ->via('get')   ->to('folder#folders');    
     $auth->route('folders/import') ->via('get')   ->to('folder#import');
     $auth->route('folder/:folderid/deactivate') ->via('put')   ->to('folder#deactivate_folder');    
