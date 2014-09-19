@@ -33,7 +33,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 
 		$scope.filter = { folderid: $scope.folderid };
 		
-    	$scope.searchBags($scope.filter, $scope.from, $scope.limit, $scope.sortfield, $scope.sortvalue);
+    	$scope.refreshResults();
     	
     	if($scope.current_user){
     		$scope.loadSelection();
@@ -128,11 +128,16 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 			$scope.from = (page-1)*$scope.limit;
 		}
     	    		    		
-    	$scope.searchBags($scope.filter, $scope.from, $scope.limit, $scope.sortfield, $scope.sortvalue);
+    	$scope.refreshResults();
     	
     	$scope.currentPage = page;
     };
   
+    
+ $scope.refreshResults = function() {
+	 $scope.searchBags($scope.filter, $scope.from, $scope.limit, $scope.sortfield, $scope.sortvalue); 
+ }
+ 
  $scope.searchBags = function(filter, from, limit, sortfield, sortvalue) {
 	 
      var promise = BagService.search(filter, from, limit, sortfield, sortvalue);
@@ -153,7 +158,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
  $scope.addFilter = function (type, value) {
 	 if($scope.filter){
 		 $scope.filter[type] = value;
-		 $scope.searchBags($scope.filter, $scope.from, $scope.limit, $scope.sortfield, $scope.sortvalue);
+		 $scope.refreshResults();
 	 }
  }
  
@@ -164,13 +169,13 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 		 $scope.sortvalue = 1;
 	 }	 
 	 $scope.sortfield = sortfield; 
-	 $scope.searchBags($scope.filter, $scope.from, $scope.limit, $scope.sortfield, $scope.sortvalue);
+	 $scope.refreshResults();
  }
  
  $scope.removeFilter = function (type, value) {
 	 if($scope.filter){
 		 delete $scope.filter[type];
-		 $scope.searchBags($scope.filter, $scope.from, $scope.limit, $scope.sortfield, $scope.sortvalue);
+		 $scope.refreshResults();
 	 }
  } 
  
@@ -195,7 +200,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
      promise.then(
       	function(response) { 
       		$scope.alerts = response.data.alerts;
-      		$scope.searchBags($scope.filter, $scope.from, $scope.limit, $scope.sortfield, $scope.sortvalue);
+      		$scope.refreshResults();
       	}
       	,function(response) {
       		$scope.alerts = response.data.alerts;
@@ -213,17 +218,15 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 	  var modalInstance = $modal.open({
             templateUrl: $('head base').attr('href')+'views/modals/define_tag.html',
             controller: TagModalCtrl,
+            scope: $scope,
             resolve: {
 		      add: function(){
 			    return add;
-			  },
-		      selection: function(){
-			    return $scope.selection;
-			  }
+			  }	  
 		    }
 	  });
   };
- 
+
   $scope.getMemberDisplayname = function (username) {
 	  
 	  for( var i = 0 ; i < $scope.initdata.members.length ; i++ ){
@@ -241,24 +244,15 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 
 });
 
-var TagModalCtrl = function ($scope, $modalInstance, FrontendService, BagService, promiseTracker, add, selection) {
-			
-	$scope.alerts = [];
+var TagModalCtrl = function ($scope, $modalInstance, FrontendService, BagService, promiseTracker, add) {
 
-	$scope.selection = selection;
 	$scope.modaldata = { tag: '' };	
 	
 	$scope.operation = add ? 'Add' : 'Remove';
 
-	$scope.loadingTracker = promiseTracker('loadingTrackerFrontend');	
-
-	$scope.closeAlert = function(index) {
-    	$scope.alerts.splice(index, 1);
-    };
-    
-    $scope.hitEnterAdd = function(evt){
+    $scope.hitEnterTagEdit = function(evt){
     	if(angular.equals(evt.keyCode,13)){
-    		$scope.addTag();
+    		$scope.editTag();
     	}
     };
     	
@@ -279,13 +273,12 @@ var TagModalCtrl = function ($scope, $modalInstance, FrontendService, BagService
     			$scope.form_disabled = false;
     			$scope.alerts = response.data.alerts;
     			$modalInstance.close();
-    			//$window.location.reload();
-    			$scope.$parent.searchBags($scope.$parent.filter, $scope.$parent.from, $scope.$parent.limit, $scope.$parent.sortfield, $scope.$parent.sortvalue);
-    			
+    			$scope.refreshResults();
     		}
     		,function(response) {
-    			$scope.form_disabled = false;
+    			$scope.form_disabled = false;    			
     			$scope.alerts = response.data.alerts;
+    			$modalInstance.close();
             }
         );
 		return;
