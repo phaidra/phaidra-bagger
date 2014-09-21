@@ -276,6 +276,14 @@ sub startup {
     $auth->route('bag/:bagid/:attribute/:value') ->via('delete')   ->to('bag#unset_attribute');    
     #$auth->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
 
+	$auth->route('job')             ->via('put')    ->to('job#create');
+    $auth->route('job/:jobid')      ->via('post')   ->to('job#save');    
+    $auth->route('job/:jobid')      ->via('get')    ->to('job#load');
+    $auth->route('job/:jobid')      ->via('delete') ->to('job#delete');
+    $auth->route('job/:jobid/edit') ->via('get')    ->to('job#edit');    
+    $auth->route('jobs')            ->via('get')    ->to('job#jobs');
+    $auth->route('jobs/my')         ->via('get')    ->to('job#my');
+
     $auth->route('folders') ->via('get')   ->to('folder#folders');    
     $auth->route('folders/import') ->via('get')   ->to('folder#import');
     $auth->route('folder/:folderid/deactivate') ->via('put')   ->to('folder#deactivate_folder');    

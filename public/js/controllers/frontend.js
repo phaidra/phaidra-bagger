@@ -1,4 +1,4 @@
-var app = angular.module('frontendApp', ['ngAnimate', 'ui.bootstrap', 'ui.bootstrap.modal', 'ui.sortable', 'ajoslin.promise-tracker', 'directoryService', 'metadataService', 'frontendService', 'bagService']);
+var app = angular.module('frontendApp', ['ngAnimate', 'ui.bootstrap', 'ui.bootstrap.modal', 'ui.bootstrap.datepicker', 'ui.bootstrap.timepicker', 'ui.sortable', 'ajoslin.promise-tracker', 'directoryService', 'metadataService', 'frontendService', 'bagService', 'jobService']);
 
 app.controller('FrontendCtrl', function($scope, $window, $modal, $log, DirectoryService, promiseTracker) {
     
@@ -105,6 +105,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
 		$modalInstance.dismiss('cancel');
 	};
 };
+
 
 
 /*

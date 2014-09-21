@@ -227,6 +227,15 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 	  });
   };
 
+  $scope.createIngestJob = function () {
+	  var modalInstance = $modal.open({
+          templateUrl: $('head base').attr('href')+'views/modals/create_ingest_job.html',
+          controller: CreateIngestJobModalCtrl,
+          scope: $scope
+	  });
+  }
+  
+
   $scope.getMemberDisplayname = function (username) {
 	  
 	  for( var i = 0 ; i < $scope.initdata.members.length ; i++ ){
@@ -285,6 +294,71 @@ var TagModalCtrl = function ($scope, $modalInstance, FrontendService, BagService
 		
 	};
 
+	$scope.cancel = function () {
+		$modalInstance.dismiss('cancel');
+	};
+};
+
+var CreateIngestJobModalCtrl = function ($scope, $modalInstance, FrontendService, JobService, promiseTracker) {
+
+	$scope.modaldata = { name: '', startat: null, ingest_instance: null};
+	
+	$scope.ingestModalInit = function() {
+		Object.keys($scope.initdata.ingest_instances).forEach(function (key) { 
+		    if($scope.initdata.ingest_instances[key].is_default == '1'){
+		    	$scope.modaldata.ingest_instance = key;
+		    }
+		    
+		})				
+	}
+	
+
+	$scope.today = function() {
+		$scope.modaldata.startat = new Date();
+	 };
+	 $scope.today();
+	
+	 $scope.clear = function () {
+		 $scope.modaldata.startat = null;
+	 };
+
+	$scope.open = function($event) {
+	    $event.preventDefault();
+	    $event.stopPropagation();
+	
+	    $scope.opened = true;
+	  };	
+
+	$scope.hitEnterCreate = function(evt){
+		if(angular.equals(evt.keyCode,13)){
+			$scope.createJob();
+		}
+	};
+		
+	$scope.createJob = function () {
+		
+		$scope.form_disabled = true;
+	
+		var promise = JobService.create($scope.selection, $scope.modaldata);	
+		
+		$scope.loadingTracker.addPromise(promise);
+		promise.then(
+			function(response) { 
+				$scope.form_disabled = false;
+				$scope.alerts = response.data.alerts;
+				$modalInstance.close();
+				window.location = $('head base').attr('href')+'jobs';
+			}
+			,function(response) {
+				$scope.form_disabled = false;    			
+				$scope.alerts = response.data.alerts;
+				$modalInstance.close();
+	        }
+	    );
+		return;
+		
+	};
+	
 	$scope.cancel = function () {
 		$modalInstance.dismiss('cancel');
 	};

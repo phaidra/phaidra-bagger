@@ -55,7 +55,8 @@
 			                  </ul>
 			                </li>
 						    <li><a href="" data-ng-click="editTag(1)">Add tag</a></li>
-						    <li><a href="" data-ng-click="editTag(0)">Remove tag</a></li>						    					    						    
+						    <li><a href="" data-ng-click="editTag(0)">Remove tag</a></li>
+						    <li><a href="" data-ng-click="createIngestJob()">Create ingest job</a></li>						    					    						    
 						  </ul>
 					  </div>		
 					  

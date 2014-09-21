@@ -1,0 +1,49 @@
+% layout 'default', title => 'Jobs';
+
+% content_for header => begin
+   
+   <script type="text/javascript" src="<%= url_for '/js/controllers/jobs.js' %>"></script>   
+        
+% end
+
+%= include 'alerts'
+	
+<div class="container" data-ng-controller="JobsCtrl"  data-ng-init="init('<%= $init_data %>')">
+
+	<input type="text" ng-model="filterinput" class="search-query form-control" placeholder="Filter">
+
+	<table class="table">
+	  <thead>
+	  <tr>
+	    <th>Name</th>
+	    <th>Status</th>
+	    <th>Instance</th>
+	    <th>Created by</th>
+	    <th>Start at</th>
+	    <th>Created</th>
+	    <th>Updated</th>
+	    <th></th>
+	    <th></th>
+	  </tr>
+	  </thead>
+	  <tbody>
+	  <tr ng-repeat="job in jobs| filter:filterinput | orderBy:'updated':true">
+	    <td><a href="/job/{{job._id}}/editor" target="_blank">{{job.name}}</a></td>
+	    <td>{{job.status}}</td>
+	    <td>{{job.ingest_instance}}</td>
+	    <td>{{job.created_by}}</td>
+	    <td>{{job.startat | date:'dd.MM.yyyy HH:mm:ss'}}</td>
+	    <td>{{job.created | date:'dd.MM.yyyy HH:mm:ss'}}</td>
+	    <td>{{job.updated | date:'dd.MM.yyyy HH:mm:ss'}}</td>
+	    <td>
+	      <a href="/job/{{job._id}}/edit"><i class="glyphicon glyphicon-pencil"></i></a>
+	    </td>
+	    <td>
+	      <a href="" ng-click="deleteJob(job._id)"><i class="glyphicon glyphicon-remove"></i></a>
+	    </td>
+	  </tr>
+	  </tbody>
+	</table>
+
+</div>
+

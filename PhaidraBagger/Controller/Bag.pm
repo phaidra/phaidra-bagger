@@ -377,7 +377,8 @@ sub bags {
 	my $thumb_path = $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path};
 	my $members = $self->config->{projects}->{$self->current_user->{project}}->{members};
 	my $redmine_baseurl = $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl};
-    my $init_data = { current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl, members => $members };
+	my $ingest_instances = $self->config->{ingest_instances};
+    my $init_data = { current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl, members => $members, ingest_instances => $ingest_instances };
     $self->stash(init_data => encode_json($init_data));
       
 	$self->render('bags/list');
@@ -400,7 +401,8 @@ sub folder_bags {
     	redmine_baseurl => $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl}, 
     	members => $self->config->{projects}->{$self->current_user->{project}}->{members}, 
     	statuses => $self->config->{projects}->{$self->current_user->{project}}->{statuses},
-    	restricted_ops => $self->config->{projects}->{$self->current_user->{project}}->{restricted_operations} 
+    	restricted_ops => $self->config->{projects}->{$self->current_user->{project}}->{restricted_operations},
+    	ingest_instances => $self->config->{ingest_instances}
     };
     
     $self->stash(

@@ -1,7 +1,7 @@
 /* Fix for Bootstrap 3 with Angular UI Bootstrap */
 .modal { 
 	display: block;
-	height: 500px;
+	height: 530px;
 	overflow: hidden;
 	
 }

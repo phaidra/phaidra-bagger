@@ -48,5 +48,6 @@ angular.module('bagService', [])
 				data    : { selection: selection }
 			});	        
 		}
+
 	}
 });
