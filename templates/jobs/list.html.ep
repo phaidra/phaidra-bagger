@@ -5,10 +5,10 @@
    <script type="text/javascript" src="<%= url_for '/js/controllers/jobs.js' %>"></script>   
         
 % end
-
-%= include 'alerts'
 	
 <div class="container" data-ng-controller="JobsCtrl"  data-ng-init="init('<%= $init_data %>')">
+
+%= include 'alerts'
 
 	<input type="text" ng-model="filterinput" class="search-query form-control" placeholder="Filter">
 
@@ -20,8 +20,10 @@
 	    <th>Instance</th>
 	    <th>Created by</th>
 	    <th>Start at</th>
+	    <th>Finished at</th>
 	    <th>Created</th>
 	    <th>Updated</th>
+	    <th></th>
 	    <th></th>
 	    <th></th>
 	  </tr>
@@ -31,16 +33,14 @@
 	    <td><a href="/job/{{job._id}}/editor" target="_blank">{{job.name}}</a></td>
 	    <td>{{job.status}}</td>
 	    <td>{{job.ingest_instance}}</td>
-	    <td>{{job.created_by}}</td>
-	    <td>{{job.startat | date:'dd.MM.yyyy HH:mm:ss'}}</td>
+	    <td>{{getMemberDisplayname(job.created_by)}}</td>
+	    <td>{{job.start_at | date:'dd.MM.yyyy HH:mm:ss'}}</td>
+	    <td>{{job.finished_at | date:'dd.MM.yyyy HH:mm:ss'}}</td>
 	    <td>{{job.created | date:'dd.MM.yyyy HH:mm:ss'}}</td>
 	    <td>{{job.updated | date:'dd.MM.yyyy HH:mm:ss'}}</td>
-	    <td>
-	      <a href="/job/{{job._id}}/edit"><i class="glyphicon glyphicon-pencil"></i></a>
-	    </td>
-	    <td>
-	      <a href="" ng-click="deleteJob(job._id)"><i class="glyphicon glyphicon-remove"></i></a>
-	    </td>
+	    <td><a href="" ng-click="editIngestJob(job)"><i class="glyphicon glyphicon-pencil"></i></a></td>
+	    <td><a href="" ng-click="toogleRun(job._id)"><i class="glyphicon glyphicon-pause" ng-show="job.status == 'running'"></i><i class="glyphicon glyphicon-play" ng-show="job.status == 'suspended'"></i></a></td>
+	    <td><a href="" ng-click="deleteJob(job._id,job.name)"><i class="glyphicon glyphicon-remove"></i></a></td>
 	  </tr>
 	  </tbody>
 	</table>

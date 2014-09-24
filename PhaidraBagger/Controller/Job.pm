@@ -6,16 +6,17 @@ use v5.10;
 use Mango::BSON ':bson';
 use Mango::BSON::ObjectID;
 use Mango::BSON::Time;
+use Mango::BSON::Document;
 use Time::Local;
 use Date::Parse qw(str2time);
 use Mojo::JSON qw(encode_json);
 use base 'Mojolicious::Controller';
 
-sub uwmetadata_job_editor {
+sub edit {
     my $self = shift;
     my $init_data = { jobid => $self->stash('jobid'), current_user => $self->current_user };
     $self->stash(init_data => encode_json($init_data));  	 
-    $self->render('jobeditor');	
+    $self->render('job/jobeditor');	
 }
 
 sub load {
@@ -25,36 +26,17 @@ sub load {
 	
 	$self->app->log->info("[".$self->current_user->{username}."] Loading job $jobid");
 	
-	my $oid = Mango::BSON::Objecjobid->new($jobid);
+	my $oid = Mango::BSON::ObjectID->new($jobid);
 	
-	$self->render_later;
-	my $reply = $self->mango->db->collection('jobs.uwmetadata')->find_one(
-		{_id => $oid} => 	
-			sub {
-				    my ($reply, $error, $doc) = @_;
-	
-				    if ( $error ){
-				    	$self->app->log->error("[".$self->current_user->{username}."] Error loading job ".$jobid.":".$self->app->dumper($error));
-						$self->render(
-								json => { 
-									uwmetadata => '', 
-									title => '',
-									alerts => [{ type => 'danger', msg => "Job with id ".$jobid." was not found" }] 
-								}, 
-						status => 500);	
-				    }
-				    
-				    $self->app->log->info("[".$self->current_user->{username}."] Loaded job ".$doc->{title}." [$jobid]");
-					$self->render(
-							json => { 
-								uwmetadata => $doc->{uwmetadata}, 
-								title => $doc->{title},
-								#alerts => [{ type => 'success', msg => "Job ".$doc->{title}." loaded" }] 
-							}, 
-					status => 200);
-				   
-				}
-	);
+	my $job = $self->mango->db->collection('jobs')->find_one({_id => $oid});
+	unless(defined($job)){
+		$self->app->log->error("[".$self->current_user->{username}."] Error loading job ".$jobid);
+		$self->render(json => {alerts => [{ type => 'danger', msg => "Job with id ".$jobid." was not found" }]},status => 500);
+		return;
+	}
+							    
+	$self->app->log->info("[".$self->current_user->{username}."] Loaded job ".$job->{name}." [$jobid]");
+	$self->render(json => {job => $job}, status => 200);		
 		
 }
 
@@ -62,16 +44,50 @@ sub save {
 	
 	my $self = shift;  	
 	my $jobid = $self->stash('jobid');
+	my $jobdata = $self->req->json->{jobdata};
 	
 	$self->app->log->info("[".$self->current_user->{username}."] Saving job $jobid");
 	
-	my $oid = Mango::BSON::Objecjobid->new($jobid);
+	my $oid = Mango::BSON::ObjectID->new($jobid);
 	
-	my $reply = $self->mango->db->collection('jobs.uwmetadata')->update({_id => $oid},{ '$set' => {updated => bson_time, uwmetadata => $self->req->json->{uwmetadata}} } );
+	my $reply = $self->mango->db->collection('jobs')->update({_id => $oid},{ '$set' => { name => $jobdata->{name}, created => bson_time, updated => bson_time, status => 'scheduled', start_at => $jobdata->{start_at}, ingest_instance => $jobdata->{ingest_instance}} } );	
+
+	$self->render(json => { alerts => [] }, status => 200);
+
+}
+
+sub toggle_run {
 	
-	my ( $sec, $min, $hour, $day, $mon, $year ) = localtime();
-	my $now = sprintf("%02d.%02d.%04d %02d:%02d:%02d",$day, $mon + 1, $year + 1900, $hour, $min, $sec);
-	$self->render(json => { alerts => [{ type => 'success', msg => "Saved at $now" }] }, status => 200);
+	my $self = shift;  	
+	my $jobid = $self->stash('jobid');
+	
+	$self->app->log->info("[".$self->current_user->{username}."] Toggle run for job $jobid");
+	
+	my $oid = Mango::BSON::ObjectID->new($jobid);
+	
+	# this does not work as an atomic transaction, 
+	# but that should not cause too much trouble in this case
+	# 1) get current status
+	my $job = $self->mango->db->collection('jobs')->find_one({_id => $oid});
+	unless(defined($job)){
+		$self->app->log->error("[".$self->current_user->{username}."] Error loading job ".$jobid);
+		$self->render(json => {alerts => [{ type => 'danger', msg => "Job with id ".$jobid." was not found" }]},status => 500);
+		return;
+	}
+	
+	# 2) set new status
+	my $current_status = $job->{status};
+	my $new_status;
+	if($current_status eq 'running'){
+		$new_status = 'suspended';
+	}
+	if($current_status eq 'suspended'){
+		$new_status = 'running';
+	}
+	
+	$self->mango->db->collection('jobs')->update({_id => $oid},{ '$set' => {updated => bson_time, status => $new_status} } );
+	
+	$self->render(json => { alerts => [{ type => 'success', msg => "Job status changed from $current_status to $new_status" }] }, status => 200);
 
 }
 
@@ -82,9 +98,9 @@ sub delete {
 	
 	$self->app->log->info("[".$self->current_user->{username}."] Removing job $jobid");
 	
-	my $oid = Mango::BSON::Objecjobid->new($jobid);
+	my $oid = Mango::BSON::ObjectID->new($jobid);
 	
-	my $reply = $self->mango->db->collection('jobs.uwmetadata')->remove({_id => $oid});
+	my $reply = $self->mango->db->collection('jobs')->remove({_id => $oid});
 		
 	$self->render(json => { alerts => [] }, status => 200);
 }
@@ -98,11 +114,16 @@ sub create {
 	my $selection = $self->req->json->{selection};
 	my $jobdata = $self->req->json->{jobdata};
 
-    my $startat = Mango::BSON::Time->new(str2time($jobdata->{startat})*1000);
+	my @jobitems;
+	foreach my $item (@{$selection}){
+		push @jobitems, { bagid => $item, status => 'new', error_msg => '', pid => ''};
+	}
+
+    my $start_at = Mango::BSON::Time->new(str2time($jobdata->{start_at})*1000);
 
 	$self->app->log->info("[".$self->current_user->{username}."] Creating job ".$jobdata->{name});
 	
-	my $reply = $self->mango->db->collection('jobs')->insert({ name => $jobdata->{name}, created => bson_time, updated => bson_time, project => $self->current_user->{project}, created_by => $self->current_user->{username}, status => 'new', startat => $startat, ingest_instance => $jobdata->{ingest_instance}, bags => $selection } );
+	my $reply = $self->mango->db->collection('jobs')->insert({ name => $jobdata->{name}, created => bson_time, updated => bson_time, project => $self->current_user->{project}, created_by => $self->current_user->{username}, status => 'scheduled', start_at => $start_at, finished_at => '', ingest_instance => $jobdata->{ingest_instance}, bags => \@jobitems } );
 	
 	my $oid = $reply->{oid};
 	if($oid){
@@ -116,7 +137,11 @@ sub create {
 sub jobs {
     my $self = shift;  	 
 
-	my $init_data = { current_user => $self->current_user };
+	my $init_data = { 
+		members => $self->config->{projects}->{$self->current_user->{project}}->{members},
+		current_user => $self->current_user,
+		ingest_instances => $self->config->{ingest_instances} 
+	};
     $self->stash(init_data => encode_json($init_data));
       
 	$self->render('jobs/list');
@@ -127,23 +152,20 @@ sub my {
     
     $self->render_later;
 
-	$self->mango->db->collection('jobs')
+	my $coll = $self->mango->db->collection('jobs')
 		->find({ created_by => $self->current_user->{username}})
 		->sort({created => 1})
-		->fields({ name => 1, created => 1, updated => 1, created_by => 1, status => 1, startat => 1, ingest_instance => 1  })
-		->all(
-			sub {
-			    my ($reply, $error, $coll) = @_;
+		->fields({ _id => 1, name => 1, created => 1, updated => 1, created_by => 1, status => 1, start_at => 1, finished_at => 1, ingest_instance => 1  })
+		->all();
 
-			    if ( $error ){
-			    	$self->app->log->info("[".$self->current_user->{username}."] Error searching jobs: ".$self->app->dumper($error));
-			    	$self->render(json => { alerts => [{ type => 'danger', msg => "Error searching jobs" }] }, status => 500);	
-			    }
+	unless(defined($coll)){
+		my $err = $self->mango->db->command(bson_doc(getLastError => 1, w => 2));
+	   	$self->app->log->info("[".$self->current_user->{username}."] Error searching jobs: ".$self->app->dumper($err));
+	   	$self->render(json => { alerts => [{ type => 'danger', msg => "Error searching jobs" }] }, status => 500);	
+	}
 			    
-			    my $collsize = scalar @{$coll};
-			    $self->render(json => { jobs => $coll, alerts => [{ type => 'success', msg => "Found $collsize jobs" }] , status => 200 });
-			}
-	);
+	my $collsize = scalar @{$coll};
+	$self->render(json => { jobs => $coll, alerts => [] , status => 200 });
 
 }
 

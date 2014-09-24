@@ -122,7 +122,8 @@
         	<% } %>
         <% } %>
         <li><a href="/folders/">Folders</a></li>
-        <li><a href="/templates/">Templates</a></li>        
+        <li><a href="/templates/">Templates</a></li>
+        <li><a href="/jobs/">Jobs</a></li>            
         <li class="disabled"><a href="/settings/">Settings</a></li>
         
         <!--
@@ -131,7 +132,6 @@
           <ul class="dropdown-menu">            
             <li><a href="/templates/">Templates</a></li>            
             <li><a href="/files/">Files</a></li>
-            <li><a href="/chillin/">Chill out page</a></li>
             <li class="disabled"><a href="/settings/">Settings</a></li>
           </ul>
         </li>
@@ -151,8 +151,17 @@
       	<span class="navbar-text">Signed in as <%= current_user->{firstname} %> <%= current_user->{lastname} %></span>
       </ul>
       <% } %>
+      
       <ul class="nav navbar-right">
-      <img class="load-spinner" ng-show="loadingTracker.active()" src="../img/ajax-loader.gif">
+      <% if(current_user){ %> 
+	    	<% if(current_user->{project} eq 'DiFaB') { %>
+	    		<center><img src="img/home/difab_logo_small.jpg" class="difab_logo img-rounded" title="DiFaB" alt="DiFaB"></center>
+	    	<% } %>
+	   <%  } %>
+      </ul>
+      
+      <ul class="nav navbar-right">
+      	<img class="load-spinner" ng-show="loadingTracker.active()" src="../img/ajax-loader.gif">
       </ul>
       
     </div><!-- /.navbar-collapse -->

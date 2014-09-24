@@ -236,14 +236,12 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
   }
   
 
-  $scope.getMemberDisplayname = function (username) {
-	  
+  $scope.getMemberDisplayname = function (username) {	  
 	  for( var i = 0 ; i < $scope.initdata.members.length ; i++ ){
 		  if($scope.initdata.members[i].username == username){
 			  return $scope.initdata.members[i].displayname; 
 		  }		  
-	  }
-	  
+	  }	  
   }
   
   $scope.canSetAttribute = function (attribute) {
@@ -301,7 +299,9 @@ var TagModalCtrl = function ($scope, $modalInstance, FrontendService, BagService
 
 var CreateIngestJobModalCtrl = function ($scope, $modalInstance, FrontendService, JobService, promiseTracker) {
 
-	$scope.modaldata = { name: '', startat: null, ingest_instance: null};
+	$scope.modaldata = { name: '', start_at: null, ingest_instance: null};
+	
+	$scope.today();
 	
 	$scope.ingestModalInit = function() {
 		Object.keys($scope.initdata.ingest_instances).forEach(function (key) { 
@@ -311,16 +311,14 @@ var CreateIngestJobModalCtrl = function ($scope, $modalInstance, FrontendService
 		    
 		})				
 	}
-	
 
 	$scope.today = function() {
-		$scope.modaldata.startat = new Date();
-	 };
-	 $scope.today();
+		$scope.modaldata.start_at = new Date();
+	};
 	
-	 $scope.clear = function () {
-		 $scope.modaldata.startat = null;
-	 };
+	$scope.clear = function () {
+		$scope.modaldata.start_at = null;
+	};
 
 	$scope.open = function($event) {
 	    $event.preventDefault();

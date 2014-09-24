@@ -1,5 +1,9 @@
-var ConfirmDeleteModalCtrl = function ($scope, $modalInstance) {
+var ConfirmDeleteModalCtrl = function ($scope, $modalInstance, itemname) {
 
+	$scope.itemname = itemname;
+	
+	$scope.itemtype = 'job';
+	
 	$scope.ok = function () {		
 		$modalInstance.close();
 	};
@@ -28,24 +32,30 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
 	$scope.init = function (initdata) {
 		$scope.initdata = angular.fromJson(initdata);
 		$scope.current_user = $scope.initdata.current_user;		
-    	$scope.getMyJobs();    	
+    	$scope.refreshResults();    	
     };
     
-    $scope.deleteJob = function (tid) {
+    $scope.deleteJob = function (jobid, jobname) {
 
     	var modalInstance = $modal.open({
-            jobUrl: $('head base').attr('href')+'views/modals/confirm_delete.html',
-            controller: ConfirmDeleteModalCtrl
+            templateUrl: $('head base').attr('href')+'views/modals/confirm_delete.html',
+            controller: ConfirmDeleteModalCtrl,
+            resolve: {
+	    		itemname: function(){
+			    	return jobname;
+			  }	 
+            }
+    	
     	});
     	
     	modalInstance.result.then(function () {
-    		var promise = JobService.deleteJob(tid);
+    		var promise = JobService.remove(jobid);
             $scope.loadingTracker.addPromise(promise);
             promise.then(
              	function(response) { 
              		$scope.alerts = response.data.alerts;
              		for(var i = 0 ; i < $scope.jobs.length; i++){
-             			if($scope.jobs[i]._id == tid){
+             			if($scope.jobs[i]._id == jobid){
              				$scope.jobs.splice(i,1);
              			}             			
              		}             		
@@ -60,7 +70,7 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
 	    });
     };	
 
- $scope.getMyJobs = function() {
+ $scope.refreshResults = function() {
 	 $scope.form_disabled = true;
      var promise = JobService.getMyJobs();
      $scope.loadingTracker.addPromise(promise);
@@ -76,8 +86,104 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
       		$scope.form_disabled = false;
       	}
      );    	      
+ };
+ 
+  $scope.toogleRun = function(jobid) {
+	 $scope.form_disabled = true;
+     var promise = JobService.toggleRun(jobid);
+     $scope.loadingTracker.addPromise(promise);
+     promise.then(
+      	function(response) { 
+      		$scope.alerts = response.data.alerts;
+      		$scope.refreshResults();   
+      		$scope.form_disabled = false;
+      	}
+      	,function(response) {
+      		$scope.alerts = response.data.alerts;
+      		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
+      		$scope.form_disabled = false;
+      	}
+     );    	      
  };   
+ 
+ $scope.editIngestJob = function (job) {
+	  var modalInstance = $modal.open({
+          templateUrl: $('head base').attr('href')+'views/modals/edit_ingest_job.html',
+          controller: EditIngestJobModalCtrl,
+          scope: $scope,
+		  resolve: {
+		      job: function(){
+			    return job;
+			  }	  
+		  }
+	  });
+  }
+ 
+  $scope.getMemberDisplayname = function (username) {	  
+	  for( var i = 0 ; i < $scope.initdata.members.length ; i++ ){
+		  if($scope.initdata.members[i].username == username){
+			  return $scope.initdata.members[i].displayname; 
+		  }		  
+	  }	  
+  }
        
 });
+
+var EditIngestJobModalCtrl = function ($scope, $modalInstance, FrontendService, JobService, promiseTracker, job) {
+
+	$scope.job = job;
+	
+	$scope.modaldata = { name: job.name, start_at: job.start_at, ingest_instance: job.ingest_instance};
+
+	$scope.today = function() {
+		$scope.modaldata.start_at = new Date();
+	};
+	
+	$scope.clear = function () {
+		 $scope.modaldata.start_at = null;
+	};
+
+	$scope.open = function($event) {
+	    $event.preventDefault();
+	    $event.stopPropagation();	
+	    $scope.opened = true;
+	};	
+
+	$scope.hitEnterSave = function(evt){
+		if(angular.equals(evt.keyCode,13)){
+			$scope.saveJob();
+		}
+	};
+		
+	$scope.saveJob = function () {
+		
+		$scope.form_disabled = true;
+	
+		var promise = JobService.save($scope.job._id, $scope.modaldata);	
+		
+		$scope.loadingTracker.addPromise(promise);
+		promise.then(
+			function(response) { 
+				$scope.form_disabled = false;
+				$scope.alerts = response.data.alerts;
+				$modalInstance.close();
+				$scope.refreshResults();
+			}
+			,function(response) {
+				$scope.form_disabled = false;    			
+				$scope.alerts = response.data.alerts;
+				$modalInstance.close();
+	        }
+	    );
+		return;
+		
+	};
+	
+	$scope.cancel = function () {
+		$modalInstance.dismiss('cancel');
+	};
+};
+
+
 
 

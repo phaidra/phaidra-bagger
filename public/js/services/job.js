@@ -10,7 +10,7 @@ angular.module('jobService', [])
 	    	});	        
 	    },
 	    
-		'delete': function(jobid){
+		remove: function(jobid){
 			return $http({
 				method  : 'DELETE',
 				url     : $('head base').attr('href')+'job/'+jobid
@@ -36,6 +36,13 @@ angular.module('jobService', [])
 			return $http({
 				method  : 'GET',
 				url     : $('head base').attr('href')+'jobs/my'
+			});	        
+		},
+		
+		toggleRun: function(jobid){
+			return $http({
+				method  : 'POST',
+				url     : $('head base').attr('href')+'job/'+jobid+'/toggle_run'
 			});	        
 		}
 

@@ -20,6 +20,10 @@ sub home {
     	$self->flash({redirect_to => $self->req->url});
     }
     
+    if($self->stash('opensignin')){
+    	$self->flash({opensignin => 1});	
+    }
+    
     my $init_data = { current_user => $self->current_user };
     $self->stash(init_data => encode_json($init_data));
     $self->stash(init_data_perl => $init_data);   

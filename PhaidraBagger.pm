@@ -216,7 +216,7 @@ sub startup {
     my $r = $self->routes;
     $r->namespaces(['PhaidraBagger::Controller']);
     
-    $r->route('') 			  		->via('get')   ->to('frontend#home');
+    $r->route('') 			  		->via('get')   ->to('frontend#home', opensignin => 1);
     
     $r->route('signin') 			  	->via('get')   ->to('authentication#signin');
     $r->route('signout') 			->via('get')   ->to('authentication#signout');
@@ -276,13 +276,14 @@ sub startup {
     $auth->route('bag/:bagid/:attribute/:value') ->via('delete')   ->to('bag#unset_attribute');    
     #$auth->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
 
-	$auth->route('job')             ->via('put')    ->to('job#create');
-    $auth->route('job/:jobid')      ->via('post')   ->to('job#save');    
-    $auth->route('job/:jobid')      ->via('get')    ->to('job#load');
-    $auth->route('job/:jobid')      ->via('delete') ->to('job#delete');
-    $auth->route('job/:jobid/edit') ->via('get')    ->to('job#edit');    
-    $auth->route('jobs')            ->via('get')    ->to('job#jobs');
-    $auth->route('jobs/my')         ->via('get')    ->to('job#my');
+	$auth->route('job')                        ->via('put')    ->to('job#create');
+    $auth->route('job/:jobid')                 ->via('post')   ->to('job#save');    
+    $auth->route('job/:jobid')                 ->via('get')    ->to('job#load');
+    $auth->route('job/:jobid')                 ->via('delete') ->to('job#delete');
+    $auth->route('job/:jobid/toggle_run')      ->via('post')   ->to('job#toggle_run');
+    $auth->route('job/:jobid/edit')            ->via('get')    ->to('job#edit');    
+    $auth->route('jobs')                       ->via('get')    ->to('job#jobs');
+    $auth->route('jobs/my')                    ->via('get')    ->to('job#my');
 
     $auth->route('folders') ->via('get')   ->to('folder#folders');    
     $auth->route('folders/import') ->via('get')   ->to('folder#import');

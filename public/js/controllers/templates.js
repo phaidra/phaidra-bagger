@@ -1,4 +1,8 @@
-var ConfirmDeleteModalCtrl = function ($scope, $modalInstance) {
+var ConfirmDeleteModalCtrl = function ($scope, $modalInstance, itemname) {
+
+	$scope.itemname = itemname;
+	
+	$scope.itemtype = 'template';	
 
 	$scope.ok = function () {		
 		$modalInstance.close();
@@ -31,11 +35,16 @@ app.controller('TemplatesCtrl',  function($scope, $modal, $location, DirectorySe
     	$scope.getMyTemplates();    	
     };
     
-    $scope.deleteTemplate = function (tid) {
+    $scope.deleteTemplate = function (tid, name) {
 
     	var modalInstance = $modal.open({
             templateUrl: $('head base').attr('href')+'views/modals/confirm_delete.html',
-            controller: ConfirmDeleteModalCtrl
+            controller: ConfirmDeleteModalCtrl,
+            resolve: {
+	    		itemname: function(){
+			    	return name;
+			  }	 
+            }
     	});
     	
     	modalInstance.result.then(function () {

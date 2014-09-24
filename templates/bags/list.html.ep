@@ -108,7 +108,7 @@
 	  <tr ng-repeat="bag in items">	  
 	    <td ng-if="current_user"><span class="glyphicon glyphicon-flag flag" ng-class="{'flag-selected': selection.indexOf(bag.bagid) != -1}" data-ng-click="toggleFile(bag.bagid)"></span></td>
 	    <td><img ng-src="{{initdata.thumb_path}}/s_{{bag.bagid}}_1.png" class="img-thumbnail" width="60" height="60" title="{{bag.bagid}}" alt="{{bag.bagid}}"></td>
-	  	<td><a href="file/{{bag.bagid}}/edit" target="_blank">{{bag.label}}</a></td>
+	  	<td><a href="bag/{{bag.bagid}}/edit" target="_blank">{{bag.label}}</a></td>
 	  	<td>
 			<div ng-class="{'btn-group':canSetAttribute('status')}"  data-ng-if="bag.status">
 			  <button type="button" class="btn btn-sm" data-ng-click="addFilter('status', bag.status)" ng-class="{'btn-danger': (bag.status == 'new'), 'btn-warning': (bag.status == 'to_check'), 'btn-primary': (bag.status == 'checked'), 'btn-success': (bag.status == 'to_ingest') }">
