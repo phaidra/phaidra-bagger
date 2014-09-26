@@ -101,23 +101,10 @@ sub startup {
 			
 		},
 	});
-	
-	#$self->attr(mango => sub { 
-    #    Mango->new('mongodb://'.$config->{mongodb}->{username}.':'.$config->{mongodb}->{password}.'@'.$config->{mongodb}->{host}.'/'.$config->{mongodb}->{database});
-    #});
-    #$self->helper('mango' => sub { shift->app->mango });
-=cut	
-	$self->attr(_mango => sub 
-		{ 
-			return Mango->new('mongodb://'.$config->{mongodb}->{username}.':'.$config->{mongodb}->{password}.'@'.$config->{mongodb}->{host}.'/'.$config->{mongodb}->{database});			
-		}
-	);
-=cut
+
 	$self->attr(_mango => sub { return Mango->new('mongodb://'.$config->{mongodb}->{username}.':'.$config->{mongodb}->{password}.'@'.$config->{mongodb}->{host}.'/'.$config->{mongodb}->{database}) });
 	$self->helper(mango => sub { return shift->app->_mango});
 
-#	$self->helper(mango => sub { state $mango = Mango->new('mongodb://'.$config->{mongodb}->{username}.':'.$config->{mongodb}->{password}.'@'.$config->{mongodb}->{host}.'/'.$config->{mongodb}->{database}) });
-	
     # we might possibly save a lot of data to session 
     # so we are not going to use cookies, but a database instead
     $self->plugin(
@@ -154,6 +141,18 @@ sub startup {
 			}
 		}
       	
+	});
+	
+	$self->hook('after_dispatch' => sub {
+		my $self = shift;		  
+		my $json = $self->res->json;
+		if($json){
+			if($json->{alerts}){
+				if(scalar(@{$json->{alerts}}) > 0){
+					$self->app->log->debug("Alerts:\n".$self->dumper($json->{alerts}));
+				}	
+			}	
+		}								     	
 	});
 	    
 	$self->sessions->default_expiration($config->{session_expiration});
@@ -267,7 +266,6 @@ sub startup {
     $auth->route('bags/import') ->via('get')   ->to('bag#import');
     $auth->route('bags/set/:attribute/:value') ->via('post')   ->to('bag#set_attribute_mass');
     $auth->route('bags/unset/:attribute/:value') ->via('post')   ->to('bag#unset_attribute_mass');
-    #$auth->route('bags/my') ->via('get')   ->to('bag#my');
         
     $auth->route('bag/:bagid/edit') ->via('get')   ->to('bag#edit');
     $auth->route('bag/:bagid') ->via('get')   ->to('bag#load');
@@ -281,7 +279,7 @@ sub startup {
     $auth->route('job/:jobid')                 ->via('get')    ->to('job#load');
     $auth->route('job/:jobid')                 ->via('delete') ->to('job#delete');
     $auth->route('job/:jobid/toggle_run')      ->via('post')   ->to('job#toggle_run');
-    $auth->route('job/:jobid/edit')            ->via('get')    ->to('job#edit');    
+    $auth->route('job/:jobid/view')            ->via('get')    ->to('job#view');    
     $auth->route('jobs')                       ->via('get')    ->to('job#jobs');
     $auth->route('jobs/my')                    ->via('get')    ->to('job#my');
 

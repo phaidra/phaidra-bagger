@@ -30,7 +30,7 @@
 	  </thead>
 	  <tbody>
 	  <tr ng-repeat="job in jobs| filter:filterinput | orderBy:'updated':true">
-	    <td><a href="/job/{{job._id}}/editor" target="_blank">{{job.name}}</a></td>
+	    <td><a href="/job/{{job._id}}/view" target="_blank">{{job.name}}</a></td>
 	    <td>{{job.status}}</td>
 	    <td>{{job.ingest_instance}}</td>
 	    <td>{{getMemberDisplayname(job.created_by)}}</td>

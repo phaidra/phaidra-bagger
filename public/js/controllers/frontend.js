@@ -82,8 +82,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
     	promise.then(
     		function(response) { 
     			$scope.form_disabled = false;
-    			$scope.alerts = response.data.alerts;
-    			$scope.alerts.push({type: 'success', msg: 'Signed in'});
+    			$scope.alerts = response.data.alerts;    			
     			$modalInstance.close();
     			var red = $('#signin').attr('data-redirect');
     			if(red){

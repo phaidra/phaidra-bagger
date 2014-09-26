@@ -345,33 +345,6 @@ sub edit {
 	$self->render('bag/'.$self->current_user->{project}.'_edit');
 }
 
-sub my {
-    my $self = shift;  	 
-    
-    $self->render_later;
-    
-    my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-
-	$self->mango->db->collection('bags')
-		->find({ owner => $owner })
-		->sort({updated => -1})
-		->fields({ bagid => 1, path => 1, created => 1, updated => 1, owner => 1 })
-		->all(
-			sub {
-			    my ($reply, $error, $coll) = @_;
-
-			    if ( $error ){
-			    	$self->app->log->info("[".$self->current_user->{username}."] Error searching bags: ".$self->app->dumper($error));
-			    	$self->render(json => { alerts => [{ type => 'danger', msg => "Error searching bags" }] }, status => 500);	
-			    }
-			    
-			    my $collsize = scalar @{$coll};
-			    $self->render(json => { bags => $coll, alerts => [{ type => 'success', msg => "Found $collsize bags" }] , status => 200 });
-			}
-	);
-
-}
-
 sub bags {
     my $self = shift;  	 
 	my $thumb_path = $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path};
@@ -442,7 +415,7 @@ sub search {
     my $folderid = $filter->{folderid};
     my $assignee = $filter->{assignee};
     my $tag = $filter->{tag};
-    my $status = $filter->{status};
+    my $statuses = $filter->{status};
     
     my %find;
     
@@ -453,8 +426,8 @@ sub search {
     if($assignee){
     	$find{assignee} = $assignee;	
     }
-    if($status){
-    	$find{status} = $status;	
+    if($statuses){
+    	$find{status} = { '$in' => $statuses };	
     }
     
     if($tag){

@@ -31,7 +31,11 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 		$scope.current_user = $scope.initdata.current_user;
 		$scope.folderid = $scope.initdata.folderid;		
 
-		$scope.filter = { folderid: $scope.folderid };
+		$scope.filter = { 
+		    folderid: $scope.folderid,
+		    // show only bags in these statuses
+		    status: ['new','to_check','checked','to_ingest']
+		};
 		
     	$scope.refreshResults();
     	
@@ -155,13 +159,6 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
      );    	      
  }; 
  
- $scope.addFilter = function (type, value) {
-	 if($scope.filter){
-		 $scope.filter[type] = value;
-		 $scope.refreshResults();
-	 }
- }
- 
  $scope.toggleSort = function (sortfield, sortvalue) {	 
 	 if($scope.sortfield == sortfield){
 		 $scope.sortvalue = $scope.sortvalue == 1 ? -1 : 1;
@@ -172,12 +169,61 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 	 $scope.refreshResults();
  }
  
+  
+ $scope.addFilter = function (type, value) {
+	 if($scope.filter){
+		 if(type == 'status'){
+			 // always an array
+			 $scope.filter[type] = [value];
+		 }else{		 
+			 $scope.filter[type] = value;
+		 }
+		 $scope.refreshResults();
+	 }
+ }
+ 
  $scope.removeFilter = function (type, value) {
 	 if($scope.filter){
-		 delete $scope.filter[type];
+		 if(type == 'status'){
+			 // not setting a status filter means resetting it to all the allowed statuses 
+			 // (there are other statuses, like 'ingesting', bags with these should not be visible on the grid)
+			 $scope.filter[type] = ['new','to_check','checked','to_ingest'];	 
+		 }else{		 
+			 delete $scope.filter[type];
+		 }
 		 $scope.refreshResults();
 	 }
  } 
+ 
+ $scope.isNotDefaultFilter = function(type, value){
+	 if(type == 'status'){
+		 if(value.length > 1){
+			 return false;
+		 }		 
+	 }
+	 return true;		
+ }
+ 
+ $scope.getFilterLabel = function(type, value){
+	 
+	 if(type == 'status'){
+		 if(value.length == 1){ 
+			 var statValue = value[0];
+			 for( var i = 0 ; i < $scope.initdata.statuses.length ; i++ ){
+				if($scope.initdata.statuses[i].value == statValue){
+					return $scope.initdata.statuses[i].label; 
+				}				 
+			 }
+		 }		 
+	 }
+	 
+	 if(type == 'assignee'){
+		 return $scope.getMemberDisplayname(value);
+	 }
+	 
+	 return value;
+ }
+ 
  
  $scope.setAttribute = function (bag, attribute, value) {
 	 var promise = BagService.setAttribute(bag.bagid, attribute, value);

@@ -12,11 +12,11 @@ use Date::Parse qw(str2time);
 use Mojo::JSON qw(encode_json);
 use base 'Mojolicious::Controller';
 
-sub edit {
+sub view {
     my $self = shift;
     my $init_data = { jobid => $self->stash('jobid'), current_user => $self->current_user };
     $self->stash(init_data => encode_json($init_data));  	 
-    $self->render('job/jobeditor');	
+    $self->render('job/view');	
 }
 
 sub load {
