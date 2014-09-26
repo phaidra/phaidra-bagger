@@ -85,6 +85,8 @@
   	
   	<%= content_for 'header' %>
   </head>	
+  
+  
   <body data-ng-app="frontendApp" data-ng-controller="FrontendCtrl" data-ng-init="init('<%= $init_data %>')">
   
   	<!--[if lt IE 7]>

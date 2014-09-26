@@ -19,6 +19,14 @@ angular.module('bagService', [])
 			});	        
 		},
 
+		searchJobBags: function(jobid, from, limit, sortfield, sortvalue){
+			return $http({
+				method  : 'POST',
+				url     : $('head base').attr('href')+'job/'+jobid+'/bags',
+			    data    : { query: { from: from, limit: limit, sortfield: sortfield, sortvalue: sortvalue } }
+			});	        
+		},		
+
 		setAttribute: function(bagid, attribute, value){
 			return $http({
 				method  : 'PUT',

@@ -278,6 +278,7 @@ sub startup {
     $auth->route('job/:jobid')                 ->via('post')   ->to('job#save');    
     $auth->route('job/:jobid')                 ->via('get')    ->to('job#load');
     $auth->route('job/:jobid')                 ->via('delete') ->to('job#delete');
+    $auth->route('job/:jobid/bags')            ->via('post')   ->to('job#bags');
     $auth->route('job/:jobid/toggle_run')      ->via('post')   ->to('job#toggle_run');
     $auth->route('job/:jobid/view')            ->via('get')    ->to('job#view');    
     $auth->route('jobs')                       ->via('get')    ->to('job#jobs');

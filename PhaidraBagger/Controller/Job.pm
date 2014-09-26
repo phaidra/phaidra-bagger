@@ -14,9 +14,81 @@ use base 'Mojolicious::Controller';
 
 sub view {
     my $self = shift;
-    my $init_data = { jobid => $self->stash('jobid'), current_user => $self->current_user };
-    $self->stash(init_data => encode_json($init_data));  	 
+    my $jobid = $self->stash('jobid');
+
+	my $job = $self->mango->db->collection('jobs')->find_one({_id => Mango::BSON::ObjectID->new($jobid), project => $self->current_user->{project}},{ name => 1 });
+        
+    my $init_data = { 
+    	jobid => $jobid, 
+    	navtitlelink => "job/$jobid/view", 
+    	navtitle => $job->{name}, 
+    	current_user => $self->current_user,
+    	thumb_path => $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path},
+    	members => $self->config->{projects}->{$self->current_user->{project}}->{members}, 
+    	statuses => $self->config->{projects}->{$self->current_user->{project}}->{statuses}, 
+    };
+    
+    $self->stash(
+    	init_data => encode_json($init_data), 
+    	navtitle => $job->{name}, 
+    	navtitlelink => "job/$jobid/view"
+    );
+      	 
     $self->render('job/view');	
+}
+
+sub bags {
+	
+    my $self = shift;  	 
+    
+    my $jobid = $self->stash('jobid');
+        
+    my $payload = $self->req->json;
+	my $query = $payload->{query};
+    
+    my $from = $query->{'from'};
+    my $limit = $query->{'limit'};
+    my $sortfield = $query->{'sortfield'};
+    my $sortvalue = $query->{'sortvalue'};
+    
+    unless($sortfield){
+    	$sortfield = 'status';
+    }
+    
+    unless($sortvalue){
+    	$sortvalue = -1;
+    }
+    
+    #$self->app->log->info("Filter:".$self->app->dumper($query));
+    
+    my %find;
+    
+    my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
+    
+    $find{owner} = $owner;    
+    $find{'jobs.jobid'} = $jobid;
+        
+    $self->render_later;
+
+	#$self->app->log->info("Find:".$self->app->dumper(\%find));
+
+	my $cursor = $self->mango->db->collection('bags')->find(\%find);
+
+	# bug? count needs to be executed before the additional sorts, limits etc although in mongo it does not matter!
+	my $hits = $cursor->count;
+	
+	$cursor
+		->sort({$sortfield => $sortvalue})
+		->fields({ bagid => 1, status => 1, label => 1, 'jobs.$' => 1 })
+		->skip($from)
+		->limit($limit);
+					
+	my $coll = $cursor->all();	
+	
+	#$self->app->log->info("coll:".$self->app->dumper($coll));
+	
+	$self->render(json => { items => $coll, hits => $hits, alerts => [] , status => 200 });
+	
 }
 
 sub load {
@@ -114,24 +186,73 @@ sub create {
 	my $selection = $self->req->json->{selection};
 	my $jobdata = $self->req->json->{jobdata};
 
-	my @jobitems;
-	foreach my $item (@{$selection}){
-		push @jobitems, { bagid => $item, status => 'new', error_msg => '', pid => ''};
-	}
-
     my $start_at = Mango::BSON::Time->new(str2time($jobdata->{start_at})*1000);
 
-	$self->app->log->info("[".$self->current_user->{username}."] Creating job ".$jobdata->{name});
+	$self->app->log->info("[".$self->current_user->{username}."] Creating job ".$self->app->dumper($jobdata));
 	
-	my $reply = $self->mango->db->collection('jobs')->insert({ name => $jobdata->{name}, created => bson_time, updated => bson_time, project => $self->current_user->{project}, created_by => $self->current_user->{username}, status => 'scheduled', start_at => $start_at, finished_at => '', ingest_instance => $jobdata->{ingest_instance}, bags => \@jobitems } );
+	my $reply = $self->mango->db->collection('jobs')->insert({ name => $jobdata->{name}, created => bson_time, updated => bson_time, project => $self->current_user->{project}, created_by => $self->current_user->{username}, status => 'scheduled', start_at => $start_at, finished_at => '', ingest_instance => $jobdata->{ingest_instance}} );
 	
-	my $oid = $reply->{oid};
-	if($oid){
-		$self->app->log->info("[".$self->current_user->{username}."] Created job ".$jobdata->{name}." [$oid]");
-		$self->render(json => { jobid => "$oid", alerts => [{ type => 'success', msg => "Job ".$jobdata->{name}." created" }] }, status => 200);
+	my $jobid = $reply->{oid};
+	if($jobid){
+		$self->app->log->info("[".$self->current_user->{username}."] Created job ".$jobdata->{name}." [$jobid]");
 	}else{
 		$self->render(json => { alerts => [{ type => 'danger', msg => "Saving job ".$jobdata->{name}." failed" }] }, status => 500);
+		return;
 	}
+	
+	my $sel_size = scalar @{$selection};
+	if($sel_size < 50){
+		# save the jobid to bags
+		$self->app->log->info("[".$self->current_user->{username}."] Saving job [".$jobdata->{name}." / $jobid] to $sel_size bags:\n".$self->app->dumper($selection));
+		my $reply = $self->_create_job_update_bag($jobid, $selection);		
+	}else{
+		# save the jobid to bags in chunks
+		$self->app->log->info("[".$self->current_user->{username}."] Selection too big, saving job [".$jobdata->{name}."] to $sel_size bags in chunks");	
+		my $reply;	
+		my @subselection;
+		my $subsel_size;
+		while($sel_size > 0){
+			
+			push @subselection, shift @{$selection};
+			
+			$sel_size = scalar @{$selection};			
+			$subsel_size = scalar @subselection;
+			
+			if($subsel_size eq 50 || ($sel_size eq 0 && $subsel_size > 0)){
+				$self->app->log->info("[".$self->current_user->{username}."] Saving job [".$jobdata->{name}."] to a chunk of $subsel_size bags ($sel_size bags left)");
+				$reply = $self->_create_job_update_bag($jobid, \@subselection);
+			}
+		}
+
+	}
+	
+	$self->render(json => { alerts => [] }, status => 200);
+	
+}
+
+sub _create_job_update_bag {
+	my $self = shift;  
+	my $jobid = shift;
+	my $bags = shift;
+	
+	return 	$self->mango->db->collection('bags')->update(
+		{ bagid => {'$in' => $bags } }, 
+		{ 
+			'$set'=> {					 
+				updated => bson_time, 					
+			},
+			'$push' => { 
+				jobs => {		  						
+		  			jobid => $jobid, 
+		  			started_at => '', 
+		  			finished_at => '', 
+		  			pid => '' 	
+				}	  			
+			}			
+		}, 
+		{ multi => 1 } 
+	);
+	
 }
 
 sub jobs {
@@ -153,7 +274,7 @@ sub my {
     $self->render_later;
 
 	my $coll = $self->mango->db->collection('jobs')
-		->find({ created_by => $self->current_user->{username}})
+		->find({ created_by => $self->current_user->{username}, project => $self->current_user->{project}})
 		->sort({created => 1})
 		->fields({ _id => 1, name => 1, created => 1, updated => 1, created_by => 1, status => 1, start_at => 1, finished_at => 1, ingest_instance => 1  })
 		->all();

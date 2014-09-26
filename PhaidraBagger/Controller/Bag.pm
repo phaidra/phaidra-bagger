@@ -136,7 +136,7 @@ sub import {
 			next;
 		}
 		
-		my $reply  = $self->mango->db->collection('bags')->insert({ bagid => $bagid, label => $bagid, folderid => '', owner => $owner, path => $bagpath, metadata => $metadata, created => bson_time, updated => bson_time } );
+		my $reply  = $self->mango->db->collection('bags')->insert({ bagid => $bagid, label => $bagid, folderid => '', owner => $owner, path => $bagpath, , metadata => $metadata, created => bson_time, updated => bson_time } );
 		
 		my $oid = $reply->{oid};
 		if($oid){
@@ -455,7 +455,7 @@ sub search {
 	
 	$cursor
 		->sort({$sortfield => $sortvalue})
-		->fields({ bagid => 1, status => 1, label => 1, created => 1, updated => 1, owner => 1, tags => 1, assignee => 1 })
+		->fields({ bagid => 1, status => 1, label => 1, created => 1, updated => 1, owner => 1, tags => 1, assignee => 1, error_msg => 1, pids => 1, job => 1 })
 		->skip($from)
 		->limit($limit);
 					

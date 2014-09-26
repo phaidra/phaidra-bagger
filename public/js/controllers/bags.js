@@ -346,7 +346,12 @@ var TagModalCtrl = function ($scope, $modalInstance, FrontendService, BagService
 var CreateIngestJobModalCtrl = function ($scope, $modalInstance, FrontendService, JobService, promiseTracker) {
 
 	$scope.modaldata = { name: '', start_at: null, ingest_instance: null};
-	
+
+	$scope.today = function() {
+		$scope.modaldata.start_at = new Date();
+	};
+		
+	// init
 	$scope.today();
 	
 	$scope.ingestModalInit = function() {
@@ -358,10 +363,6 @@ var CreateIngestJobModalCtrl = function ($scope, $modalInstance, FrontendService
 		})				
 	}
 
-	$scope.today = function() {
-		$scope.modaldata.start_at = new Date();
-	};
-	
 	$scope.clear = function () {
 		$scope.modaldata.start_at = null;
 	};
