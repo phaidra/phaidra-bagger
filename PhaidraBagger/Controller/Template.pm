@@ -60,7 +60,7 @@ sub save {
 	
 	my $oid = Mango::BSON::ObjectID->new($tid);
 	
-	my $reply = $self->mango->db->collection('templates.uwmetadata')->update({_id => $oid},{ '$set' => {updated => bson_time, uwmetadata => $self->req->json->{uwmetadata}} } );
+	my $reply = $self->mango->db->collection('templates.uwmetadata')->update({_id => $oid},{ '$set' => {updated => time, uwmetadata => $self->req->json->{uwmetadata}} } );
 	
 	$self->render(json => { alerts => [] }, status => 200);
 
@@ -90,7 +90,7 @@ sub create {
 	
 	$self->app->log->info("[".$self->current_user->{username}."] Creating template ".$title);
 	
-	my $reply = $self->mango->db->collection('templates.uwmetadata')->insert({ title => $title, created => bson_time, updated => bson_time, project => $self->current_user->{project}, created_by => $self->current_user->{username}, uwmetadata => $self->req->json->{uwmetadata} } );
+	my $reply = $self->mango->db->collection('templates.uwmetadata')->insert({ title => $title, created => time, updated => time, project => $self->current_user->{project}, created_by => $self->current_user->{username}, uwmetadata => $self->req->json->{uwmetadata} } );
 	
 	my $oid = $reply->{oid};
 	if($oid){

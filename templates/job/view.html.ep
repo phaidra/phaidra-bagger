@@ -28,10 +28,10 @@
 		  <tr>
 		  	<th></th>	  	
 		  	<th>Label</th>
-		  	<th>Status</th>	  		  		
 		  	<th>Pid</th>
 		    <th>Started at</th>
-		    <th>Finished at</th>				
+		    <th>Finished at</th>
+		  	<th>Alerts</th>	  		  				  	
 		  </tr>
 	  </thead>
 	  <tbody>
@@ -39,15 +39,13 @@
 		    <td><img ng-src="{{initdata.thumb_path}}/s_{{bag.bagid}}_1.png" class="img-thumbnail" width="60" height="60" title="{{bag.bagid}}" alt="{{bag.bagid}}"></td>
 		  	<td>{{bag.label}}</td>
 		  	<td>
-		  		<span ng-repeat="status in initdata.statuses">
-				    		<span ng-show="bag.status == status.value">{{status.label}}</span>
-				</span>			    				   
-		  	</td>	  	
-		  	<td>
 		  		{{bag.jobs[0].pid}}
-		  	</td>	  			  	
-		    <td><span class="gray-light">{{bag.jobs[0].started_at | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
-		    <td><span class="gray-light">{{bag.jobs[0].finished_at | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
+		  	</td>	  		  			  	
+		    <td><span class="gray-light" ng-if="bag.jobs[0].started_at">{{bag.jobs[0].started_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
+		    <td><span class="gray-light" ng-if="bag.jobs[0].finished_at">{{bag.jobs[0].finished_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
+		    <td>
+		    	<alert ng-repeat="alert in bag.jobs[0].alerts" type="alert.type">{{alert.msg}}</alert>
+		    </td>
 		  </tr>	  
 	  </tbody>
 	</table>

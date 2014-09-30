@@ -25,8 +25,8 @@
 	  <tbody>
 	  <tr ng-repeat="template in templates| filter:filterinput | orderBy:'updated':true">
 	    <td><a href="/uwmetadata_template_editor/{{template._id}}" target="_blank">{{template.title}}</a></td>
-	    <td>{{template.created | date:'dd.MM.yyyy HH:mm:ss'}}</td>
-	    <td>{{template.updated | date:'dd.MM.yyyy HH:mm:ss'}}</td>
+	    <td>{{template.created * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</td>
+	    <td>{{template.updated * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</td>
 	    <td>
 	      <a href="/uwmetadata_template_editor/{{template._id}}"><i class="glyphicon glyphicon-pencil"></i></a>
 	    </td>

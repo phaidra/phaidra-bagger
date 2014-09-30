@@ -105,13 +105,13 @@ sub import {
 		# read bag metadata
 		my $content;
 		my $metadatapath = "$bagpath/data/metadata.json";
-		open my $fh, "<", $metadatapath or push @{$res->{alerts}}, "Error reading metadata.json of bag $bag, ".$!;
+		open my $fh, "<", $metadatapath or push @{$res->{alerts}}, { type => 'danger', msg => "Error reading metadata.json of bag $bag, ".$!};
 	    local $/;
 	    $content = <$fh>;
 	    close $fh;  
 	    
 	    unless(defined($content)){	    	
-	    	push @{$res->{alerts}}, "Error reading metadata.json of bag $bag, no content";
+	    	push @{$res->{alerts}}, { type => 'danger', msg => "Error reading metadata.json of bag $bag, no content"};
 	    	next;
 	    }
 
@@ -121,28 +121,28 @@ sub import {
 		my $owner = $metadata->{owner};
 		
 		unless(defined($bagid)){
-	    	push @{$res->{alerts}}, "Error reading metadata.json of bag $bag, no bagid";
+	    	push @{$res->{alerts}}, { type => 'danger', msg => "Error reading metadata.json of bag $bag, no bagid"};
 	    	next;
 	    }
 	    unless(defined($owner)){
-	    	push @{$res->{alerts}}, "Error reading metadata.json of bag $bag, no owner";
+	    	push @{$res->{alerts}}, { type => 'danger', msg => "Error reading metadata.json of bag $bag, no owner"};
 	    	next;
 	    }
 	    
 	    my $found = $self->mango->db->collection('bags')->find_one({bagid => $bagid, owner => $owner});
 		
 		if(defined($found->{bagid})){
-			push @{$res->{alerts}}, "Not importing bag $bag, already exists with bagid ".$found->{bagid};
+			push @{$res->{alerts}}, { type => 'warning', msg => "Not importing bag $bag, already exists with bagid ".$found->{bagid}};
 			next;
 		}
 		
-		my $reply  = $self->mango->db->collection('bags')->insert({ bagid => $bagid, label => $bagid, folderid => '', owner => $owner, path => $bagpath, , metadata => $metadata, created => bson_time, updated => bson_time } );
+		my $reply  = $self->mango->db->collection('bags')->insert({ bagid => $bagid, label => $bagid, folderid => '', owner => $owner, path => $bagpath, , metadata => $metadata, created => time, updated => time } );
 		
 		my $oid = $reply->{oid};
 		if($oid){
-			push @{$res->{alerts}}, "Imported bag $bagid [oid: $oid]";			
+			push @{$res->{alerts}}, { type => 'info', msg => "Imported bag $bagid [oid: $oid]"};			
 		}else{
-			push @{$res->{alerts}}, "Importing bag $bagid failed";
+			push @{$res->{alerts}}, { type => 'danger', msg => "Importing bag $bagid failed"};
 		}
 		
 		if(exists($projectconfig->{thumbnails})){
@@ -307,7 +307,7 @@ sub save_uwmetadata {
 	
 	$self->app->log->info("[".$self->current_user->{username}."] Saving bag $bagid");
 	
-	my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => bson_time, 'metadata.uwmetadata' => $self->req->json->{uwmetadata}} } );
+	my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => time, 'metadata.uwmetadata' => $self->req->json->{uwmetadata}} } );
 	
 	$self->render(json => { alerts => [{ type => 'success', msg => "$bagid saved" }] }, status => 200);
 
@@ -455,7 +455,7 @@ sub search {
 	
 	$cursor
 		->sort({$sortfield => $sortvalue})
-		->fields({ bagid => 1, status => 1, label => 1, created => 1, updated => 1, owner => 1, tags => 1, assignee => 1, error_msg => 1, pids => 1, job => 1 })
+		->fields({ bagid => 1, status => 1, label => 1, created => 1, updated => 1, owner => 1, tags => 1, assignee => 1, alerts => 1, pids => 1, job => 1 })
 		->skip($from)
 		->limit($limit);
 					
@@ -514,10 +514,10 @@ sub set_attribute {
 	my $reply;
 	if($attribute eq 'tags'){
 		$self->app->log->info("[".$self->current_user->{username}."] Adding $attribute $value to bag $bagid");
-		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => bson_time}, '$addToSet' =>	{ tags => $value }} );
+		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => time}, '$addToSet' =>	{ tags => $value }} );
 	}else{
 		$self->app->log->info("[".$self->current_user->{username}."] Changing $attribute of bag $bagid to $value");		
-		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => bson_time, $attribute => $value }} );
+		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => time, $attribute => $value }} );
 	}
 	
 	$self->render(json => { alerts => [] }, status => 200);
@@ -548,10 +548,10 @@ sub unset_attribute {
 	my $reply;
 	if($attribute eq 'tags'){
 		$self->app->log->info("[".$self->current_user->{username}."] Removing $attribute $value from bag $bagid");
-		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => bson_time}, '$pullAll' =>	{ tags => $value }} );
+		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => time}, '$pullAll' =>	{ tags => $value }} );
 	}else{
 		$self->app->log->info("[".$self->current_user->{username}."] Changing $attribute of bag $bagid to ''");		
-		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => bson_time, $attribute => '' }} );
+		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => time, $attribute => '' }} );
 	}
 	
 	$self->render(json => { alerts => [] }, status => 200);
@@ -584,10 +584,10 @@ sub set_attribute_mass {
 	my $reply;
 	if($attribute eq 'tags'){
 		$self->app->log->info("[".$self->current_user->{username}."] Adding $attribute $value for bags:".$self->app->dumper($selection));
-		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, owner => $owner},{ '$set' => {updated => bson_time }, '$addToSet' =>	{ tags => $value }}, { multi => 1 } );
+		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, owner => $owner},{ '$set' => {updated => time }, '$addToSet' =>	{ tags => $value }}, { multi => 1 } );
 	}else{		
 		$self->app->log->info("[".$self->current_user->{username}."] Changing $attribute to $value for bags:".$self->app->dumper($selection));
-		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, owner => $owner},{ '$set' => {updated => bson_time, $attribute => $value }}, { multi => 1 } );
+		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, owner => $owner},{ '$set' => {updated => time, $attribute => $value }}, { multi => 1 } );
 	}
 	
 	$self->render(json => { alerts => [] }, status => 200);
@@ -622,10 +622,10 @@ sub unset_attribute_mass {
 	my $reply;
 	if($attribute eq 'tags'){
 		$self->app->log->info("[".$self->current_user->{username}."] Removing $attribute $value from bags:".$self->app->dumper($selection));
-		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, owner => $owner},{ '$set' => {updated => bson_time}, '$pullAll' => { tags => [$value] }}, { multi => 1 }  );
+		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, owner => $owner},{ '$set' => {updated => time}, '$pullAll' => { tags => [$value] }}, { multi => 1 }  );
 	}else{
 		$self->app->log->info("[".$self->current_user->{username}."] Changing $attribute to '' for bags:".$self->app->dumper($selection));		
-		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, owner => $owner},{ '$set' => {updated => bson_time, $attribute => '' }}, { multi => 1 }  );
+		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, owner => $owner},{ '$set' => {updated => time, $attribute => '' }}, { multi => 1 }  );
 	}
 	
 	$self->render(json => { alerts => [] }, status => 200);

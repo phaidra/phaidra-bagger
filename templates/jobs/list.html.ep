@@ -34,10 +34,10 @@
 	    <td>{{job.status}}</td>
 	    <td>{{job.ingest_instance}}</td>
 	    <td>{{getMemberDisplayname(job.created_by)}}</td>
-	    <td>{{job.start_at | date:'dd.MM.yyyy HH:mm:ss'}}</td>
-	    <td>{{job.finished_at | date:'dd.MM.yyyy HH:mm:ss'}}</td>
-	    <td>{{job.created | date:'dd.MM.yyyy HH:mm:ss'}}</td>
-	    <td>{{job.updated | date:'dd.MM.yyyy HH:mm:ss'}}</td>
+	    <td><span class="gray-light" ng-if="job.start_at">{{job.start_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
+	    <td><span class="gray-light" ng-if="job.finished_at">{{job.finished_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
+	    <td><span class="gray-light" ng-if="job.created">{{job.created * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
+	    <td><span class="gray-light" ng-if="job.updated">{{job.updated * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
 	    <td><a href="" ng-click="editIngestJob(job)"><i class="glyphicon glyphicon-pencil"></i></a></td>
 	    <td><a href="" ng-click="toogleRun(job._id)"><i class="glyphicon glyphicon-pause" ng-show="job.status == 'running'"></i><i class="glyphicon glyphicon-play" ng-show="job.status == 'suspended'"></i></a></td>
 	    <td><a href="" ng-click="deleteJob(job._id,job.name)"><i class="glyphicon glyphicon-remove"></i></a></td>

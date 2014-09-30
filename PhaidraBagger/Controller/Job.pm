@@ -122,7 +122,7 @@ sub save {
 	
 	my $oid = Mango::BSON::ObjectID->new($jobid);
 	
-	my $reply = $self->mango->db->collection('jobs')->update({_id => $oid},{ '$set' => { name => $jobdata->{name}, created => bson_time, updated => bson_time, status => 'scheduled', start_at => $jobdata->{start_at}, ingest_instance => $jobdata->{ingest_instance}} } );	
+	my $reply = $self->mango->db->collection('jobs')->update({_id => $oid},{ '$set' => { name => $jobdata->{name}, created => time, updated => time, status => 'scheduled', start_at => $jobdata->{start_at}, ingest_instance => $jobdata->{ingest_instance}} } );	
 
 	$self->render(json => { alerts => [] }, status => 200);
 
@@ -157,7 +157,7 @@ sub toggle_run {
 		$new_status = 'running';
 	}
 	
-	$self->mango->db->collection('jobs')->update({_id => $oid},{ '$set' => {updated => bson_time, status => $new_status} } );
+	$self->mango->db->collection('jobs')->update({_id => $oid},{ '$set' => {updated => time, status => $new_status} } );
 	
 	$self->render(json => { alerts => [{ type => 'success', msg => "Job status changed from $current_status to $new_status" }] }, status => 200);
 
@@ -190,7 +190,7 @@ sub create {
 
 	$self->app->log->info("[".$self->current_user->{username}."] Creating job ".$self->app->dumper($jobdata));
 	
-	my $reply = $self->mango->db->collection('jobs')->insert({ name => $jobdata->{name}, created => bson_time, updated => bson_time, project => $self->current_user->{project}, created_by => $self->current_user->{username}, status => 'scheduled', start_at => $start_at, finished_at => '', ingest_instance => $jobdata->{ingest_instance}} );
+	my $reply = $self->mango->db->collection('jobs')->insert({ name => $jobdata->{name}, created => time, updated => time, project => $self->current_user->{project}, created_by => $self->current_user->{username}, status => 'scheduled', start_at => $start_at, finished_at => '', ingest_instance => $jobdata->{ingest_instance}} );
 	
 	my $jobid = $reply->{oid};
 	if($jobid){
@@ -239,7 +239,7 @@ sub _create_job_update_bag {
 		{ bagid => {'$in' => $bags } }, 
 		{ 
 			'$set'=> {					 
-				updated => bson_time, 					
+				updated => time, 					
 			},
 			'$push' => { 
 				jobs => {		  						

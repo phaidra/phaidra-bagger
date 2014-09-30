@@ -104,7 +104,7 @@ sub startup {
 
 	$self->attr(_mango => sub { return Mango->new('mongodb://'.$config->{mongodb}->{username}.':'.$config->{mongodb}->{password}.'@'.$config->{mongodb}->{host}.'/'.$config->{mongodb}->{database}) });
 	$self->helper(mango => sub { return shift->app->_mango});
-
+	
     # we might possibly save a lot of data to session 
     # so we are not going to use cookies, but a database instead
     $self->plugin(

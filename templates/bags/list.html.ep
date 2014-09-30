@@ -152,8 +152,8 @@
 		  		<a class="tag" ng-repeat="pid in bag.pids" >{{pid}}</a>
 		  	</td>  
 	  	%>
-	    <td><span class="gray-light">{{bag.created | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
-	    <td><span class="gray-light">{{bag.updated | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
+	    <td><span class="gray-light">{{bag.created * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
+	    <td><span class="gray-light">{{bag.updated * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
 	    <td>
 	      <a href="/bag/{{bag.bagid}}/edit"><i class="glyphicon glyphicon-pencil"></i></a>
 	    </td>

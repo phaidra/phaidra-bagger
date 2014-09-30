@@ -22,7 +22,7 @@
 	  <tbody>
 	  <tr ng-repeat="folder in items | orderBy:'created'">	  
 	  	<td><a href="bags/folder/{{folder.folderid}}">{{folder.name}}</a></td>  
-	    <td>{{folder.created | date:'dd.MM.yyyy HH:mm:ss'}}</td>
+	    <td><span class="gray-light" ng-if="folder.created">{{folder.created * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
 	    <td ng-if="current_user.role == 'manager'"><a href="" data-ng-click="deactivateFolder(folder.folderid)">Deactivate</a></td>
 	  </tr>	  
 	  </tbody>
