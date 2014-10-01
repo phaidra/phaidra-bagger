@@ -8,7 +8,7 @@ use warnings;
 use Data::Dumper;
 use File::Find;
 use Mojo::Util qw(slurp);
-use Mojo::JSON;
+use Mojo::JSON qw(encode_json decode_json);
 use Mojo::Log;
 use Mojo::UserAgent;
 use Mojo::URL;
@@ -26,6 +26,20 @@ sub new {
 	my $log;
 	my $config;
 	my $mongo;
+	
+	unless(defined($configpath)){
+		$configpath = 'PhaidraBaggerAgent.json'
+	}
+	
+	unless(-f $configpath){
+		say "Error: config path $configpath is not a file";
+		return undef;	
+	}
+	
+	unless(-r $configpath){
+		say "Error: cannot access config: $configpath";
+		return undef;	
+	}
 	
 	my $bytes = slurp $configpath;
 	my $json = Mojo::JSON->new;
@@ -49,7 +63,6 @@ sub new {
 	$self->{jobs_coll} = $self->{baggerdb}->get_collection('jobs');
 	$self->{bags_coll} = $self->{baggerdb}->get_collection('bags');
 	$self->{ua} = Mojo::UserAgent->new;
-	
 	
 	bless($self, $class);
 	return $self;
@@ -234,12 +247,13 @@ sub _ingest_bag {
 		$url->path("/picture/create");
 	}
 	
-	$self->{'log'}->info(Dumper($bag->{'metadata'}));
+	my $json = encode_json({metadata => $bag->{'metadata'}});
+	
+	#$self->{'log'}->info($json);
 	
 	my $tx = $self->{ua}->post($url => form => { 
 		
-		# fixme
-		metadata => { json => { metadata => $bag->{'metadata'}}},
+		metadata => $json,
 		# fixme
 		mimetype => 'image/tiff',
 		file => { file => $filepath } 
@@ -253,7 +267,7 @@ sub _ingest_bag {
 	  if ($err->{code}){
 	  	push(@alerts, { type => 'danger', msg => "$err->{code} response: $err->{message}" });
 	  }else{
-	  	push(@alerts, { type => 'danger', "Connection error: $err->{message}" });
+	  	push(@alerts, { type => 'danger', msg => "Connection error: $err->{message}" });
 	  }
 	}
 	

@@ -1,0 +1,44 @@
+{
+    "agent_id": "phaidra-bagger-agent-1",
+    "log": {
+        "path": "/var/log/bagger/PhaidraBaggerAgent.log",
+        "level": "debug"
+    },
+    "bagger_mongodb": {
+        "host": "host",
+        "port": "27017",
+        "username": "phaidra-bagger-agent",
+        "password": "xxx",
+        "database": "baggerdb"
+    },
+    "ingest_instances": {
+        "phaidra-y": {
+            "baseurl": "phaidra-y.example.com",
+            "apibaseurl": "services.phaidra-y.example.com/api",
+            "paf_mongodb": {
+                "host": "host",
+                "port": "27017",
+                "username": "phaidra-bagger-agent",
+                "password": "xxx",
+                "database": "baggerdb"
+            }
+        },
+        "phaidra-x": {
+            "baseurl": "phaidra-x.example.com",
+            "apibaseurl": "services.phaidra.example.com/api",
+            "paf_mongodb": {
+                "host": "host",
+                "port": "27017",
+                "username": "phaidra-bagger-agent",
+                "password": "xxx",
+                "database": "baggerdb"
+            }
+        }
+    },
+    "accounts": {
+	    "user123": {
+            "username": "user123",
+            "password": "xxx" 
+        }
+    }
+}

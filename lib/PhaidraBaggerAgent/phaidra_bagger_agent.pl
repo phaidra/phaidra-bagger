@@ -2,7 +2,7 @@
 
 =pod
 
-=head1 phaidra_bagger_agent.pl [-j jobid | -rck] -c config_path
+=head1 phaidra_bagger_agent.pl (-j jobid | -rck) [-c config_path]
 
   -j jobid - run a specific ingest job
   -rck - check for ingest requests
@@ -31,10 +31,6 @@ while (defined (my $arg= shift (@ARGV)))
     elsif ($arg eq '-rck') {  $action = 'check_requests'; }
     else { system ("perldoc '$0'"); exit (0); }
   }
-}
-
-unless(defined($configpath)){
-	print "undefined configpath\n"; system ("perldoc '$0'"); exit(0);
 }
 
 unless(defined($action)){
