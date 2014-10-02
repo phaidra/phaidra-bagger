@@ -250,14 +250,11 @@ sub _ingest_bag {
 	my $json = encode_json({metadata => $bag->{'metadata'}});
 	
 	#$self->{'log'}->info($json);
-	
-	my $tx = $self->{ua}->post($url => form => { 
 		
+	my $tx = $self->{ua}->post($url => form => { 		
 		metadata => $json,
-		# fixme
-		mimetype => 'image/tiff',
-		file => { file => $filepath } 
-			
+		file => { file => $filepath },
+		# we won't send the mimetype, currently we will rely on the magic in api 			
 	});
 	
   	if (my $res = $tx->success) { 
@@ -270,8 +267,6 @@ sub _ingest_bag {
 	  	push(@alerts, { type => 'danger', msg => "Connection error: $err->{message}" });
 	  }
 	}
-	
-	#push @alerts, {type => 'danger', msg => 'neiiiiiiiiin!'};
 	
 	return ($pid, \@alerts);
 }
