@@ -77,6 +77,7 @@ sub _update_activity {
 	my $self = shift;
 	my $status = shift;
 	my $activity = shift;
+	my $last_reguest_time = shift;
 	
 	my %h = (
 		ts_iso => $self->ts_iso(),	  	
@@ -86,6 +87,10 @@ sub _update_activity {
 		activity => $activity, 
 		PID => $$	
 	);
+	
+	if(defined($last_reguest_time)){		
+		$h{last_request_time} = $last_reguest_time;  
+	}
 	
 	#$self->{'log'}->debug("Updating activity ".Dumper(\%h));
 	
@@ -116,6 +121,13 @@ sub run_job {
 	unless($job){	
 		$self->{'log'}->info("Job $jobid not found");
 		return;	
+	}
+	
+	# check job status
+	if($job->{status} ne 'scheduled'){
+		my @alerts = [{ type => 'danger', msg => "Job $jobid not in 'scheduled' status"}];
+		$self->{'log'}->error(Dumper(\@alerts));		
+		return;
 	}
 	
 	my $ingest_instance = $job->{ingest_instance};	
@@ -156,8 +168,8 @@ sub run_job {
 		
 		# check if file exist
 		unless(-f $filepath){
-			$self->{'log'}->error("Bag ".$bag->{bagid}.": File $filepath does not exist");
-			my @alerts = [{ type => 'danger', msg => "File $filepath does not exist"}];
+			my @alerts = [{ type => 'danger', msg => "Bag ".$bag->{bagid}.":File $filepath does not exist"}];
+			$self->{'log'}->error(Dumper(\@alerts));
 			# save error to bag
 			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => \@alerts}});
 			next;				
@@ -165,19 +177,18 @@ sub run_job {
 		
 		# check if file is readable
 		unless(-r $filepath){
-			$self->{'log'}->error("Bag ".$bag->{bagid}.": File $filepath is not readable");
-			my @alerts = [{ type => 'danger', msg => "File $filepath is not readable"}];
+			my @alerts = [{ type => 'danger', msg => "Bag ".$bag->{bagid}.": File $filepath is not readable"}];
+			$self->{'log'}->error(Dumper(\@alerts));
 			# save error to bag
 			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => \@alerts}});
 			next;				
 		}
 		
-		# check if we have owner's credentials
-		
+		# check if we have owner's credentials		
 		my $credentials = $self->{config}->{accounts}->{$bag->{owner}};
 		unless($credentials){
-			$self->{'log'}->error("Bag ".$bag->{bagid}.": Bag owner: ".$bag->{owner}." not found in config.");
-			my @alerts = [{ type => 'danger', msg => "Bag owner: ".$bag->{owner}." not found in config."}];
+			my @alerts = [{ type => 'danger', msg => "Bag ".$bag->{bagid}.": Bag owner: ".$bag->{owner}." not found in config."}];
+			$self->{'log'}->error(Dumper(\@alerts));
 			# save error to bag
 			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => \@alerts}});
 			next;	
@@ -185,11 +196,20 @@ sub run_job {
 		my $username = $credentials->{username};
 		my $password = $credentials->{password};
 		unless(defined($username) && defined($password)){
-			$self->{'log'}->error("Bag ".$bag->{bagid}.": Credentials missing for bag owner: ".$bag->{owner});
-			my @alerts = [{ type => 'danger', msg => "Credentials missing for bag owner: ".$bag->{owner}}];
+			my @alerts = [{ type => 'danger', msg => "Bag ".$bag->{bagid}.": Credentials missing for bag owner: ".$bag->{owner}}];
+			$self->{'log'}->error(Dumper(\@alerts));
 			# save error to bag
 			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => \@alerts}});
 			next;	
+		}
+		
+		# check if there are metadata
+		unless($bag->{metadata}->{uwmetadata}){ # or mods later
+			my @alerts = [{ type => 'danger', msg => "Bag ".$bag->{bagid}." has no bibliographical metadata"}];
+			$self->{'log'}->error(Dumper(\@alerts));
+			# save error to bag
+			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => \@alerts}});
+			next;
 		}
 				
 		# update job status
@@ -207,6 +227,7 @@ sub run_job {
 		$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.pid' => $pid, 'jobs.$.finished_at' => time}});		
 		if(defined($alerts)){
 			my $alerts_size = scalar @{$alerts};
+			$self->{'log'}->error(Dumper($alerts));
 			if($alerts_size > 0){
 				$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => $alerts}});			
 			}	
@@ -273,27 +294,23 @@ sub _ingest_bag {
 
 sub check_requests {
 	my $self = shift;
+	my $ingest_instance = shift;
 	
 	$self->{'log'}->info("Check requests");
+		
+	$self->_init_pafdb($ingest_instance);
 	
 	# update activity
-	my $ts_iso = ts(); 	
-	my $agent = $self->{"agent_id"};
-	my $host = hostname;
-	my $status = 'running';
-	my $activity = 'checking requests';
-	my $PID = $$;
+	$self->_update_activity("running", "checking request");
 	
-	#last_request_time - if request found
-	
+	# find jobs & run them
+	my $jobs = $self->{jobs_coll}->find({'start_at' => { '$lte' => time}, 'status' => 'scheduled'});
+	while (my $job = $jobs->next) {
+    	$self->run_job($job->{_id}->to_string);
+	}
 	
 	# update activity
-	$ts_iso = ts(); 	
-	$agent = $self->{"agent_id"};
-	$host = hostname;
-	$status = 'running';
-	$activity = 'sleep';
-	$PID = $$;
+	$self->_update_activity("sleeping", "checking request", time);
 }
 
 1;

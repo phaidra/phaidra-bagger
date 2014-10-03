@@ -186,7 +186,7 @@ sub create {
 	my $selection = $self->req->json->{selection};
 	my $jobdata = $self->req->json->{jobdata};
 
-    my $start_at = Mango::BSON::Time->new(str2time($jobdata->{start_at})*1000);
+    my $start_at = str2time($jobdata->{start_at});
 
 	$self->app->log->info("[".$self->current_user->{username}."] Creating job ".$self->app->dumper($jobdata));
 	

@@ -2,10 +2,10 @@
 
 =pod
 
-=head1 phaidra_bagger_agent.pl (-j jobid | -rck) [-c config_path]
+=head1 phaidra_bagger_agent.pl (-j jobid | -rck ingest_instance) [-c config_path]
 
   -j jobid - run a specific ingest job
-  -rck - check for ingest requests
+  -rck ingest_instance - check for ingest requests
   -c config_path - config path
 
 =cut
@@ -21,6 +21,7 @@ use Switch;
 my $jobid;
 my $configpath;
 my $action;
+my $ingest_instance;
 
 while (defined (my $arg= shift (@ARGV)))
 {
@@ -28,7 +29,7 @@ while (defined (my $arg= shift (@ARGV)))
   {
   	   if ($arg eq '-c') { $configpath = shift (@ARGV); }
   	elsif ($arg eq '-j') { $jobid = shift (@ARGV); $action = 'run_job' }
-    elsif ($arg eq '-rck') {  $action = 'check_requests'; }
+    elsif ($arg eq '-rck') { $ingest_instance = shift (@ARGV); $action = 'check_requests'; }
     else { system ("perldoc '$0'"); exit (0); }
   }
 }
@@ -47,8 +48,12 @@ switch ($action) {
 		$agent->run_job($jobid); 
 	}	
 	case 'check_requests' {
+		unless(defined($ingest_instance)){
+			print "undefined ingest instance\n"; system ("perldoc '$0'"); exit(0);
+		}		
+		
 		my $agent = PhaidraBaggerAgent->new($configpath);
-		$agent->check_requests(); 	
+		$agent->check_requests($ingest_instance); 	
 	}
 	else { print "unknown action\n"; system ("perldoc '$0'"); exit(0); }
 }	
