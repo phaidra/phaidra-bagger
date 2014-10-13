@@ -1,4 +1,4 @@
-var app = angular.module('frontendApp', ['ngAnimate', 'ui.bootstrap', 'ui.bootstrap.modal', 'ui.bootstrap.datepicker', 'ui.bootstrap.timepicker', 'ui.sortable', 'ajoslin.promise-tracker', 'directoryService', 'metadataService', 'frontendService', 'bagService', 'jobService']);
+var app = angular.module('frontendApp', ['ngAnimate', 'ngSanitize', 'ui.bootstrap', 'ui.bootstrap.modal', 'ui.bootstrap.datepicker', 'ui.bootstrap.timepicker', 'ui.sortable', 'ui.select', 'ajoslin.promise-tracker', 'directoryService', 'vocabularyService', 'metadataService', 'frontendService', 'bagService', 'jobService']);
 
 app.controller('FrontendCtrl', function($scope, $window, $modal, $log, DirectoryService, promiseTracker) {
     

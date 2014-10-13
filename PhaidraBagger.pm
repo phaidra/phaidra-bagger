@@ -16,18 +16,25 @@ sub startup {
     my $self = shift;
 
     my $config = $self->plugin( 'JSONConfig' => { file => 'PhaidraBagger.json' } );
-	$self->config($config);  
+	$self->config($config);  		
 	$self->mode($config->{mode});     
     $self->secrets([$config->{secret}]);
-    
+   
     # init log	
   	$self->log(Mojo::Log->new(path => $config->{log_path}, level => $config->{log_level}));
-
-	my $directory_impl = $config->{directory_class};
-	my $e = Mojo::Loader->new->load($directory_impl);    
-    my $directory = $directory_impl->new($self, $config);
- 
-    $self->helper( directory => sub { return $directory; } );
+  	
+	# make config->{phaidra} point to default ingest instance, for quick access
+	my $have_default_instance = 0;
+	foreach my $k (%{$config->{ingest_instances}}){
+		if($config->{ingest_instances}->{$k}->{is_default} eq '1'){
+			$have_default_instance = 1;
+			$config->{phaidra} = $config->{ingest_instances}->{$k};
+			$self->log->info("Default ingest instance: ".$self->dumper($config->{phaidra}));
+		}
+	}
+	unless($have_default_instance){
+		$self->log->error("Cannot find default ingest_instance");
+	}
     
     # init auth
     $self->plugin(authentication => {
@@ -39,7 +46,30 @@ sub startup {
 
 	    	unless($login_data->{username} eq $username){
 	    		$self->app->log->debug("[cache miss] $username");	
-	    		my $login_data = $self->directory->get_login_data($self, $username);			
+	    		
+	    		my $login_data;
+	    		
+	    		my $url = Mojo::URL->new;
+				$url->scheme('https');		
+				$url->userinfo($self->app->config->{phaidra}->{directory_user}->{username}.":".$self->app->config->{phaidra}->{directory_user}->{password});
+				my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
+				$url->host($base[0]);
+				$url->path($base[1]."/directory/user/$username/data") if exists($base[1]);	
+			  	my $tx = $self->ua->get($url); 
+						
+			 	if (my $res = $tx->success) {
+			 		$login_data = $tx->res->json->{user_data};			 		 	
+				} else {
+				 	my ($err, $code) = $tx->error;
+				 	$self->app->log->error("Getting user data failed for user $username. Error code: $code, Error: ".$self->app->dumper($err));
+				 	if($tx->res->json && exists($tx->res->json->{alerts})){	  
+						$self->stash({phaidra_auth_result => { alerts => $tx->res->json->{alerts}, status  =>  $code ? $code : 500 }});						 	
+				 	}else{
+						$self->stash({phaidra_auth_result => { alerts => [{ type => 'danger', msg => $err }], status  =>  $code ? $code : 500 }});
+					}					 	
+				 	return undef;
+				}		
+  
 				foreach my $p (keys %{$self->app->config->{projects}}){
 					foreach my $u (@{$self->app->config->{projects}->{$p}->{members}}){
 						if($u->{username} eq $username){
@@ -50,8 +80,7 @@ sub startup {
 				}
 				$self->app->log->info("Loaded user: ".$self->app->dumper($login_data));    			
 	    		$self->app->chi->set($username, $login_data, '1 day');    
-	    		# keep this here, the set method may change the structure a bit
-	    		# so we better read it again 		
+	    		# keep this here, the set method may change the structure a bit so we better read it again 		
 	    		$login_data = $self->app->chi->get($username);			
 	    	}else{
 	    		$self->app->log->debug("[cache hit] $username");
@@ -89,7 +118,7 @@ sub startup {
 			  		return $username;
 			 }else {
 				 	my ($err, $code) = $tx->error;
-				 	$self->app->log->info("Authentication failed for user $username. Error code: $code, Error: $err");
+				 	$self->app->log->error("Authentication failed for user $username. Error code: $code, Error: ".$self->app->dumper($err));
 				 	if($tx->res->json && exists($tx->res->json->{alerts})){	  
 						$self->stash({phaidra_auth_result => { alerts => $tx->res->json->{alerts}, status  =>  $code ? $code : 500 }});						 	
 				 	}else{

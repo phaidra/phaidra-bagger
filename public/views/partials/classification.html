@@ -1,0 +1,42 @@
+<div class="container">
+	
+	
+	<div class="panel panel-default">
+	  <div class="panel-heading">Getty</div>
+	  <div class="panel-body">
+	    Panel content
+	  </div>
+	</div>
+
+	<tabset>
+		<tab>
+			<tab-heading>
+		   		<span>Choose</span>
+		   	</tab-heading>
+		   	
+		   		<ui-select ng-model="selectedclass.selected" theme="bootstrap">
+			    	<ui-select-match placeholder="Select or search a classification in the list...">{{$select.selected.name}}</ui-select-match>
+				    	<ui-select-choices repeat="item in myclasses | filter: $select.search">
+				        <div ng-bind-html="item.label | highlight: $select.search"></div>
+				        <small ng-bind-html="item.uri | highlight: $select.search"></small>
+				    </ui-select-choices>
+			   	</ui-select>
+		   	
+		   	
+		</tab>
+		<tab>
+			<tab-heading>
+		   		<span>Browse</span>
+		   	</tab-heading>
+		   	<div class="well"></div>
+		</tab>
+		<tab>
+			<tab-heading>
+		   		<span>Search</span>
+		   	</tab-heading>
+		   	<div class="well"></div>
+		</tab>
+	</tabset>
+
+
+</div>

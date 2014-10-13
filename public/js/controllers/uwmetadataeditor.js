@@ -90,13 +90,20 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
 		var spl_namespace = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/organization/voc_spl/';
 		var kennzahl_namespace = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/organization/voc_kennzahl/';
 		
-		// we don't want to update select-boxes when they are only being rendered    			
-		if($scope.form.$pristine){
-			return;
+		// we don't want to update select-boxes when they are only being rendered
+		if($scope.form){
+			if($scope.form.$pristine){
+				return;
+			}
 		}
+		
 		
 		// find the next select-box and update it, and remove all the rest of them    			
 		var curriculum_node = $scope.get_model_parent(null, $scope.fields, curriculum_child_node);
+		
+		if(!curriculum_node){
+			return;
+		}
 		
 		// if 'none' is selected, just remove the remaining nodes
 		if(!curriculum_child_node.ui_value){//kennzahl_namespace+'-100'){
@@ -204,8 +211,10 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     	}
     	
 		// we don't want to update select-boxes when they are only being rendered    			
-		if($scope.form.$pristine){
-			return;
+		if($scope.form){
+			if($scope.form.$pristine){
+				return;
+			}
 		}
 		
 		// find the department sibling and update it

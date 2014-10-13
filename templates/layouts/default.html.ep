@@ -26,21 +26,17 @@
   	<script src="<%= url_for '/js/jquery.min.js' %>"></script>
   	<script src="<%= url_for '/js/jquery-ui-1.10.4.custom.min.js' %>"></script>
 
-  	
-  	<!-- Select2 -->
-  	<!--<link rel="stylesheet" href="<%= url_for '/css/select2.css' %>">-->
-  	<!--<link rel="stylesheet" href="<%= url_for '/css/select2-bootstrap.css' %>">-->
-  	<!--<script type="text/javascript" src="<%= url_for '/js/select2.min.js' %>"></script>-->
-  	
   	<!-- AngularJS -->
-  	<script src="<%= url_for '/js/angular-1.2.6.min.js' %>"></script>
-  	<script src="<%= url_for '/js/angular-animate-1.2.6.min.js' %>"></script>
+  	<!--<script src="<%= url_for '/js/angular-1.2.6.min.js' %>"></script>-->
+  	<!--<script src="<%= url_for '/js/angular-animate-1.2.6.min.js' %>"></script>-->
+  	
+  	<script src="<%= url_for '/js/angular-1.2.26.min.js' %>"></script>
+  	<script src="<%= url_for '/js/angular-animate-1.2.26.min.js' %>"></script>
+  	<script src="<%= url_for '/js/angular-sanitize-1.2.26.min.js' %>"></script>  	
+  	
   	<!--<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.js"></script>-->
   	<!--<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular-animate.js"></script>-->
   	<script src="<%= url_for '/js/sortable-angular-1.2.js' %>"></script>
-  	
-  	<!-- AngularJS Select2 -->
-  	<!--<script type="text/javascript" src="<%= url_for '/js/ngselect2.js' %>"></script>-->
   	
   	<!-- AngularJS i18n -->
   	<!--<script src="http://cdnjs.cloudflare.com/ajax/libs/angular-i18n/1.2.5/angular-locale_de-at.js"></script>-->
@@ -49,9 +45,12 @@
   	<!-- Bootstrap 3 CSS & js -->   	    
     <!--<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">-->
   	<!--<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>-->  	  	
-  	<script src="<%= url_for '/js/bootstrap.min.js' %>"></script>
-  	<link href="<%= url_for '/css/bootstrap.min.css' %>" rel="stylesheet">
+  	<script src="<%= url_for '/js/bootstrap-3.2.0.min.js' %>"></script>
+  	<link href="<%= url_for '/css/bootstrap-3.2.0.min.css' %>" rel="stylesheet">
   	
+  	<!-- AngularJS ui-select -->
+  	<script type="text/javascript" src="<%= url_for '/js/angular-ui-select-0.8.0.min.js' %>"></script>
+  	<link rel="stylesheet" href="<%= url_for '/css/angular-ui-select-0.8.0.min.css' %>">
   	
   	<!-- Bootstrap datepicker -->
   	<!--<link href="<%= url_for '/css/bootstrap-datepicker.css' %>" rel="stylesheet">-->
@@ -76,7 +75,8 @@
 	<script type="text/javascript" src="<%= url_for '/js/services/metadata.js' %>"></script>
 	<script type="text/javascript" src="<%= url_for '/js/services/frontend.js' %>"></script>
 	<script type="text/javascript" src="<%= url_for '/js/services/bag.js' %>"></script>
-	<script type="text/javascript" src="<%= url_for '/js/services/job.js' %>"></script>   	    	 
+	<script type="text/javascript" src="<%= url_for '/js/services/job.js' %>"></script>
+	<script type="text/javascript" src="<%= url_for '/js/services/vocabulary.js' %>"></script>   	    	    	    	 
   	<script type="text/javascript" src="<%= url_for '/js/controllers/frontend.js' %>"></script>
   	
   	<!-- Custom Phaidra CSS --> 

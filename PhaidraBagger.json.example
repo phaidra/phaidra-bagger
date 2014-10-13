@@ -100,37 +100,18 @@
 		    "redmine_baseurl": "https://redmine.phaidra.org/redmine/"
         }
     },
-    
-	"directory_class": "Phaidra::Directory::Univie",
-	
-	"directory": {	        
-	
-        "connect_string": "dbi:Oracle:DB",
-        
-        "username": "username",
-        
-        "password": "password",
-        
-        "org_units_languages": ["en","de"],
-        
-        "study_plans_languages": ["de"]
-	}, 
-    
-    "phaidra": {
-    	"baseurl": "phaidra-instance.univie.ac.at",    
-    	"apibaseurl": "services.phaidra-instance.univie.ac.at",
-	    "metadata_format_version": "1",
-	    "local_uwmetadata_tree": "1"
-    
-    },     
-    
+
     "ingest_instances": {
         "phaidra-instance": {
             "baseurl": "phaidra-instance.univie.ac.at",
             "apibaseurl": "services.phaidra-instance.univie.ac.at/api",
             "metadata_format_version": "1",
             "local_uwmetadata_tree": "1",
-            "is_default": "1"
+            "is_default": "1",
+             "directory_user": {	    	        
+	        	"username": "username",        
+	        	"password": "password"
+	    	}   
         },
         "phaidra-instance2": {
             "baseurl": "phaidra-instance2.univie.ac.at",
@@ -148,15 +129,10 @@
         "password": "password",
         "database": "database"
     },
-    
-    
-    "authentication": {
-    
-    	"realm": "Phaidra",
-    	
+        
+    "authentication": {    
+    	"realm": "Phaidra",    	
     	"token_header": "X-XSRF-TOKEN",
-
-        "token_cookie": "XSRF-TOKEN",
-    	
+        "token_cookie": "XSRF-TOKEN",    	
     }, 
 }
