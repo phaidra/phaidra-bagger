@@ -189,3 +189,11 @@ margin-top: 5px;
 	height: 30px;
 	margin: 10px 0px 0px 0px;
 }
+
+.classification-panel {
+	margin: 10px 0 0 0;
+}
+
+.classification-select {
+	margin: 0 0 10px 0;
+}

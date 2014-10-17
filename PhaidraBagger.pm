@@ -260,6 +260,7 @@ sub startup {
     $r->route('proxy/objects/:username') ->via('get')   ->to('proxy#search_owner');
     $r->route('proxy/search') ->via('get')   ->to('proxy#search');
     $r->route('proxy/object/:pid/related') ->via('get')   ->to('proxy#get_related_objects');
+    $r->route('proxy/terms/children') ->via('get')   ->to('proxy#get_terms_children');
     
     # if not authenticated, users will be redirected to login page
     my $auth = $r->bridge->to('authentication#check');

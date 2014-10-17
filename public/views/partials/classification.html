@@ -1,20 +1,27 @@
 <div class="container">
 	
 	
-	<div class="panel panel-default">
-	  <div class="panel-heading">Getty</div>
+	<div class="panel panel-default" data-ng-repeat="cls in bag_classes">
+	  <span data-ng-repeat="elm in cls">
+		  <div class="panel-heading" ng-if="cls.xmlname == 'source'">{{elm.value_labels.en}}</div>
+	  </span>
 	  <div class="panel-body">
-	    Panel content
-	  </div>
+	  	<ol class="breadcrumb">
+		  <span data-ng-repeat="elm in cls">					  
+		  	<li ng-if="cls.xmlname == 'taxon'">{{elm.value_labels.en}}</li>
+		  </span>
+		</ol>		  
+	  </div>	  	  
 	</div>
 
 	<tabset>
+		
 		<tab>
 			<tab-heading>
 		   		<span>Choose</span>
 		   	</tab-heading>
 		   	
-		   		<ui-select ng-model="selectedclass.selected" theme="bootstrap">
+		   		<ui-select ng-model="selectedmyclass.selected" theme="bootstrap">
 			    	<ui-select-match placeholder="Select or search a classification in the list...">{{$select.selected.name}}</ui-select-match>
 				    	<ui-select-choices repeat="item in myclasses | filter: $select.search">
 				        <div ng-bind-html="item.label | highlight: $select.search"></div>
@@ -22,14 +29,41 @@
 				    </ui-select-choices>
 			   	</ui-select>
 		   	
-		   	
 		</tab>
+		
+		
 		<tab>
 			<tab-heading>
 		   		<span>Browse</span>
 		   	</tab-heading>
-		   	<div class="well"></div>
+
+
+			<accordion close-others="false">
+				<accordion-group heading="{{class.en}}" data-ng-repeat="class in class_roots" data-ng-click="browse_class_opened(class)">
+				
+					<ui-select class="classification-select" data-ng-model="level.selected" theme="bootstrap" on-select="update_current_path($item, $model, class, $index)" data-ng-repeat="level in class.current_path">
+					  <ui-select-match placeholder="Select or search a classification in the list...">{{level.selected.en}} <small class="text-muted">{{level.selected.upstream_identifier}}</small></ui-select-match>
+					  <ui-select-choices repeat="term in level.terms | filter: $select.search">
+						<div data-ng-bind-html="term.en | highlight: $select.search"></div>
+						<small data-ng-bind-html="term.upstream_identifier | highlight: $select.search" tooltip="Upstream ID"></small>
+					  </ui-select-choices>
+					</ui-select>
+
+					<dl class="dl-horizontal" data-ng-if="getLastSelectedTaxon(class).uri">
+					  <dt>Preferred label</dt>
+					  <dd>{{getLastSelectedTaxon(class).en}} <small class="text-muted">{{getLastSelectedTaxon(class).term_id}}</small></dd>			  
+					  <dt data-ng-if="getLastSelectedTaxon(class).nonpreferred.length > 0">Non-preferred labels</td>
+					  <dd data-ng-repeat="term in getLastSelectedTaxon(class).nonpreferred" >{{term.en}} <small class="text-muted">{{term.term_id}}</small></dd>
+					</dl>
+				
+					
+					
+				</accordion-group>
+			</accordion>				
+			
+			
 		</tab>
+				
 		<tab>
 			<tab-heading>
 		   		<span>Search</span>
@@ -37,6 +71,5 @@
 		   	<div class="well"></div>
 		</tab>
 	</tabset>
-
 
 </div>
