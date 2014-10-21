@@ -9,13 +9,6 @@ angular.module('vocabularyService', [])
 	    	});	        
 	    },
 	    
-	    getMyClassifications: function(){
-	    	return $http({
-	    		method  : 'GET',
-	    		url     : $('head base').attr('href')+'terms/myclasses'
-	    	});	        
-	    },
-
 	    getClassifications: function(){
 	    	return $http({
 	    		method  : 'GET',

@@ -80,7 +80,7 @@
 							      	</select>			      						     				    							
 							      </div>			
 							      
-							      <p class="navbar-text">Bag ID: <a href="{{initdata.redmine_baseurl}}issues/{{bagid}}" target="_blank">#{{bagid}}</a></p>      
+							      <p class="navbar-text">{{bagid}}</p>      
 							      			      
 							      <div class="navbar-form navbar-right">			             
 									<button ng-disabled="form.$invalid || form_disabled" data-ng-click="save()" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-save"></span> Save</button>									   

@@ -268,6 +268,9 @@ sub startup {
     $auth->route('selection') 			->via('post')   ->to('frontend#post_selection');
     $auth->route('selection') 			->via('get')   ->to('frontend#get_selection');
     
+    $auth->route('classifications') 			->via('post')   ->to('frontend#toggle_classification');
+    $auth->route('classifications') 			->via('get')   ->to('frontend#get_classifications');
+    
     $auth->route('uwmetadata_editor/:pid') ->via('get')  ->to('object#uwmetadataeditor');
     
     $auth->route('uwmetadata_template_editor') ->via('get')  ->to('object#uwmetadata_template_editor');

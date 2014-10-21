@@ -197,3 +197,44 @@ margin-top: 5px;
 .classification-select {
 	margin: 0 0 10px 0;
 }
+
+.star-class {
+	color: #aaa;
+}
+
+.star-class-fav {
+	color: #b40014;
+}
+
+.class-panel {
+	margin-right: 0;
+	margin-left: 0;
+	background-color: #fff;
+	border-color: #ddd;
+	border-width: 1px;
+	border-radius: 4px 4px 0 0;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+	position: relative;
+	padding: 10px 15px 0px 15px;
+	margin: 0 -15px 15px;
+	border-style: solid;
+}
+
+.class-panel-header {	
+	font-size: 12px;	
+	color: #959595;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	margin-bottom: 10px;
+}
+
+.class-breadcrumb {
+	font-weight: 700;
+	background-color: #fff;
+	margin-bottom: 0px;
+}
+
+.class-panel-buttons {
+	margin-bottom: 10px;
+}

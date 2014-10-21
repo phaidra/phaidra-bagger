@@ -1,17 +1,21 @@
 <div class="container">
 	
 	
-	<div class="panel panel-default" data-ng-repeat="cls in bag_classes">
-	  <span data-ng-repeat="elm in cls">
-		  <div class="panel-heading" ng-if="cls.xmlname == 'source'">{{elm.value_labels.en}}</div>
-	  </span>
-	  <div class="panel-body">
-	  	<ol class="breadcrumb">
-		  <span data-ng-repeat="elm in cls">					  
-		  	<li ng-if="cls.xmlname == 'taxon'">{{elm.value_labels.en}}</li>
-		  </span>
-		</ol>		  
-	  </div>	  	  
+	<div class="class-panel" data-ng-repeat="tpath in selectBagClassificationNode().children" ng-if="tpath.xmlname == 'taxonpath' && tpath.children[0].ui_value != ''">		  
+		<div class="class-panel-header" data-ng-repeat="elm in tpath.children" ng-if="elm.xmlname == 'source'">{{elm.value_labels.en}}</div>
+		<span class="pull-left">
+			<a href="#tax_collapse{{$index}}" data-toggle="collapse">{{tpath.children[tpath.children.length-1].value_labels.labels.en}}</a>
+			<span id="tax_collapse{{$index}}" class="collapse">
+				<ol class="breadcrumb class-breadcrumb">
+				  	<li data-ng-repeat="elm in tpath.children" ng-if="elm.xmlname == 'taxon'">{{elm.value_labels.labels.en}}</li>					
+				</ol>
+			</span>	  
+		</span>	  
+		<span class="btn-group pull-right class-panel-buttons">    
+		    <button class="btn btn-default" ng-click="toggleClassification(tpath.children[tpath.children.length-1].ui_value)"><span class="glyphicon glyphicon-star star-class" ng-class="{'star-class-fav': myclasses.indexOf(tpath.children[tpath.children.length-1].ui_value) != -1}"></span></button>
+		    <button class="btn btn-primary" ng-click="removeClassFromObject($index)"><span class="glyphicon glyphicon-minus-sign"></span></button>
+		</span>		
+		<div class="clearfix"></div>
 	</div>
 
 	<tabset>
@@ -22,10 +26,10 @@
 		   	</tab-heading>
 		   	
 		   		<ui-select ng-model="selectedmyclass.selected" theme="bootstrap">
-			    	<ui-select-match placeholder="Select or search a classification in the list...">{{$select.selected.name}}</ui-select-match>
+			    	<ui-select-match placeholder="Select or search a classification in the list...">{{$select.selected}}</ui-select-match>
 				    	<ui-select-choices repeat="item in myclasses | filter: $select.search">
-				        <div ng-bind-html="item.label | highlight: $select.search"></div>
-				        <small ng-bind-html="item.uri | highlight: $select.search"></small>
+				        <div ng-bind-html="item | highlight: $select.search"></div>
+				        <!--<small ng-bind-html="item.uri | highlight: $select.search"></small>-->
 				    </ui-select-choices>
 			   	</ui-select>
 		   	
@@ -39,24 +43,32 @@
 
 
 			<accordion close-others="false">
-				<accordion-group heading="{{class.en}}" data-ng-repeat="class in class_roots" data-ng-click="browse_class_opened(class)">
+				<accordion-group heading="{{class.labels.en}}" data-ng-repeat="class in class_roots" data-ng-click="browse_class_opened(class)">
 				
 					<ui-select class="classification-select" data-ng-model="level.selected" theme="bootstrap" on-select="update_current_path($item, $model, class, $index)" data-ng-repeat="level in class.current_path">
-					  <ui-select-match placeholder="Select or search a classification in the list...">{{level.selected.en}} <small class="text-muted">{{level.selected.upstream_identifier}}</small></ui-select-match>
+					  <ui-select-match placeholder="Select or search a classification in the list...">{{level.selected.labels.en}} <small class="text-muted">{{level.selected.upstream_identifier}}</small></ui-select-match>
 					  <ui-select-choices repeat="term in level.terms | filter: $select.search">
-						<div data-ng-bind-html="term.en | highlight: $select.search"></div>
+						<div data-ng-bind-html="term.labels.en | highlight: $select.search"></div>
 						<small data-ng-bind-html="term.upstream_identifier | highlight: $select.search" tooltip="Upstream ID"></small>
 					  </ui-select-choices>
 					</ui-select>
 
-					<dl class="dl-horizontal" data-ng-if="getLastSelectedTaxon(class).uri">
-					  <dt>Preferred label</dt>
-					  <dd>{{getLastSelectedTaxon(class).en}} <small class="text-muted">{{getLastSelectedTaxon(class).term_id}}</small></dd>			  
-					  <dt data-ng-if="getLastSelectedTaxon(class).nonpreferred.length > 0">Non-preferred labels</td>
-					  <dd data-ng-repeat="term in getLastSelectedTaxon(class).nonpreferred" >{{term.en}} <small class="text-muted">{{term.term_id}}</small></dd>
-					</dl>
-				
-					
+					<div class="panel panel-default" data-ng-if="lastSelectedTaxons[class.uri].uri">
+					  <div class="panel-heading">
+					    <h3 class="panel-title pull-left">{{lastSelectedTaxons[class.uri].labels.en}} <small class="text-muted">{{lastSelectedTaxons[class.uri].term_id}}</small></h3>
+					    <span class="btn-group pull-right">    
+						    <button class="btn btn-default" ng-click="toggleClassification(lastSelectedTaxons[class.uri].uri)"><span class="glyphicon glyphicon-star star-class" ng-class="{'star-class-fav': myclasses.indexOf(lastSelectedTaxons[class.uri].uri) != -1}"></span></button>
+						    <button class="btn btn-success" ng-click="addClassToObject(class)"><span class="glyphicon glyphicon-plus-sign"></span></button>
+					    </span>
+					    <div class="clearfix"></div>
+					  </div>
+					  <div class="panel-body" data-ng-if="lastSelectedTaxons[class.uri].nonpreferred.length > 0">
+					    <dl class="dl-horizontal" >
+						  <dt>Non-preferred labels</td>
+						  <dd data-ng-repeat="term in lastSelectedTaxons[class.uri].nonpreferred" >{{term.labels.en}} <small class="text-muted">{{term.term_id}}</small></dd>
+						</dl>
+					  </div>
+					</div>
 					
 				</accordion-group>
 			</accordion>				

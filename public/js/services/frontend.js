@@ -7,7 +7,7 @@ angular.module('frontendService', [])
 			return $http({
 				method  : 'POST',
 				url     : $('head base').attr('href')+'selection',
-				data  : { selection: selection }
+				data    : { selection: selection }
 			});	        
 		},
 		
@@ -15,6 +15,21 @@ angular.module('frontendService', [])
 			return $http({
 				method  : 'GET',
 				url     : $('head base').attr('href')+'selection'
+			});	        
+		},
+		
+		toggleClassification: function(uri){
+			return $http({
+				method  : 'POST',
+				url     : $('head base').attr('href')+'classifications',
+				data    : { uri: uri }
+			});	        
+		},
+
+		getClassifications: function(terms){
+			return $http({
+				method  : 'GET',
+				url     : $('head base').attr('href')+'classifications'
 			});	        
 		}
 	}

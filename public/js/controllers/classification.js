@@ -1,4 +1,4 @@
-app.controller('ClassificationCtrl',  function($scope, $modal, $location, DirectoryService, VocabularyService, JobService, promiseTracker) {
+app.controller('ClassificationCtrl',  function($scope, $modal, $location, DirectoryService, FrontendService, VocabularyService, JobService, promiseTracker) {
     
 	// we will use this to track running ajax requests to show spinner
 	$scope.loadingTracker = promiseTracker('loadingTrackerFrontend');
@@ -7,16 +7,15 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 	            
 	$scope.initdata = '';
 	$scope.current_user = '';
-	
-	$scope.bag_classes = [];
 
 	$scope.init = function (initdata) {
 		$scope.initdata = angular.fromJson(initdata);
-		$scope.current_user = $scope.initdata.current_user;		
-		//$scope.selectBagClassifications();
+		$scope.current_user = $scope.initdata.current_user;	
 		$scope.getClassifications();
-    	//$scope.getMyClassifications();    
+    	$scope.getMyClassifications();    
     };
+    
+    $scope.clsns = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification';
     
     // TODO: read from user config
     $scope.classes_config = {
@@ -28,6 +27,7 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
     	'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification/cls_13': 6   	
     };
     
+    $scope.lastSelectedTaxons = {};
 
     $scope.selectedmyclass = {};
     
@@ -103,7 +103,8 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 		  		$scope.alerts = response.data.alerts;	   
 		  		if(response.data.terms.length > 0){
 		  			classif.current_path.push({terms: response.data.terms});
-		  		}			      		
+		  		}		
+		  		$scope.lastSelectedTaxons[classif.uri] = $scope.findLastSelectedTaxon(classif);
 		  		$scope.form_disabled = false;		  		
 		  	}
 		  	,function(response) {
@@ -111,13 +112,11 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 		  		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
 		   		$scope.form_disabled = false;
 		   	}
-		);			     
-		
-
-	 };
+		);			     		
+	 };	 
 	 
 	 // supersafe (and superstupid)
-	 $scope.getLastSelectedTaxon = function(classif){
+	 $scope.findLastSelectedTaxon = function(classif){
 		 var last = classif.current_path[classif.current_path.length-1];		 
 		 if(typeof last === 'undefined'){
 			 return {};			 
@@ -133,16 +132,105 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 				 return last.selected;
 			 }			
 		}
-	 }
-
-	 $scope.getMyClassifications = function() {
+	 };
+	 
+	 $scope.removeClassFromObject = function(index){
+		 $scope.selectBagClassificationNode().children.splice(index,1); 
+		 $scope.save();
+	 };
+	 
+	 $scope.save = function(){
+		 $scope.$parent.save(); 
+	 };
+	 
+	 $scope.toggleClassification = function(uri){
+		 if(typeof uri == 'undefined'){
+			 return;
+		 }
+		 
 		 $scope.form_disabled = true;
-	     var promise = VocabularyService.getMyClassifications();
+	     var promise = FrontendService.toggleClassification(uri);
 	     $scope.loadingTracker.addPromise(promise);
 	     promise.then(
 	      	function(response) { 
 	      		$scope.alerts = response.data.alerts;
-	      		$scope.myclasses = response.data.entries;
+	      		$scope.getMyClassifications();
+	      		$scope.form_disabled = false;
+	      	}
+	      	,function(response) {
+	      		$scope.alerts = response.data.alerts;
+	      		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
+	      		$scope.form_disabled = false;
+	      	}
+	     );    	
+	 };
+	 
+
+	 $scope.addClassToObject = function(classif){
+
+		 var taxonpath = { 
+             xmlns: $scope.clsns,		 
+		     xmlname: "taxonpath",
+		     datatype: "Node",
+		     children: [
+    	       {
+		             xmlns: $scope.clsns,
+		             xmlname: "source",
+		             datatype: "ClassificationSource",
+		             ui_value: classif.uri,
+		             value_labels: classif.labels
+		       }
+		    ]
+		 };
+		 
+		 for (var i = 0; i < classif.current_path.length; ++i) {
+			 var taxons = classif.current_path[i];
+			 if(typeof taxons.selected != 'undefined'){
+				 var t = {
+				     xmlns: $scope.clsns,		 
+				     xmlname: "taxon",
+				     datatype: "Taxon",
+				 	 ui_value: taxons.selected.uri,
+				 	 value_labels: {
+					 	labels: taxons.selected.labels,
+					 	upstream_identifier: taxons.selected.upstream_identifier,
+					 	term_is: taxons.selected.term_id 
+					 }
+				 
+				 };
+				 
+				 // copy nonpreferred array
+				 if(typeof taxons.selected.nonpreferred != 'undefined'){
+					 if(taxons.selected.nonpreferred.length > 0){
+						 t.value_labels['nonpreferred'] = [];
+						 for (var j = 0; j < taxons.selected.nonpreferred.length; ++j) {
+							 t.value_labels['nonpreferred'].push(taxons.selected.nonpreferred[j]);
+						 }
+					 }
+				 }
+				 
+				 
+				 taxonpath.children.push(t); 
+			 }			 
+		 }
+		 var ch = $scope.selectBagClassificationNode().children;
+		 // -2 because the last two are not taxonpaths but description and keywords
+		 ch.splice(ch.length-2,0,taxonpath);	
+		 $scope.save();
+	 };
+	 
+	 $scope.getFields = function() {
+		 return $scope.$parent.fields;
+	 }
+
+	 $scope.getMyClassifications = function() {
+		 $scope.form_disabled = true;
+	     var promise = FrontendService.getClassifications();
+	     $scope.loadingTracker.addPromise(promise);
+	     promise.then(
+	      	function(response) { 
+	      		$scope.alerts = response.data.alerts;
+	      		$scope.myclasses = response.data.classifications;
 	      		$scope.form_disabled = false;
 	      	}
 	      	,function(response) {
@@ -172,15 +260,8 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 	 };
 	 
 
-	 $scope.selectBagClassifications = function(nodes) {  	
-    	 for (var i = 0; i < nodes.length; ++i) {
-    		if(nodes[i].xmlns == 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0' && nodes[i].xmlname == 'taxonpath'){
-    			$scope.bag_classes.push(nodes[i]);
-    		}
-    		if(nodes[i].children){
-    			$scope.selectBagClassifications(nodes[i].children);
-    		}
-    	}	 
+	 $scope.selectBagClassificationNode = function() {		 	
+		 return $scope.$parent.fields[6];	 
 	 }
 	 
  
