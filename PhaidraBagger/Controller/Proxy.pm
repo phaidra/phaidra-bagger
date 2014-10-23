@@ -3,6 +3,7 @@ package PhaidraBagger::Controller::Proxy;
 use strict;
 use warnings;
 use v5.10;
+use PhaidraBagger::Model::Cache;
 use base 'Mojolicious::Controller';
 
 sub get_object_uwmetadata {
@@ -324,6 +325,48 @@ sub get_terms_children {
 		
   	});
 }		
+
+sub get_taxonpath {
+	my $self = shift;  
+	
+	my $uri = $self->param('uri');
+	
+	my $res = { alerts => [], status => 200 };
+	
+	my $url = Mojo::URL->new;
+	$url->scheme('https');		
+	my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
+	$url->host($base[0]);
+	if(exists($base[1])){
+		$url->path($base[1]."/terms/taxonpath");
+	}else{
+		$url->path("/terms/taxonpath");
+	}
+	
+	$url->query({uri => $uri});
+		
+  	$self->ua->get($url => sub { 	
+  		my ($ua, $tx) = @_;
+	  	if (my $res = $tx->success) {
+	  		$self->render(json => $res->json, status => 200 );
+	  	}else {
+		 	my ($err, $code) = $tx->error;	  
+		  	if(exists($tx->res->json->{alerts})) {
+			 	$self->render(json => { alerts => $tx->res->json->{alerts} }, status =>  $code ? $code : 500);
+			 }else{
+			  	$self->render(json => { alerts => [{ type => 'danger', msg => $err }] }, status =>  $code ? $code : 500);
+			 }
+		}
+		
+  	});
+}		
+
+sub get_terms_label {	
+	my $self = shift;  
+	my $cache_model = PhaidraBagger::Model::Cache->new;
+    my $res = $cache_model->get_terms_label($self, $self->param('uri'));
+	$self->render(json => $res, status => $res->{status});
+}
 	
 
 1;

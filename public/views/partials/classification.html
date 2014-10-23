@@ -12,7 +12,7 @@
 			</span>	  
 		</span>	  
 		<span class="btn-group pull-right class-panel-buttons">    
-		    <button class="btn btn-default" ng-click="toggleClassification(tpath.children[tpath.children.length-1].ui_value)"><span class="glyphicon glyphicon-star star-class" ng-class="{'star-class-fav': myclasses.indexOf(tpath.children[tpath.children.length-1].ui_value) != -1}"></span></button>
+		    <button class="btn btn-default" ng-click="toggleClassification(tpath.children[tpath.children.length-1].ui_value)"><span class="glyphicon glyphicon-star star-class" ng-class="{'star-class-fav': isMyClass(tpath.children[tpath.children.length-1].ui_value)}"></span></button>
 		    <button class="btn btn-primary" ng-click="removeClassFromObject($index)"><span class="glyphicon glyphicon-minus-sign"></span></button>
 		</span>		
 		<div class="clearfix"></div>
@@ -25,13 +25,31 @@
 		   		<span>Choose</span>
 		   	</tab-heading>
 		   	
-		   		<ui-select ng-model="selectedmyclass.selected" theme="bootstrap">
-			    	<ui-select-match placeholder="Select or search a classification in the list...">{{$select.selected}}</ui-select-match>
+		   		<ui-select ng-model="selectedmyclass.selected" theme="bootstrap" class="myclass-select">
+			    	<ui-select-match placeholder="Select or search a classification in the list...">{{$select.selected.labels.en}}</ui-select-match>
 				    	<ui-select-choices repeat="item in myclasses | filter: $select.search">
-				        <div ng-bind-html="item | highlight: $select.search"></div>
-				        <!--<small ng-bind-html="item.uri | highlight: $select.search"></small>-->
+				        <strong><div ng-bind-html="item.labels.en | highlight: $select.search"></div></strong>
+				        <small ng-bind-html="item.classification.en | highlight: $select.search"></small> / 
+				        <small ng-bind-html="item.upstream_identifier | highlight: $select.search"></small>
 				    </ui-select-choices>
 			   	</ui-select>
+			   	
+			   	<div class="panel panel-default" data-ng-if="selectedmyclass.selected.uri">
+					  <div class="panel-heading">
+					    <h3 class="panel-title pull-left">{{selectedmyclass.selected.labels.en}} <small class="text-muted">{{selectedmyclass.selected.term_id}}</small></h3>
+					    <span class="btn-group pull-right">    
+						    <button class="btn btn-default" ng-click="toggleClassification(selectedmyclass.selected.uri)"><span class="glyphicon glyphicon-star star-class" ng-class="{'star-class-fav': isMyClass(selectedmyclass.selected.uri)}"></span></button>
+						    <button class="btn btn-success" ng-click="addClassToObjectFromTaxon(selectedmyclass.selected.uri)"><span class="glyphicon glyphicon-plus-sign"></span></button>
+					    </span>
+					    <div class="clearfix"></div>
+					  </div>
+					  <div class="panel-body" data-ng-if="selectedmyclass.selected.nonpreferred.length > 0">
+					    <dl class="dl-horizontal" >
+						  <dt>Non-preferred labels</td>
+						  <dd data-ng-repeat="term in selectedmyclass.selected.nonpreferred" >{{term.labels.en}} <small class="text-muted">{{term.term_id}}</small></dd>
+						</dl>
+					  </div>
+					</div>
 		   	
 		</tab>
 		
@@ -57,7 +75,7 @@
 					  <div class="panel-heading">
 					    <h3 class="panel-title pull-left">{{lastSelectedTaxons[class.uri].labels.en}} <small class="text-muted">{{lastSelectedTaxons[class.uri].term_id}}</small></h3>
 					    <span class="btn-group pull-right">    
-						    <button class="btn btn-default" ng-click="toggleClassification(lastSelectedTaxons[class.uri].uri)"><span class="glyphicon glyphicon-star star-class" ng-class="{'star-class-fav': myclasses.indexOf(lastSelectedTaxons[class.uri].uri) != -1}"></span></button>
+						    <button class="btn btn-default" ng-click="toggleClassification(lastSelectedTaxons[class.uri].uri)"><span class="glyphicon glyphicon-star star-class" ng-class="{'star-class-fav': isMyClass(lastSelectedTaxons[class.uri].uri)}"></span></button>
 						    <button class="btn btn-success" ng-click="addClassToObject(class)"><span class="glyphicon glyphicon-plus-sign"></span></button>
 					    </span>
 					    <div class="clearfix"></div>

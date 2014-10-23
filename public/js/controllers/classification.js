@@ -142,10 +142,16 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 	 $scope.save = function(){
 		 $scope.$parent.save(); 
 	 };
-	 
+
 	 $scope.toggleClassification = function(uri){
 		 if(typeof uri == 'undefined'){
 			 return;
+		 }
+		 
+		 if($scope.selectedmyclass.selected){
+			 if($scope.selectedmyclass.selected.uri == uri){
+				 $scope.selectedmyclass = {};	
+			 }
 		 }
 		 
 		 $scope.form_disabled = true;
@@ -165,6 +171,74 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 	     );    	
 	 };
 	 
+	 $scope.addClassToObjectFromTaxon = function(uri){
+
+		 $scope.form_disabled = true;
+	     var promise = VocabularyService.getTaxonPath(uri);
+	     $scope.loadingTracker.addPromise(promise);
+	     promise.then(
+	      	function(response) { 
+	      		$scope.alerts = response.data.alerts;
+	      		
+	      		var taxonpath = { 
+	      			 xmlns: $scope.clsns,		 
+			   	     xmlname: "taxonpath",
+			   	     datatype: "Node",
+			   	     children: [
+			           {
+			   	             xmlns: $scope.clsns,
+			   	             xmlname: "source",
+			   	             datatype: "ClassificationSource",
+			   	             ui_value: response.data.taxonpath[0].uri,
+			   	             value_labels: response.data.taxonpath[0].labels
+			   	       }
+			   	    ]
+			   	};	      		
+
+	      		for (var i = 1; i < response.data.taxonpath.length; ++i) {
+	      			
+	      			 var taxondata = response.data.taxonpath[i];
+	      			 
+	      			 var t = {
+					     xmlns: $scope.clsns,		 
+					     xmlname: "taxon",
+					     datatype: "Taxon",
+					 	 ui_value: taxondata.uri,
+					 	 value_labels: {
+						 	labels: taxondata.labels,
+						 	upstream_identifier: taxondata.upstream_identifier,
+						 	term_id: taxondata.term_id 
+						 }
+					 
+					 };
+	      			 
+	      			 // copy nonpreferred array
+					 if(typeof taxondata.nonpreferred != 'undefined'){
+						 if(taxondata.nonpreferred.length > 0){
+							 t.value_labels['nonpreferred'] = [];
+							 for (var j = 0; j < taxondata.nonpreferred.length; ++j) {
+								 t.value_labels['nonpreferred'].push(taxondata.nonpreferred[j]);
+							 }
+						 }
+					 }
+					 
+					 taxonpath.children.push(t); 								 					 
+	      		}
+	      		
+	      		var ch = $scope.selectBagClassificationNode().children;
+				// -2 because the last two are not taxonpaths but description and keywords
+				ch.splice(ch.length-2,0,taxonpath);	
+				$scope.save();
+	      		
+	      		$scope.form_disabled = false;
+	      	}
+	      	,function(response) {
+	      		$scope.alerts = response.data.alerts;
+	      		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
+	      		$scope.form_disabled = false;
+	      	}
+	     );  		 
+	 };
 
 	 $scope.addClassToObject = function(classif){
 
@@ -194,7 +268,7 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 				 	 value_labels: {
 					 	labels: taxons.selected.labels,
 					 	upstream_identifier: taxons.selected.upstream_identifier,
-					 	term_is: taxons.selected.term_id 
+					 	term_id: taxons.selected.term_id 
 					 }
 				 
 				 };
@@ -262,6 +336,15 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 
 	 $scope.selectBagClassificationNode = function() {		 	
 		 return $scope.$parent.fields[6];	 
+	 }
+	 
+	 $scope.isMyClass = function(uri) {
+		 for (var i = 0; i < $scope.myclasses.length; ++i) {
+			 if($scope.myclasses[i].uri == uri){
+				 return true;
+			 }			 
+		 }
+		 return false;
 	 }
 	 
  

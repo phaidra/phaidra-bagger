@@ -280,7 +280,7 @@ sub load {
 			
 		}
 				    
-		$self->app->log->info("[".$self->current_user->{username}."] Loaded bag $bagid");
+		#$self->app->log->debug("[".$self->current_user->{username}."] Loaded bag $bagid");
 		$self->render(json => $bag, status => 200);
 		
 	}else{

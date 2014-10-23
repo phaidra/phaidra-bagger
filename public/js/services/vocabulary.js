@@ -23,6 +23,14 @@ angular.module('vocabularyService', [])
 				url     : $('head base').attr('href')+'proxy/terms/children',
 				params: { uri: uri }	    		
 			});	        
+		},
+
+		getTaxonPath: function(uri){
+			return $http({
+				method  : 'GET',
+				url     : $('head base').attr('href')+'proxy/terms/taxonpath',
+				params: { uri: uri }	    		
+			});	        
 		}
 
 	}

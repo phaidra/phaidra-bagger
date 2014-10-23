@@ -5,6 +5,7 @@ use warnings;
 use v5.10;
 use Mango 0.24;
 use Mojo::JSON qw(encode_json);
+use PhaidraBagger::Model::Cache;
 use base 'Mojolicious::Controller';
 
 sub chillin {
@@ -106,9 +107,34 @@ sub get_classifications {
 		return;	
 	}	
 
-	my $cls = $self->mango->db->collection('user.classifications')->find_one({username => $username});	
-
-	$self->render(json => { classifications => $cls->{classifications} }, status => 200);	
+	my $r = $self->mango->db->collection('user.classifications')->find_one({username => $username});	
+	
+	my @clss;
+	foreach my $uri (@{$r->{classifications}}){
+		my $class;
+		my $cache_model = PhaidraBagger::Model::Cache->new;
+    	# get taxon labels
+    	my $res = $cache_model->get_terms_label($self, $uri);
+    	if($res->{status} eq 200){
+			$class = $res->{labels};					
+    	}else{
+    		$self->app->log->error("Cannot get taxon labels: ".$self->app->dumper($res));	
+    	}
+    	# get classification labels
+    	my $ns = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification';
+    	$uri =~ m/($ns\/cls_\d+)\//;
+    	$res = $cache_model->get_terms_label($self, $1);
+    	if($res->{status} eq 200){
+			$class->{classification} = $res->{labels};					
+    	}else{
+    		$self->app->log->error("Cannot get classification labels: ".$self->app->dumper($res));	
+    	}
+    	$class->{uri} = $uri;		
+		push @clss, $class; 
+	}
+	$self->app->log->debug($self->app->dumper(\@clss));
+	$self->render(json => { classifications => \@clss }, status => 200);	
 }
+
 
 1;
