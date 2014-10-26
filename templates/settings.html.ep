@@ -1,0 +1,29 @@
+% layout 'default', title => 'stage';
+
+	%= include 'alerts'
+    
+    
+    <tabset data-ng-init="initSettings('<%= $init_data %>')">
+		
+		<tab>
+			<tab-heading>
+		   		<span>User</span>
+		   	</tab-heading>
+		   	
+		   	<pre>
+		   	{{user_settings}}
+		   	</pre>  	
+		</tab>
+		
+		<tab data-ng-if="project_settings">
+			<tab-heading>
+		   		<span>Project</span>
+		   	</tab-heading>
+		   	
+		   	<pre>
+		   	{{project_settings}}
+		   	</pre>  	
+		</tab>
+		   	
+    </tabset>	   
+	   

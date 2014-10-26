@@ -509,8 +509,6 @@ sub set_attribute {
 	
 	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
 	
-	
-	
 	my $reply;
 	if($attribute eq 'tags'){
 		$self->app->log->info("[".$self->current_user->{username}."] Adding $attribute $value to bag $bagid");

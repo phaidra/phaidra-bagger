@@ -18,6 +18,21 @@ angular.module('frontendService', [])
 			});	        
 		},
 		
+		loadSettings: function(type){
+			return $http({
+				method  : 'POST',
+				url     : $('head base').attr('href')+'settings/'+type
+			});	        
+		},
+		
+		saveSettings: function(type, settings){
+			return $http({
+				method  : 'GET',
+				url     : $('head base').attr('href')+'settings/'+type,
+				data    : { settings: settings }
+			});	        
+		},
+		
 		toggleClassification: function(uri){
 			return $http({
 				method  : 'POST',

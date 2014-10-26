@@ -10,11 +10,19 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
     
 	$scope.initdata = '';
 	$scope.current_user = '';
+	
+	$scope.user_settings = [];
+	$scope.project_settings = [];
 			
 	$scope.init = function (initdata) {
 		$scope.initdata = angular.fromJson(initdata);
 		$scope.current_user = $scope.initdata.current_user;
 		$scope.baseurl = $('head base').attr('href');
+    };
+    
+    $scope.initSettings = function (initdata) {    
+		$scope.user_settings = angular.fromJson(initdata).user_settings;
+		$scope.project_settings = angular.fromJson(initdata).project_settings;
     };
                    
     $scope.forceLoadPage = function(link) {

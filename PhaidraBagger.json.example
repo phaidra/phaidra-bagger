@@ -86,6 +86,7 @@
 	            		}
             		],
             "restricted_operations": ["set_assignee"],
+            "restricted_actions": ["POST /job/"],
             "bags": {
                 "in": "/var/www/bagger/data/p2/bags/in",
                 "out": "/var/www/bagger/data/p2/bags/out"

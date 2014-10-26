@@ -108,7 +108,7 @@
 		    	
 		   	<accordion close-others="false">
 				<accordion-group data-ng-repeat="class in searchclasses">
-					<accordion-heading><span class="label label-default pull-right" ng-class="{'label-primary': class.hits > 0}">{{class.hits}}</span> {{class.labels.en}}</accordion-heading>
+					<accordion-heading><span class="label label-default pull-right" ng-class="{'label-primary': class.hits > 0}">{{class.hits}}</span> {{class.labels.en}} <small data-ng-if="class.hits > 49" class="text-danger">Too many results, please narrow your query</small></accordion-heading>
 					
 					<div class="panel panel-default" data-ng-if="term.uri" data-ng-repeat="term in class.terms">
 					  <div class="panel-heading">

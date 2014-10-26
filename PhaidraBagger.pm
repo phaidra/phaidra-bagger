@@ -265,74 +265,78 @@ sub startup {
     $r->route('proxy/terms/search') ->via('get')   ->to('proxy#get_search');
     
     # if not authenticated, users will be redirected to login page
-    my $auth = $r->bridge->to('authentication#check');
+    my $autn = $r->bridge->to('authentication#check');
+    my $autz = $autn->bridge->to('authorization#check');
     
-    $auth->route('selection') 			->via('post')   ->to('frontend#post_selection');
-    $auth->route('selection') 			->via('get')   ->to('frontend#get_selection');
+    $autz->route('settings') 			->via('get')   ->to('settings#settings');
+    $autz->route('settings') 			->via('post')   ->to('settings#save');
     
-    $auth->route('classifications') 			->via('post')   ->to('frontend#toggle_classification');
-    $auth->route('classifications') 			->via('get')   ->to('frontend#get_classifications');
+    $autz->route('selection') 			->via('post')   ->to('frontend#post_selection');
+    $autz->route('selection') 			->via('get')   ->to('frontend#get_selection');
     
-    $auth->route('uwmetadata_editor/:pid') ->via('get')  ->to('object#uwmetadataeditor');
+    $autz->route('classifications') 			->via('post')   ->to('frontend#toggle_classification');
+    $autz->route('classifications') 			->via('get')   ->to('frontend#get_classifications');
     
-    $auth->route('uwmetadata_template_editor') ->via('get')  ->to('object#uwmetadata_template_editor');
-    $auth->route('uwmetadata_template_editor/:tid') ->via('get')  ->to('object#uwmetadata_template_editor'); 
+    $autz->route('uwmetadata_editor/:pid') ->via('get')  ->to('object#uwmetadataeditor');
     
-    $auth->route('proxy/get_object_uwmetadata/:pid') ->via('get')   ->to('proxy#get_object_uwmetadata');
-    $auth->route('proxy/save_object_uwmetadata/:pid') ->via('post')   ->to('proxy#save_object_uwmetadata');    
-    $auth->route('proxy/collection/create') ->via('post')   ->to('proxy#collection_create');
-    $auth->route('proxy/collection/:pid/members/order') ->via('post')   ->to('proxy#collection_order');
-    $auth->route('proxy/collection/:pid/members/:itempid/order/:position') ->via('post')   ->to('proxy#collection_member_order');
-    $auth->route('proxy/collection/:pid/members/:itempid/order/') ->via('post')   ->to('proxy#collection_member_order');
+    $autz->route('uwmetadata_template_editor') ->via('get')  ->to('object#uwmetadata_template_editor');
+    $autz->route('uwmetadata_template_editor/:tid') ->via('get')  ->to('object#uwmetadata_template_editor'); 
+    
+    $autz->route('proxy/get_object_uwmetadata/:pid') ->via('get')   ->to('proxy#get_object_uwmetadata');
+    $autz->route('proxy/save_object_uwmetadata/:pid') ->via('post')   ->to('proxy#save_object_uwmetadata');    
+    $autz->route('proxy/collection/create') ->via('post')   ->to('proxy#collection_create');
+    $autz->route('proxy/collection/:pid/members/order') ->via('post')   ->to('proxy#collection_order');
+    $autz->route('proxy/collection/:pid/members/:itempid/order/:position') ->via('post')   ->to('proxy#collection_member_order');
+    $autz->route('proxy/collection/:pid/members/:itempid/order/') ->via('post')   ->to('proxy#collection_member_order');
         
-    $auth->route('template') ->via('put')   ->to('template#create');
-    $auth->route('template/:tid') ->via('post')   ->to('template#save');    
-    $auth->route('template/:tid') ->via('get')   ->to('template#load');
-    $auth->route('template/:tid') ->via('delete')   ->to('template#delete');
-    $auth->route('template/:tid/difab') ->via('get')   ->to('template#load_difab');    
+    $autz->route('template') ->via('put')   ->to('template#create');
+    $autz->route('template/:tid') ->via('post')   ->to('template#save');    
+    $autz->route('template/:tid') ->via('get')   ->to('template#load');
+    $autz->route('template/:tid') ->via('delete')   ->to('template#delete');
+    $autz->route('template/:tid/difab') ->via('get')   ->to('template#load_difab');    
     
-    $auth->route('templates') ->via('get')   ->to('template#templates');
-    $auth->route('templates/my') ->via('get')   ->to('template#my');
+    $autz->route('templates') ->via('get')   ->to('template#templates');
+    $autz->route('templates/my') ->via('get')   ->to('template#my');
     
-    $auth->route('bags') ->via('get')   ->to('bag#bags');
-    $auth->route('bags/folder/:folderid') ->via('get')   ->to('bag#folder_bags');
-    $auth->route('bags/search') ->via('post')   ->to('bag#search');    
-    $auth->route('bags/search/:filterfield/:filtervalue') ->via('post')   ->to('bag#search');            
-    $auth->route('bags/import') ->via('get')   ->to('bag#import');
-    $auth->route('bags/set/:attribute/:value') ->via('post')   ->to('bag#set_attribute_mass');
-    $auth->route('bags/unset/:attribute/:value') ->via('post')   ->to('bag#unset_attribute_mass');
+    $autz->route('bags') ->via('get')   ->to('bag#bags');
+    $autz->route('bags/folder/:folderid') ->via('get')   ->to('bag#folder_bags');
+    $autz->route('bags/search') ->via('post')   ->to('bag#search');    
+    $autz->route('bags/search/:filterfield/:filtervalue') ->via('post')   ->to('bag#search');            
+    $autz->route('bags/import') ->via('get')   ->to('bag#import');
+    $autz->route('bags/set/:attribute/:value') ->via('post')   ->to('bag#set_attribute_mass');
+    $autz->route('bags/unset/:attribute/:value') ->via('post')   ->to('bag#unset_attribute_mass');
         
-    $auth->route('bag/:bagid/edit') ->via('get')   ->to('bag#edit');
-    $auth->route('bag/:bagid') ->via('get')   ->to('bag#load');
-    $auth->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');    
-    $auth->route('bag/:bagid/:attribute/:value') ->via('put')   ->to('bag#set_attribute');
-    $auth->route('bag/:bagid/:attribute/:value') ->via('delete')   ->to('bag#unset_attribute');    
-    #$auth->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
+    $autz->route('bag/:bagid/edit') ->via('get')   ->to('bag#edit');
+    $autz->route('bag/:bagid') ->via('get')   ->to('bag#load');
+    $autz->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');    
+    $autz->route('bag/:bagid/:attribute/:value') ->via('put')   ->to('bag#set_attribute');
+    $autz->route('bag/:bagid/:attribute/:value') ->via('delete')   ->to('bag#unset_attribute');    
+    #$autz->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
 
-	$auth->route('job')                        ->via('put')    ->to('job#create');
-    $auth->route('job/:jobid')                 ->via('post')   ->to('job#save');    
-    $auth->route('job/:jobid')                 ->via('get')    ->to('job#load');
-    $auth->route('job/:jobid')                 ->via('delete') ->to('job#delete');
-    $auth->route('job/:jobid/bags')            ->via('post')   ->to('job#bags');
-    $auth->route('job/:jobid/toggle_run')      ->via('post')   ->to('job#toggle_run');
-    $auth->route('job/:jobid/view')            ->via('get')    ->to('job#view');    
-    $auth->route('jobs')                       ->via('get')    ->to('job#jobs');
-    $auth->route('jobs/my')                    ->via('get')    ->to('job#my');
+	$autz->route('job')                        ->via('put')    ->to('job#create');
+    $autz->route('job/:jobid')                 ->via('post')   ->to('job#save');    
+    $autz->route('job/:jobid')                 ->via('get')    ->to('job#load');
+    $autz->route('job/:jobid')                 ->via('delete') ->to('job#delete');
+    $autz->route('job/:jobid/bags')            ->via('post')   ->to('job#bags');
+    $autz->route('job/:jobid/toggle_run')      ->via('post')   ->to('job#toggle_run');
+    $autz->route('job/:jobid/view')            ->via('get')    ->to('job#view');    
+    $autz->route('jobs')                       ->via('get')    ->to('job#jobs');
+    $autz->route('jobs/my')                    ->via('get')    ->to('job#my');
 
-    $auth->route('folders') ->via('get')   ->to('folder#folders');    
-    $auth->route('folders/import') ->via('get')   ->to('folder#import');
-    $auth->route('folder/:folderid/deactivate') ->via('put')   ->to('folder#deactivate_folder');    
-    $auth->route('folders/list') ->via('get')   ->to('folder#get_folders');    
+    $autz->route('folders') ->via('get')   ->to('folder#folders');    
+    $autz->route('folders/import') ->via('get')   ->to('folder#import');
+    $autz->route('folder/:folderid/deactivate') ->via('put')   ->to('folder#deactivate_folder');    
+    $autz->route('folders/list') ->via('get')   ->to('folder#get_folders');    
 =cut    
-    $auth->route('file/:fileid/edit') ->via('get')   ->to('file#edit');
-    $auth->route('file/:fileid/assignee/:username') ->via('put')   ->to('file#change_assignee'); 
-    $auth->route('file/:fileid/uwmetadata') ->via('post')   ->to('file#save_uwmetadata');             
-    $auth->route('file/template/:tid/difab') ->via('get')   ->to('file#load_difab_template');    
+    $autz->route('file/:fileid/edit') ->via('get')   ->to('file#edit');
+    $autz->route('file/:fileid/assignee/:username') ->via('put')   ->to('file#change_assignee'); 
+    $autz->route('file/:fileid/uwmetadata') ->via('post')   ->to('file#save_uwmetadata');             
+    $autz->route('file/template/:tid/difab') ->via('get')   ->to('file#load_difab_template');    
 =cut    
-    $auth->route('chillin') ->via('get')   ->to('frontend#chillin');
+    $autz->route('chillin') ->via('get')   ->to('frontend#chillin');
     
-    $auth->route('log') ->via('get')   ->to('log#log');
-    $auth->route('log/events') ->via('get')   ->to('log#events');
+    $autz->route('log') ->via('get')   ->to('log#log');
+    $autz->route('log/events') ->via('get')   ->to('log#events');
     
     return $self;
 }

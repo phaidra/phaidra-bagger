@@ -38,7 +38,6 @@ sub view {
 }
 
 sub bags {
-	
     my $self = shift;  	 
     
     my $jobid = $self->stash('jobid');
@@ -87,12 +86,10 @@ sub bags {
 	
 	#$self->app->log->info("coll:".$self->app->dumper($coll));
 	
-	$self->render(json => { items => $coll, hits => $hits, alerts => [] , status => 200 });
-	
+	$self->render(json => { items => $coll, hits => $hits, alerts => [] , status => 200 });	
 }
 
 sub load {
-	
 	my $self = shift;  	
 	my $jobid = $self->stash('jobid');
 	
@@ -109,7 +106,6 @@ sub load {
 							    
 	$self->app->log->info("[".$self->current_user->{username}."] Loaded job ".$job->{name}." [$jobid]");
 	$self->render(json => {job => $job}, status => 200);		
-		
 }
 
 sub save {
@@ -182,7 +178,7 @@ sub create {
 	my $self = shift;  
 	
 	my $res = { alerts => [], status => 200 };
-	
+
 	my $selection = $self->req->json->{selection};
 	my $jobdata = $self->req->json->{jobdata};
 
@@ -226,8 +222,7 @@ sub create {
 
 	}
 	
-	$self->render(json => { alerts => [] }, status => 200);
-	
+	$self->render(json => { alerts => [] }, status => 200);	
 }
 
 sub _create_job_update_bag {
@@ -285,9 +280,8 @@ sub my {
 	   	$self->render(json => { alerts => [{ type => 'danger', msg => "Error searching jobs" }] }, status => 500);	
 	}
 			    
-	my $collsize = scalar @{$coll};
+	#my $collsize = scalar @{$coll};
 	$self->render(json => { jobs => $coll, alerts => [] , status => 200 });
-
 }
 
 

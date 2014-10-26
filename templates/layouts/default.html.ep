@@ -126,7 +126,7 @@
         <li><a href="/folders/">Folders</a></li>
         <li><a href="/templates/">Templates</a></li>
         <li><a href="/jobs/">Jobs</a></li>            
-        <li class="disabled"><a href="/settings/">Settings</a></li>
+        <li><a href="/settings/">Settings</a></li>
         
         <!--
         <li class="dropdown">
@@ -134,7 +134,7 @@
           <ul class="dropdown-menu">            
             <li><a href="/templates/">Templates</a></li>            
             <li><a href="/files/">Files</a></li>
-            <li class="disabled"><a href="/settings/">Settings</a></li>
+            <li><a href="/settings/">Settings</a></li>
           </ul>
         </li>
             -->    
