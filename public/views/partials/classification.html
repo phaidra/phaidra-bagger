@@ -7,7 +7,7 @@
 			<a href="#tax_collapse{{$index}}" data-toggle="collapse">{{tpath.children[tpath.children.length-1].value_labels.labels.en}}</a>
 			<span id="tax_collapse{{$index}}" class="collapse">
 				<ol class="breadcrumb class-breadcrumb">
-				  	<li data-ng-repeat="elm in tpath.children" ng-if="elm.xmlname == 'taxon'">{{elm.value_labels.labels.en}}</li>					
+				  	<li data-ng-repeat="elm in tpath.children" ng-if="elm.xmlname == 'taxon'">{{elm.value_labels.labels.en}} {{elm.ordered}} {{elm.data_order}}</li>					
 				</ol>
 			</span>	  
 		</span>	  
@@ -98,7 +98,32 @@
 			<tab-heading>
 		   		<span>Search</span>
 		   	</tab-heading>
-		   	<div class="well"></div>
+		   	
+		   	<div class="input-group class-search-form">
+	          <input type="text" class="form-control" ng-model="class_search.query" placeholder="Search" ng-keyup="hitEnterSearch($event)">
+	          <div class="input-group-btn">
+	        	<button class="btn btn-default" type="submit" ng-click="search(class_search.query)"><i class="glyphicon glyphicon-search"></i></button>
+	          </div>
+	        </div>
+		    	
+		   	<accordion close-others="false">
+				<accordion-group data-ng-repeat="class in searchclasses">
+					<accordion-heading><span class="label label-default pull-right" ng-class="{'label-primary': class.hits > 0}">{{class.hits}}</span> {{class.labels.en}}</accordion-heading>
+					
+					<div class="panel panel-default" data-ng-if="term.uri" data-ng-repeat="term in class.terms">
+					  <div class="panel-heading">
+					    <h3 class="panel-title pull-left">{{term.labels.en}} <small class="text-muted"><span data-ng-if="term.preferred">Preferred</span><span data-ng-if="term.preferred == 0">Non-preferred</span> {{term.term_id}}</small></h3>
+					    <span class="btn-group pull-right">    
+						    <button class="btn btn-default" ng-click="toggleClassification(term.uri)"><span class="glyphicon glyphicon-star star-class" ng-class="{'star-class-fav': isMyClass(term.uri)}"></span></button>
+						    <button class="btn btn-success" ng-click="addClassToObjectFromTaxon(term.uri)"><span class="glyphicon glyphicon-plus-sign"></span></button>
+					    </span>
+					    <div class="clearfix"></div>
+					  </div>					 
+					</div>
+					
+				</accordion-group>
+			</accordion>		
+		   	
 		</tab>
 	</tabset>
 

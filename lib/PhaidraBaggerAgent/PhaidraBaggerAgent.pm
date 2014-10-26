@@ -227,7 +227,7 @@ sub run_job {
 		$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.pid' => $pid, 'jobs.$.finished_at' => time}});		
 		if(defined($alerts)){
 			my $alerts_size = scalar @{$alerts};
-			$self->{'log'}->error(Dumper($alerts));
+			$self->{'log'}->info('Alerts: '.Dumper($alerts));
 			if($alerts_size > 0){
 				$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => $alerts}});			
 			}	

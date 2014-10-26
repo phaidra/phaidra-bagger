@@ -4,8 +4,9 @@ angular.module('vocabularyService', [])
 	return {
 		searchClassifications: function(query){
 	    	return $http({
-	    		method  : 'POST',
-	    		url     : $('head base').attr('href')+'terms/search/'+query
+	    		method  : 'GET',
+	    		url     : $('head base').attr('href')+'proxy/terms/search/',
+	    		params: { q: query }	    
 	    	});	        
 	    },
 	    

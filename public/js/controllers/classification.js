@@ -34,6 +34,7 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
     $scope.myclasses = [];
     
     $scope.searchclasses = [];
+    $scope.class_search = {query: ''};
     
     $scope.class_roots = [];
 
@@ -203,6 +204,8 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 					     xmlns: $scope.clsns,		 
 					     xmlname: "taxon",
 					     datatype: "Taxon",
+					     ordered: 1,
+	      				 data_order: i-1,	
 					 	 ui_value: taxondata.uri,
 					 	 value_labels: {
 						 	labels: taxondata.labels,
@@ -264,6 +267,8 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 				     xmlns: $scope.clsns,		 
 				     xmlname: "taxon",
 				     datatype: "Taxon",
+				     ordered: 1,
+				     data_order: i,				     
 				 	 ui_value: taxons.selected.uri,
 				 	 value_labels: {
 					 	labels: taxons.selected.labels,
@@ -315,6 +320,12 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 	     );    	      
 	 };
    
+	 $scope.hitEnterSearch = function(evt){    	
+    	if(angular.equals(evt.keyCode, 13) && !(angular.equals($scope.class_search.query, null) || angular.equals($scope.class_search.query, ''))){
+    		$scope.search($scope.class_search.query);
+    	}
+     };
+
 	 $scope.search = function(query) {
 		 $scope.form_disabled = true;
 	     var promise = VocabularyService.searchClassifications(query);
@@ -322,7 +333,20 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 	     promise.then(
 	      	function(response) { 
 	      		$scope.alerts = response.data.alerts;
-	      		$scope.searchclasses = response.data.entries;
+	      		
+	      		// filter and order
+	      		$scope.searchclasses = [];
+	      		for (var i = 0; i < response.data.terms.length; ++i) {
+	      			var pos = $scope.classes_config[response.data.terms[i].uri];
+	      			if(pos > 0){	      				
+	      				// pos goes from 1
+	      				$scope.searchclasses[pos-1] = response.data.terms[i];
+	      				$scope.searchclasses[pos-1].terms = response.data.terms[i].terms;
+		      			// init current_path array
+	      				$scope.searchclasses[pos-1].current_path = [];
+	      			}	      			
+	      		}
+	      		
 	      		$scope.form_disabled = false;
 	      	}
 	      	,function(response) {

@@ -45,7 +45,6 @@
             <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
         </div>
     </script>
-    
     	
 	<div class="container uwmetadataeditor_full" role="main" data-ng-controller="UwmetadataeditorCtrl" data-ng-init="init('<%= $init_data %>')">
 		<div class="row">
@@ -53,6 +52,8 @@
 			<div class="col-md-5"><img ng-src="{{initdata.thumb_path}}/m_{{bagid}}_1.png" class="img-rounded" title="{{bagid}}" alt="{{bagid}}"></div>
 		
 			<div class="col-md-7">	
+			
+			%= include 'alerts'
 			
 				<tabset>
 					<tab>
@@ -88,11 +89,7 @@
 								  
 					    	</div>				
 						</nav>		
-						
 				
-						<alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert($index)">{{alert.msg}}</alert>
-						
-						
 						<div class="well" id="UwmetadataeditorCtrl" data-ng-show="fields" data-ng-cloak >
 						
 							<form name="form" class="form-horizontal" novalidate role="form">

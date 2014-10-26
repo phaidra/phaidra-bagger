@@ -309,7 +309,7 @@ sub save_uwmetadata {
 	
 	my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => time, 'metadata.uwmetadata' => $self->req->json->{uwmetadata}} } );
 	
-	$self->render(json => { alerts => [{ type => 'success', msg => "$bagid saved" }] }, status => 200);
+	$self->render(json => { alerts => [] }, status => 200);
 
 }
 
