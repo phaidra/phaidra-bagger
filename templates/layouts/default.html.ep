@@ -70,6 +70,7 @@
   	<script src="<%= url_for '/js/promise-tracker.min.js' %>"></script>
   	
   	<!-- Custom Phaidra scripts -->
+  	<script type="text/javascript" src="<%= url_for '/js/services/url.js' %>"></script>
   	<script type="text/javascript" src="<%= url_for '/js/services/base64.js' %>"></script>
 	<script type="text/javascript" src="<%= url_for '/js/services/directory.js' %>"></script>
 	<script type="text/javascript" src="<%= url_for '/js/services/metadata.js' %>"></script>
@@ -127,17 +128,7 @@
         <li><a href="/templates/">Templates</a></li>
         <li><a href="/jobs/">Jobs</a></li>            
         <li><a href="/settings/">Settings</a></li>
-        
-        <!--
-        <li class="dropdown">
-          <a href="" class="dropdown-toggle" data-toggle="dropdown">My <b class="caret"></b></a>
-          <ul class="dropdown-menu">            
-            <li><a href="/templates/">Templates</a></li>            
-            <li><a href="/files/">Files</a></li>
-            <li><a href="/settings/">Settings</a></li>
-          </ul>
-        </li>
-            -->    
+         
       </ul>
       <% } %>
 

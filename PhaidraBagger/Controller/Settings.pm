@@ -22,6 +22,7 @@ sub settings {
 		unless($project_settings){
 			$project_settings = $self->config->{projects}->{$self->current_user->{project}};	
 		}
+		$project_settings->{name} = $self->current_user->{project};
 	}			    
 	
 	my $user_settings = $self->mango->db->collection('user.settings')->find_one({ username => $self->current_user->{username}, project => $self->current_user->{project}});

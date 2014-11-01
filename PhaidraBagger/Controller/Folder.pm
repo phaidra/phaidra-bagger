@@ -16,13 +16,14 @@ $home->detect('PhaidraBagger');
 use base 'Mojolicious::Controller';
 
 sub hashdir {
+	my $self = shift;
     my $dir = shift;
     opendir my $dh, $dir or die $!;
     my $tree = {}->{$dir} = {};
     while( my $file = readdir($dh) ) {
         next if $file =~ m[^\.{1,2}$];
         my $path = $dir .'/' . $file;
-        $tree->{$file} = hashdir($path), next if -d $path;
+        $tree->{$file} = $self->hashdir($path), next if -d $path;
         push @{$tree->{'.'}}, $file;
     }
     return $tree;
@@ -37,7 +38,7 @@ sub import {
 	my $projectconfig = $self->app->config->{projects}->{$self->current_user->{project}};
 	my $basepath = $projectconfig->{folders}->{in};
 	
-	my $folders = hashdir($basepath);
+	my $folders = $self->hashdir($basepath);
 	
 	$self->app->log->info($self->app->dumper($folders));
 	
@@ -48,6 +49,8 @@ sub import {
 		
 		$folderpath .= '/' unless substr($folderpath, -1) eq '/';
 		$folderpath .= $folder;
+		
+		$self->app->log->info("Importing folder, folderpath $folderpath");	
 	
 		# folder name is the folder id
 		my $folderid = $folder;
@@ -81,7 +84,7 @@ sub import {
 			if(defined($foundfile->{folderid})){
 				push @{$res->{alerts}}, "Not inserting file $file, already exists with fileid ".$foundfile->{bagid};
 			}else{		
-				my $reply = $self->mango->db->collection('bags')->insert({ bagid => $bagid, file => $file, label => $file, folderid => $folderid, tags => [], owner => $owner, metadata => {uwmetadata => ''}, status => 'new', assignee => '', created => time, updated => time } );
+				my $reply = $self->mango->db->collection('bags')->insert({ bagid => $bagid, file => $file, label => $file, folderid => $folderid, tags => [], owner => $owner, metadata => {uwmetadata => ''}, status => 'new', assignee => $projectconfig->{default_assignee}, created => time, updated => time } );
 				my $oid = $reply->{oid};
 				if($oid){
 					push @{$res->{alerts}}, "Inserting bag $bagid [oid: $oid]";			
@@ -89,10 +92,10 @@ sub import {
 					push @{$res->{alerts}}, "Inserting bag $bagid failed";
 				}
 				
-				#if(exists($projectconfig->{thumbnails})){
-				#	$self->app->log->info("Generating thumbnails for file $bagid");
-				#	$self->generate_thumbnail($projectconfig, $folder, $file, $bagid);			
-				#}
+				if(exists($projectconfig->{thumbnails})){
+					$self->app->log->info("Generating thumbnails for file $bagid in folder $folder");
+					$self->generate_thumbnail($projectconfig, $folder, $file, $bagid);			
+				}
 			}
 			
 		}
@@ -139,7 +142,7 @@ sub generate_thumbnail {
 	unless($ext eq 'png' || $ext eq 'PNG'){
 		$self->app->log->debug("Converting $file to png");
 		# first convert to png			
-		system("$c_cmd $filepath $thumb_c_path");
+		system("$c_cmd '$filepath' '$thumb_c_path'");
 		if( $? == -1 ){
 		  $self->app->log->error("failed to convert file $filepath to png: $!");
 		}		
@@ -149,14 +152,14 @@ sub generate_thumbnail {
 	
 	# medium, for file detail
 	$self->app->log->debug("Generating medium thumbnail from $generate_from_path");
-	system("$m_cmd $generate_from_path $thumb_m_path");
+	system("$m_cmd '$generate_from_path' '$thumb_m_path'");
 	if( $? == -1 ){
 	  $self->app->log->error("failed to generate medium thumbnail for $filepath: $!");
 	}
 		
 	# small, for file list
 	$self->app->log->debug("Generating small thumbnail from $generate_from_path");
-	system("$s_cmd $generate_from_path $thumb_s_path");
+	system("$s_cmd '$generate_from_path' '$thumb_s_path'");
 	if( $? == -1 ){
 	  $self->app->log->error("failed to generate small thumbnail for $filepath: $!");
 	}

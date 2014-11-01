@@ -3,26 +3,118 @@
 	%= include 'alerts'
     
     
-    <tabset data-ng-init="initSettings('<%= $init_data %>')">
+    <tabset data-ng-init="initSettings('<%= $init_data %>')" class="project-settings">
 		
 		<tab>
 			<tab-heading>
-		   		<span>User</span>
+		   		<span>User settings</span>
 		   	</tab-heading>
 		   	
-		   	<pre>
-		   	{{user_settings}}
-		   	</pre>  	
+		   	<div class="panel panel-default settings-panel" >
+					<div class="panel-heading">
+					    <h3 class="panel-title">Metadata</h3>
+					</div>
+					<div class="panel-body">
+					
+						<table class="table">
+						  <thead>
+							  <tr>
+							  	<th>URI</th>
+							  	<th>Include</th>
+							  	<th>Include children</th>
+						   	  </tr>
+					   	  </thead>
+						  <tbody>
+							  <tr data-ng-repeat="field in user_settings.uwmetadata.fieldfilter">	  
+							    <td>{{field.uri}}</td>
+							    <td>{{field.include}}</td>
+							    <td>{{field.include_children}}</td>
+							  </tr>
+							  <tr>	  
+							    <td><select class="form-control" ng-model="addfilter.uri" ng-options="option.uri as option.uri for option in uwmfields" ng-required="true" placeholder="-- please choose --"><option value="">-- please choose --</option></select></td>
+							    <td>{{field.include}}</td>
+							    <td>{{field.include_children}}</td>
+							  </tr>
+						  </tbody>	
+						</table>
+					
+					</div>
+			 </div>
+		   	  	
 		</tab>
-		
-		<tab data-ng-if="project_settings">
+
+		<tab data-ng-if="current_user.role == 'manager'">
 			<tab-heading>
-		   		<span>Project</span>
+		   		<span>Project settings</span>
 		   	</tab-heading>
 		   	
-		   	<pre>
-		   	{{project_settings}}
-		   	</pre>  	
+		   		<div class="panel panel-default settings-panel" >
+					<div class="panel-heading">
+					    <h3 class="panel-title">General</h3>
+					</div>
+					<div class="panel-body">
+					   	<dl class="dl-horizontal" >
+					   	  
+					   	  <dt>Name</dt>
+						  <dd>{{project_settings.name}}</dd>
+						  
+						  <dt>Account</dt>
+						  <dd>{{project_settings.account}}</dd>
+						  
+						  <dt>Folder</dt>
+						  <dd>{{project_settings.folders.in}}</dd>
+						  
+						  <dt>Default assignee</dt>
+						  <dd>{{defaultAssigneeDisplayName()}}</dd>
+							
+						</dl>
+					</div>
+			   	</div>
+		   	
+			   	<div class="panel panel-default settings-panel" >
+					<div class="panel-heading">
+					    <h3 class="panel-title">Members</h3>
+					</div>
+					<div class="panel-body">
+					   	<dl class="dl-horizontal dl-settings" data-ng-repeat="member in project_settings.members">
+					   	  
+					   	  <dt class="settings-role">Role</dt>
+						  <dd data-ng-if="member.role == 'manager'" ><img src="img/vader.png" height="30px" /></dd>
+						  <dd data-ng-if="member.role != 'manager'" ><img src="img/trooper.png" height="30px"/></dd>
+						  
+						  <dt>Display name</dt>
+						  <dd>{{member.displayname}}</dd>
+						  <dt>Username</dt>
+						  <dd>{{member.username}}</dd>
+							
+						</dl>
+					</div>
+			   	</div>
+			   	
+			   	<div class="panel panel-default settings-panel" >
+					<div class="panel-heading">
+					    <h3 class="panel-title">Statuses</h3>
+					</div>
+					<div class="panel-body">
+					
+						<table class="table">
+						  <thead>
+							  <tr>
+							  	<th>Label</th>
+							  	<th>Value</th>
+						   	  </tr>
+					   	  </thead>
+						  <tbody>
+							  <tr data-ng-repeat="status in project_settings.statuses">	  
+							    <td>{{status.label}}</td>
+							    <td>{{status.value}}</td>
+							  </tr>
+						  </tbody>	
+						</table>
+										   				
+					</div>
+			   	</div>
+		   	
 		</tab>
 		   	
     </tabset>	   

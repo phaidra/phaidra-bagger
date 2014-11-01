@@ -7,6 +7,7 @@ app.controller('FoldersCtrl',  function($scope, $http, $modal, $location, promis
 	$scope.alerts = [];	
 	
 	$scope.items = [];
+	$scope.importResults = [];
 	
 	$scope.initdata = '';
 	$scope.current_user = '';
@@ -18,28 +19,44 @@ app.controller('FoldersCtrl',  function($scope, $http, $modal, $location, promis
 	$scope.init = function (initdata) {
 		$scope.initdata = angular.fromJson(initdata);
 		$scope.current_user = $scope.initdata.current_user;		
-
     	$scope.getFolderList();
     };
 
+     $scope.runImport = function() {
+    	 var promise = $http({
+ 	        method  : 'GET',
+ 		    url     : $('head base').attr('href')+'folders/import'
+ 		 });	  
+ 	     $scope.loadingTracker.addPromise(promise);
+ 	     promise.then(
+ 	      	function(response) { 
+ 	      		$scope.importResults = response.data.alerts;	      	      		
+ 	      		$scope.getFolderList();
+ 	      	}
+ 	      	,function(response) {
+ 	      		$scope.alerts = response.data.alerts;
+ 	      		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
+ 	      	}
+ 	     ); 
+     }
      
- $scope.getFolderList = function() {
-     var promise = $http({
-        method  : 'GET',
-	    url     : $('head base').attr('href')+'folders/list'
-	 });	  
-     $scope.loadingTracker.addPromise(promise);
-     promise.then(
-      	function(response) { 
-      		$scope.alerts = response.data.alerts;
-      		$scope.items = response.data.items;
-      	}
-      	,function(response) {
-      		$scope.alerts = response.data.alerts;
-      		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
-      	}
-     );    	      
- };   
+     $scope.getFolderList = function() {
+	     var promise = $http({
+	        method  : 'GET',
+		    url     : $('head base').attr('href')+'folders/list'
+		 });	  
+	     $scope.loadingTracker.addPromise(promise);
+	     promise.then(
+	      	function(response) { 
+	      		$scope.alerts = response.data.alerts;
+	      		$scope.items = response.data.items;
+	      	}
+	      	,function(response) {
+	      		$scope.alerts = response.data.alerts;
+	      		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
+	      	}
+	     );    	      
+     };   
  
  $scope.deactivateFolder = function(folderid) {
 

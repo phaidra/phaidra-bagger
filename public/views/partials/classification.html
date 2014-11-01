@@ -7,7 +7,7 @@
 			<a href="#tax_collapse{{$index}}" data-toggle="collapse">{{tpath.children[tpath.children.length-1].value_labels.labels.en}}</a>
 			<span id="tax_collapse{{$index}}" class="collapse">
 				<ol class="breadcrumb class-breadcrumb">
-				  	<li data-ng-repeat="elm in tpath.children" ng-if="elm.xmlname == 'taxon'">{{elm.value_labels.labels.en}} {{elm.ordered}} {{elm.data_order}}</li>					
+				  	<li data-ng-repeat="elm in tpath.children" ng-if="elm.xmlname == 'taxon'">{{elm.value_labels.labels.en}}</li>					
 				</ol>
 			</span>	  
 		</span>	  
@@ -45,7 +45,7 @@
 					  </div>
 					  <div class="panel-body" data-ng-if="selectedmyclass.selected.nonpreferred.length > 0">
 					    <dl class="dl-horizontal" >
-						  <dt>Non-preferred labels</td>
+						  <dt>Non-preferred labels</dt>
 						  <dd data-ng-repeat="term in selectedmyclass.selected.nonpreferred" >{{term.labels.en}} <small class="text-muted">{{term.term_id}}</small></dd>
 						</dl>
 					  </div>
@@ -82,7 +82,7 @@
 					  </div>
 					  <div class="panel-body" data-ng-if="lastSelectedTaxons[class.uri].nonpreferred.length > 0">
 					    <dl class="dl-horizontal" >
-						  <dt>Non-preferred labels</td>
+						  <dt>Non-preferred labels</dt>
 						  <dd data-ng-repeat="term in lastSelectedTaxons[class.uri].nonpreferred" >{{term.labels.en}} <small class="text-muted">{{term.term_id}}</small></dd>
 						</dl>
 					  </div>

@@ -1,5 +1,5 @@
 
-app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, DirectoryService, MetadataService, FrontendService, promiseTracker) {
+app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, DirectoryService, MetadataService, FrontendService, promiseTracker, Url) {
     
 	$scope.regex_pid = /^[a-zA-Z\-]+:[0-9]+$/;
 	// use: <input ng-pattern="regex_identifier" ...
@@ -14,6 +14,7 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
 	
 	$scope.initdata = '';
 	$scope.current_user = '';
+	$scope.current_bags_query = '';
 
 	$scope.selectedtemplate = '';
 	$scope.templatetitle = '';
@@ -40,6 +41,7 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     	$scope.initdata = angular.fromJson(initdata);
     	$scope.current_user = $scope.initdata.current_user;
     	$scope.bagid = $scope.initdata.bagid;
+    	
     	/*
     	if($scope.initdata.pid){    		
     		$scope.pid = $scope.initdata.pid;
@@ -56,6 +58,28 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     	$scope.loadBag();	
     };
     
+    $scope.getBack2BagsLink = function (){
+    	if($scope.initdata.current_bags_query){
+    		if($scope.initdata.current_bags_query.filter){
+    			if($scope.initdata.current_bags_query.filter.folderid){
+    				return Url.buildUrl('/bags/folder/'+$scope.initdata.current_bags_query.filter.folderid, $scope.initdata.current_bags_query);
+    			}
+    		}
+    	}
+    }    
+    
+    $scope.getPrevBagLink = function (){
+    	if($scope.initdata.prev_bag){
+    		return Url.buildUrl('/bag/'+$scope.initdata.prev_bag.bagid+'/edit', $scope.initdata.current_bags_query);
+    	}    	
+    }
+    
+    $scope.getNextBagLink = function (){
+    	if($scope.initdata.next_bag){
+    		return Url.buildUrl('/bag/'+$scope.initdata.next_bag.bagid+'/edit', $scope.initdata.current_bags_query);
+    	}    	
+    }
+        
     $scope.reset_values = function (node, default_value){
     	if(!default_value){
     		default_value = '';
@@ -480,7 +504,7 @@ $scope.saveTemplateAs = function () {
     // used to filter array of elements: if 'hidden' is set, the field will not be included in the array
     $scope.filterHidden = function(e)
     {
-        return !e.hidden && e.included;        
+        return !e.hidden && e.include;        
     };
     
 

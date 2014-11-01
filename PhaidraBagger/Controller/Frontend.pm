@@ -132,7 +132,7 @@ sub get_classifications {
     	$class->{uri} = $uri;		
 		push @clss, $class; 
 	}
-	$self->app->log->debug($self->app->dumper(\@clss));
+	#$self->app->log->debug($self->app->dumper(\@clss));
 	$self->render(json => { classifications => \@clss }, status => 200);	
 }
 

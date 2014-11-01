@@ -1,6 +1,13 @@
-var app = angular.module('frontendApp', ['ngAnimate', 'ngSanitize', 'ui.bootstrap', 'ui.bootstrap.modal', 'ui.bootstrap.datepicker', 'ui.bootstrap.timepicker', 'ui.sortable', 'ui.select', 'ajoslin.promise-tracker', 'directoryService', 'vocabularyService', 'metadataService', 'frontendService', 'bagService', 'jobService']);
+var app = angular.module('frontendApp', ['ngAnimate', 'ngSanitize', 'ui.bootstrap', 'ui.bootstrap.modal', 'ui.bootstrap.datepicker', 'ui.bootstrap.timepicker', 'ui.sortable', 'ui.select', 'ajoslin.promise-tracker', 'directoryService', 'vocabularyService', 'metadataService', 'frontendService', 'bagService', 'jobService', 'Url']);
 
-app.controller('FrontendCtrl', function($scope, $window, $modal, $log, DirectoryService, promiseTracker) {
+app.filter("nl2br", function($filter) {
+ return function(data) {
+   if (!data) return data;
+   return data.replace(/\n\r?/g, '<br />');
+ };
+});
+
+app.controller('FrontendCtrl', function($scope, $window, $modal, $log, DirectoryService, MetadataService, promiseTracker) {
     
 	// we will use this to track running ajax requests to show spinner	
 	$scope.loadingTracker = promiseTracker.register('loadingTrackerFrontend');
@@ -20,11 +27,47 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
 		$scope.baseurl = $('head base').attr('href');
     };
     
-    $scope.initSettings = function (initdata) {    
-		$scope.user_settings = angular.fromJson(initdata).user_settings;
-		$scope.project_settings = angular.fromJson(initdata).project_settings;
+    $scope.initSettings = function (initdata_settings) {
+    	var d = angular.fromJson(initdata_settings);
+    	$scope.initdata = d;
+		$scope.current_user = d.current_user;
+		$scope.baseurl = $('head base').attr('href');
+		$scope.user_settings = d.user_settings;
+		$scope.project_settings = d.project_settings;
+		$scope.getUwmfields();
     };
-                   
+    
+    $scope.getUwmfields = function () {
+    	var promise = MetadataService.getUwmetadataTree();
+		$scope.loadingTracker.addPromise(promise);
+		promise.then(
+		  	function(response) { 
+		  		$scope.alerts = response.data.alerts;	   
+		  		$scope.uwmfields = $scope.getUwmfieldsFromTree(response.data.tree);
+		  		$scope.form_disabled = false;		  		
+		  	}
+		  	,function(response) {
+		  		$scope.alerts = response.data.alerts;
+		  		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
+		   		$scope.form_disabled = false;
+		   	}
+		);
+	};
+	
+	$scope.defaultAssigneeDisplayName = function() {
+		for (var i = 0; i < $scope.project_settings.members.length; ++i) {
+			if($scope.project_settings.members[i].username == $scope.project_settings.default_assignee){
+				return $scope.project_settings.members[i].displayname;
+			}			
+		}		
+	}
+	
+	$scope.getUwmfieldsFromTree = function (fields) {
+		for (var i = 0; i < fields.length; ++i) {
+			
+		}		
+	};	
+
     $scope.forceLoadPage = function(link) {
     	$window.location = link;
     };
@@ -61,7 +104,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
       
 });
 
-	var SigninModalCtrl = function ($scope, $modalInstance, DirectoryService, FrontendService, promiseTracker) {
+var SigninModalCtrl = function ($scope, $modalInstance, DirectoryService, FrontendService, promiseTracker) {
 		
 	$scope.user = {username: '', password: ''};
 	$scope.alerts = [];		
@@ -112,7 +155,6 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
 		$modalInstance.dismiss('cancel');
 	};
 };
-
 
 
 /*

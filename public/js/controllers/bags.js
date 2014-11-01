@@ -1,5 +1,5 @@
 
-app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService, BagService, FrontendService, promiseTracker) {
+app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService, BagService, FrontendService, promiseTracker, Url) {
     
 // we will use this to track running ajax requests to show spinner
 	$scope.loadingTracker = promiseTracker('loadingTrackerFrontend');
@@ -22,7 +22,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
     $scope.maxSize = 10;
     $scope.filter = '';
     $scope.from = 0;
-    $scope.limit = 5;
+    $scope.limit = 10;
     $scope.sortfield = 'updated';
     $scope.sortvalue = -1;
     			
@@ -37,8 +37,16 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 		    status: ['new','to_check','checked','to_ingest']
 		};
 		
-    	$scope.refreshResults();
-    	
+		if($scope.initdata.query){
+			$scope.filter = $scope.initdata.query.filter;
+			$scope.from = $scope.initdata.query.from;
+			$scope.limit = $scope.initdata.query.limit;
+			$scope.sortfield = $scope.initdata.query.sortfield;
+			$scope.sortvalue = $scope.initdata.query.sortvalue;					
+		}
+    	    	
+		$scope.refreshResults();
+		
     	if($scope.current_user){
     		$scope.loadSelection();
     	}
@@ -47,7 +55,30 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 
     $scope.closeAlert = function(index) {
     	$scope.alerts.splice(index, 1);
-    };    
+    };       
+/*    
+    $scope.qs = function(obj, prefix){
+	  var str = [];
+	  for (var p in obj) {
+	    var k = prefix ? prefix + "[" + p + "]" : p, 
+	        v = obj[p];
+	    str.push(angular.isObject(v) ? $scope.qs(v, k) : (k) + "=" + encodeURIComponent(v));
+	  }
+	  return str.join("&");
+    };
+*/    	
+	$scope.getBagUrlWithQuery = function (bagid) {
+		var url = '/bag/'+bagid+'/edit';
+		var params = {
+			filter: $scope.filter,
+			from: $scope.from, 
+			limit: $scope.limit, 
+			sortfield: $scope.sortfield, 
+			sortvalue: $scope.sortvalue
+		};
+		//return url+'?'+ $scope.qs(params, null);
+		return Url.buildUrl(url, params);
+	};	
     
     $scope.selectNone = function(event){
     	$scope.selection = [];	

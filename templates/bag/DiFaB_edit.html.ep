@@ -47,9 +47,29 @@
     </script>
     	
 	<div class="container uwmetadataeditor_full" role="main" data-ng-controller="UwmetadataeditorCtrl" data-ng-init="init('<%= $init_data %>')">
+		
+		
+		
 		<div class="row">
 				
-			<div class="col-md-5"><img ng-src="{{initdata.thumb_path}}/m_{{bagid}}_1.png" class="img-rounded" title="{{bagid}}" alt="{{bagid}}"></div>
+			<div class="col-md-5">
+				<div class="container-fluid">
+					<div class="row">
+						<div class="col-md-4 pull-left prev-bag">
+							<a data-ng-if="getPrevBagLink()" data-ng-href="{{getPrevBagLink()}}" title="Previous bag: {{initdata.prev_bag.label}}" class="btn btn-primary"><span class="glyphicon glyphicon-arrow-left"></span></a>
+						</div>
+						<div class="col-md-4">
+						<center>
+							<a data-ng-if="getBack2BagsLink()" data-ng-href="{{getBack2BagsLink()}}" title="Back to folder: {{initdata.folder.name}}" class="btn btn-primary"><span class="glyphicon glyphicon-list"></span></a>
+						</center>
+						</div>
+						<div class="col-md-4 pull-right next-bag">
+							<a data-ng-if="getNextBagLink()" data-ng-href="{{getNextBagLink()}}" title="Next bag: {{initdata.next_bag.label}}" class="btn btn-primary"><span class="glyphicon glyphicon-arrow-right"></span></a>
+						</div>
+					</div>
+				</div>
+				<img ng-src="{{initdata.thumb_path}}/m_{{bagid}}_1.png" class="img-thumbnail img-thumbnail-detail" title="{{bagid}}" alt="{{bagid}}">
+			</div>
 		
 			<div class="col-md-7">	
 			
@@ -105,25 +125,18 @@
 					        					<span phaidra-help phaidra-help-id="{{field.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>{{field.labels.en}}</span>        					
 					      					</tab-heading>
 					      					
-									      		<!-- name of the tab -->
-									      		<!-- {{field.xmlname}} -->
-									      		
 									      		<!-- children fields of the tab -->
 									      		<ul data-ng-show="field.children.length">		      		
 									      			<li data-ng-repeat="child in field.children" data-ng-include="'field_renderer.html'" class="form-li"></li>
 									      		</ul>
-									      		
-		
-									      		
+			
 									      		<script type="text/ng-template" id="field_renderer.html">
 									      		
-													<!--<span class="muted">{{child.xmlname}} - {{child.input_type}} - {{child.included}}</span>--> 
-													
 													<div ng-switch="child.input_type">
 													
 											          <div ng-switch-when="node">
 											          
-												          <div ng-if="child.included" class="panel panel-default">
+												          <div ng-if="child.include" class="panel panel-default">
 												          
 															  <div class="panel-heading" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>
 															    <h3 class="panel-title pull-left"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.labels.en}}</h3>
@@ -157,7 +170,7 @@
 											          
 											          <div ng-switch-default>
 											        
-											        	<div ng-if="child.included" data-ng-hide="child.hidden" data-ng-include="'/views/partials/' + child.input_type + '.html'"></div>
+											        	<div ng-if="child.include" data-ng-hide="child.hidden" data-ng-include="'/views/partials/' + child.input_type + '.html'"></div>
 														
 														<!-- children fields of the field -->
 														<ul data-ng-show="child.children.length">

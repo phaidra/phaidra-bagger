@@ -111,13 +111,13 @@
 							      		
 							      		<script type="text/ng-template" id="field_renderer.html">
 							      		
-											<!--<span class="muted">{{child.xmlname}} - {{child.input_type}} - {{child.included}}</span>--> 
+											<!--<span class="muted">{{child.xmlname}} - {{child.input_type}} - {{child.include}}</span>--> 
 											
 											<div ng-switch="child.input_type">
 											
 									          <div ng-switch-when="node">
 									          
-										          <div ng-if="child.included" class="panel panel-default">
+										          <div ng-if="child.include" class="panel panel-default">
 										          
 													  <div class="panel-heading" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>
 													    <h3 class="panel-title pull-left"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.labels.en}}</h3>
@@ -151,7 +151,7 @@
 									          
 									          <div ng-switch-default>
 									        
-									        	<div ng-if="child.included" data-ng-hide="child.hidden" data-ng-include="'/views/partials/' + child.input_type + '.html'"></div>
+									        	<div ng-if="child.include" data-ng-hide="child.hidden" data-ng-include="'/views/partials/' + child.input_type + '.html'"></div>
 												
 												<!-- children fields of the field -->
 												<ul data-ng-show="child.children.length">

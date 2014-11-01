@@ -6,24 +6,41 @@
         
 % end
 
-%= include 'alerts'
-
 	
 <div class="container" data-ng-controller="FoldersCtrl" data-ng-init="init('<%= $init_data %>')">
+
+%= include 'alerts'
+
+	<div data-ng-if="importResults" class="panel panel-primary">
+	    <div class="panel-heading" role="tab">
+	      <h4 class="panel-title">
+	        <a data-toggle="collapse" href="#collapseOne" aria-controls="collapseOne">
+	          Import results
+	        </a>
+	      </h4>
+	    </div>
+	    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+	      <div class="panel-body">
+	      	<ul>
+			  <li data-ng-repeat="res in importResults">{{res}}</li>
+			</ul>
+	      </div>
+	     </div>
+    </div>
 
 	<table class="table">
 	  <thead>
 	  <tr>
 	  	<th>Folder</th>
 	    <th>Created</th>		
-	    <th></th>
+	    <th data-ng-if="current_user.role == 'manager'"><button ng-disabled="form_disabled" data-ng-click="runImport()" class="btn btn-primary navbar-btn"><span class="glyphicon glyphicon-import"></span> Run import</button></th>
 	  </tr>
 	  </thead>
 	  <tbody>
 	  <tr ng-repeat="folder in items | orderBy:'created'">	  
 	  	<td><a href="bags/folder/{{folder.folderid}}">{{folder.name}}</a></td>  
 	    <td><span class="gray-light" ng-if="folder.created">{{folder.created * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
-	    <td ng-if="current_user.role == 'manager'"><a href="" data-ng-click="deactivateFolder(folder.folderid)">Deactivate</a></td>
+	    <td data-ng-if="current_user.role == 'manager'"><a href="" data-ng-click="deactivateFolder(folder.folderid)">Deactivate</a></td>
 	  </tr>	  
 	  </tbody>
 	</table>

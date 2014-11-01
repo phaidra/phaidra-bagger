@@ -20,6 +20,13 @@ sub get_uwmetadata_tree {
     
 	my $res = { alerts => [], status => 200 };
 	
+	my $cachekey = 'uwmetadata_tree';
+	my $cacheval = $self->app->chi->get($cachekey);
+	if($cacheval){   			  	
+		$self->app->log->debug("[cache hit] $cachekey");
+		return $cacheval;		
+	}
+	
 	if($self->app->config->{phaidra}->{local_uwmetadata_tree}){
 		
 		$self->app->log->debug("Reading uwmetadata tree from file");
@@ -40,6 +47,11 @@ sub get_uwmetadata_tree {
 		my $metadata = decode_json($content);
  		$res->{tree} = $metadata->{tree};
  		$res->{languages} = $metadata->{languages};
+ 		
+ 		$cacheval = $res;
+ 		$self->app->chi->set($cachekey, $cacheval, '1 day');    
+	    # serialization check
+	    $cacheval = $self->app->chi->get($cachekey);
  		
  		return $res;
 	}
@@ -64,6 +76,11 @@ sub get_uwmetadata_tree {
 				$res->{languages} = $rs->json->{languages};
 				$res->{tree} = $rs->json->{tree};
 				push @{$res->{alerts}}, $rs->json->{alerts}; 
+				
+				$cacheval = $res;
+		 		$self->app->chi->set($cachekey, $cacheval, '1 day');    
+			    # serialization check
+			    $cacheval = $self->app->chi->get($cachekey);
 		  		return $res;
 		  		
 		  	}else {
@@ -240,6 +257,12 @@ sub generate_thumbnails {
 	}
 }
 
+sub get_languages() {
+	my $self = shift;  	
+	my $rs = $self->get_uwmetadata_tree();		
+	return $rs->{languages};
+}
+
 sub load {
 	
 	my $self = shift;  	
@@ -253,7 +276,7 @@ sub load {
 	
 	if(defined($bag)){
 		
-		$self->app->log->info("[".$self->current_user->{username}."] Loaded bag $bagid: ".$self->app->dumper($bag));				    
+		#$self->app->log->info("[".$self->current_user->{username}."] Loaded bag $bagid: ".$self->app->dumper($bag));				    
 		my $metadata_exists = 0;
 		if($bag->{metadata}){
 			if($bag->{metadata}->{uwmetadata}){
@@ -278,7 +301,11 @@ sub load {
 			   	}	
 			}
 			
+		}else{
+			$bag->{metadata}->{languages} = $self->get_languages();
+			
 		}
+				
 				    
 		#$self->app->log->debug("[".$self->current_user->{username}."] Loaded bag $bagid");
 		$self->render(json => $bag, status => 200);
@@ -327,24 +354,104 @@ sub delete {
 	$self->render(json => { alerts => [] }, status => 200);
 }
 
-sub edit {
-    my $self = shift;
-    
-    my $project_config = $self->config->{projects}->{$self->current_user->{project}};  	 
+sub _edit_prepare_data {
+	my $self = shift;
+	 
+	my $project_config = $self->config->{projects}->{$self->current_user->{project}};  	 
 	my $thumb_path = $project_config->{thumbnails}->{url_path};
 	my $redmine_baseurl = $project_config->{redmine_baseurl};
-    
+	
     my $templates = $self->mango->db->collection('templates.uwmetadata')
 		->find({ project => $self->current_user->{project}})
 		->sort({created => 1})
 		->fields({ title => 1, created => 1, updated => 1, created_by => 1 })->all();
-		
-    my $init_data = { bagid => $self->stash('bagid'), templates => $templates, current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl};
+	
+	my $init_data = { bagid => $self->stash('bagid'), templates => $templates, current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl};
+	
+	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
+	my $bag = $self->mango->db->collection('bags')->find_one({bagid => $self->stash('bagid'), owner => $owner}, {label => 1});
+	
+	$init_data->{navtitle} = $bag->{label};
+	$init_data->{navtitlelink} = 'bag/'.$self->stash('bagid').'/edit';
+	
+	$self->stash(    
+    	navtitle => $init_data->{navtitle}, 
+    	navtitlelink => $init_data->{navtitlelink}
+    );
+	
+	return $init_data;
+}
+
+sub edit {
+	my $self = shift;
+    
+    #my $payload = $self->req->json;
+	#my $query = $payload->{query};
+    
+    my $init_data = $self->_edit_prepare_data();
+      
+    my $filter = $self->param('filter');
+    my $from = $self->param('from');
+    my $limit = $self->param('limit');
+    my $sortfield = $self->param('sortfield');
+    my $sortvalue = $self->param('sortvalue');
+    
+    if($filter){
+    	$filter = decode_json($filter);
+       
+	    my %query = (
+	    	filter => $filter,
+	    	from => $from,
+	    	limit => $limit,
+	    	sortfield => $sortfield,
+	    	sortvalue => $sortvalue
+	    );
+	    
+	    # get next and prev bags
+	    my ($hits, $coll) = $self->_search($filter, $from, $limit, $sortfield, $sortvalue);
+	    my $prev;
+	    my $next;
+	    my $tmp;
+	    my $bagid = $self->stash('bagid');
+	
+	    foreach my $bag (@{$coll}){    	    
+	    	if($bag->{bagid} eq $bagid){
+	    		$prev = $tmp;	    		
+	    	}
+	    	if($tmp){
+		    	if($tmp->{bagid} eq $bagid){
+		    		$next = $bag; last;	
+		    	}
+	    	}
+	    	$tmp = $bag;    	
+	    }
+	    
+	    #$self->app->log->debug("XXXXXXXXXXXX q:".$self->app->dumper(\%query));
+	    	
+	   	$init_data->{current_bags_query} = \%query;
+	   	
+	   	if($prev){
+	   		$init_data->{prev_bag} = { bagid => $prev->{bagid}, label => $prev->{label} };
+	   	}
+	   	if($next){
+	   		$init_data->{next_bag} = { bagid => $next->{bagid}, label => $next->{label} };
+	   	}
+	
+	   	
+	   	if($filter->{folderid}){
+	   		my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
+	   		my $folder = $self->mango->db->collection('folders')->find_one({folderid => $filter->{folderid}, owner => $owner},{ name => 1 });
+	   		$init_data->{folder} = { folderid => $filter->{folderid}, name => $folder->{name} };	
+	   	}	
+    }
+   	
+    #$self->app->log->debug("XXXXXXXX :".$self->app->dumper($init_data));
     $self->stash(init_data => encode_json($init_data));
     
 	$self->render('bag/'.$self->current_user->{project}.'_edit');
 }
 
+=cut /bags, currently not used 
 sub bags {
     my $self = shift;  	 
 	my $thumb_path = $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path};
@@ -356,15 +463,16 @@ sub bags {
       
 	$self->render('bags/list');
 }
+=cut
 
-sub folder_bags {
-    my $self = shift;
+sub _folder_bags_prepare_data {
+	my $self = shift;
 
     my $folderid = $self->stash('folderid');  	
 
 	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
 	my $folder = $self->mango->db->collection('folders')->find_one({folderid => $folderid, owner => $owner},{ name => 1 });
-    
+
     my $init_data = { 
     	folderid => $folderid, 
     	navtitlelink => 'bags/folder/'.$folderid, 
@@ -378,11 +486,37 @@ sub folder_bags {
     	ingest_instances => $self->config->{ingest_instances}
     };
     
-    $self->stash(
-    	init_data => encode_json($init_data), 
-    	navtitle => $folder->{name}, 
-    	navtitlelink => 'bags/folder/'.$folderid
+    $self->stash(    
+    	navtitle => $init_data->{navtitle}, 
+    	navtitlelink => $init_data->{navtitlelink}
     );
+    
+    return $init_data;
+}
+
+sub folder_bags_with_query {
+	my $self = shift;
+	
+	my $payload = $self->req->json;
+	my $query = $payload->{query};
+      
+    my $init_data = $self->_folder_bags_prepare_data();
+      
+    if($query){    	
+    	$init_data->{query} = $query;
+    }
+    
+    $self->stash(init_data => encode_json($init_data));     
+    
+    $self->render('bags/list');
+}
+
+sub folder_bags {
+    my $self = shift;
+    
+    my $init_data = $self->_folder_bags_prepare_data();
+    
+    $self->stash(init_data => encode_json($init_data));
       
 	$self->render('bags/list');
 }
@@ -401,6 +535,21 @@ sub search {
     my $limit = $query->{'limit'};
     my $sortfield = $query->{'sortfield'};
     my $sortvalue = $query->{'sortvalue'};
+    
+	my ($hits, $coll) = $self->_search($filter, $from, $limit, $sortfield, $sortvalue, $filterfield, $filtervalue);
+	#$self->app->log->debug("XXXXXXXX :".$self->app->dumper($coll));
+	$self->render(json => { items => $coll, hits => $hits, alerts => []}, status => 200);
+}
+
+sub _search {
+    my $self = shift;  	 
+    my $filter = shift;
+    my $from = shift;
+    my $limit = shift;
+    my $sortfield = shift;
+    my $sortvalue = shift;    
+    my $filterfield = shift;
+    my $filtervalue = shift;
     
     unless($sortfield){
     	$sortfield = 'updated';
@@ -443,10 +592,8 @@ sub search {
     if($filterfield && $filtervalue){
     	$find{$filterfield} = $filtervalue;
     }
-        
-    $self->render_later;
 
-	#$self->app->log->info("Find:".$self->app->dumper(\%find));
+	#$self->app->log->info("Find:".$self->app->dumper(\%find)." sortfield: $sortfield, sortvalue: $sortvalue");
 
 	my $cursor = $self->mango->db->collection('bags')->find(\%find);
 
@@ -454,7 +601,7 @@ sub search {
 	my $hits = $cursor->count;
 	
 	$cursor
-		->sort({$sortfield => $sortvalue})
+		->sort({$sortfield => int $sortvalue})
 		->fields({ bagid => 1, status => 1, label => 1, created => 1, updated => 1, owner => 1, tags => 1, assignee => 1, alerts => 1, pids => 1, job => 1 })
 		->skip($from)
 		->limit($limit);
@@ -463,7 +610,7 @@ sub search {
 	
 	#$self->app->log->info("coll:".$self->app->dumper($coll));
 	
-	$self->render(json => { items => $coll, hits => $hits, alerts => [] , status => 200 });
+	return ($hits, $coll);
 
 =cut
 
@@ -633,13 +780,13 @@ my %filter = (
 	
 	# mandatory
 	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#general" => { default => undef},
-	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#identifier" => { default => undef, included => 0},
+	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#identifier" => { default => undef, include => 0},
 	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#title" => { default => undef},
-	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#language" => { default => "xx", included => 0},
+	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#language" => { default => "xx", include => 0},
 	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#description" => { default => undef},
 	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#lifecycle" => { default => undef},
-	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#upload_date" => { default => undef, included => 0},
-	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#status" => { default => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/voc_2/44", included => 0},
+	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#upload_date" => { default => undef, include => 0},
+	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#status" => { default => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/voc_2/44", include => 0},
 	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#contribute" => { default => undef},
 	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#role" => { default => undef},
 	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#entity" => { default => undef},
@@ -647,20 +794,20 @@ my %filter = (
 	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/entity#lastname" => { default => undef},
 	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/entity#institution" => { default => undef},
 	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#rights" => { default => undef},
-	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#cost" => { default => 0, included => 0},
-	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#copyright" => { default => 1, included => 0},
+	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#cost" => { default => 0, include => 0},
+	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#copyright" => { default => 1, include => 0},
 	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#license" => { default => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/voc_21/12"},
 	
 	# difab wanted
 	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#alt_title" => { default => undef},
 	"http://phaidra.univie.ac.at/XML/metadata/lom/V1.0#keyword" => { default => undef},
 	"http://phaidra.univie.ac.at/XML/metadata/histkult/V1.0#histkult" => { default => undef},
-	"http://phaidra.univie.ac.at/XML/metadata/histkult/V1.0#dimensions" => { default => undef, included_children => 1 },
-	"http://phaidra.univie.ac.at/XML/metadata/histkult/V1.0#reference_number" => { default => undef, included_children => 1 },
+	"http://phaidra.univie.ac.at/XML/metadata/histkult/V1.0#dimensions" => { default => undef, include_children => 1 },
+	"http://phaidra.univie.ac.at/XML/metadata/histkult/V1.0#reference_number" => { default => undef, include_children => 1 },
 	"http://phaidra.univie.ac.at/XML/metadata/histkult/V1.0#inscription" => { default => undef, value_lang => 'bg'},
 	"http://phaidra.univie.ac.at/XML/metadata/histkult/V1.0#note" => { default => undef},
 	"http://phaidra.univie.ac.at/XML/metadata/histkult/V1.0#gps" => { default => undef},
-	"http://phaidra.univie.ac.at/XML/metadata/provenience/V1.0#provenience" => { default => undef, included_children => 1},
+	"http://phaidra.univie.ac.at/XML/metadata/provenience/V1.0#provenience" => { default => undef, include_children => 1},
 	"http://phaidra.univie.ac.at/XML/metadata/provenience/V1.0#location" => { default => undef},
 	
 );
@@ -670,7 +817,7 @@ sub difab_filter(){
 
 	my $self = shift;
 	my $children = shift;
-	my $included_children = shift;
+	my $include_children = shift;
 	my $set_default = shift;					
 
 	foreach my $child (@{$children}){
@@ -686,11 +833,11 @@ sub difab_filter(){
 			
 			#$self->app->log->debug("def found ".$self->app->dumper($def));
 						
-			# included
-			if(defined($def->{included})){
-				$child->{included} = $def->{included};
+			# include
+			if(defined($def->{include})){
+				$child->{include} = $def->{include};
 			}else{
-				$child->{included} = 1;
+				$child->{include} = 1;
 			}
 			
 			if($set_default){
@@ -709,20 +856,20 @@ sub difab_filter(){
 		}else{
 			# HACK rights>description has same xmlns & xmlname as general>description (WTAF)
 			if($child->{help_id} eq "helpmeta_37"){
-				$child->{included} = 0;	
+				$child->{include} = 0;	
 			}
 			
-			$child->{included} = $included_children ? 1 : 0;
+			$child->{include} = $include_children ? 1 : 0;
 		}
 
 		if($children_size > 0){
 			if(defined($def)){
-				if(defined($def->{included_children})){
-					$self->difab_filter($child->{children}, $def->{included_children}, $set_default);
+				if(defined($def->{include_children})){
+					$self->difab_filter($child->{children}, $def->{include_children}, $set_default);
 					return;
 				}
 			}
-			$self->difab_filter($child->{children}, $included_children, $set_default);
+			$self->difab_filter($child->{children}, $include_children, $set_default);
 		}
 	}	
 		

@@ -85,6 +85,7 @@
 		            		"value": "fixed"
 	            		}
             		],
+            "default_assignee": "username",
             "restricted_operations": ["set_assignee"],
             "restricted_actions": ["POST /job/"],
             "bags": {

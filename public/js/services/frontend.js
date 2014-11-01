@@ -47,5 +47,6 @@ angular.module('frontendService', [])
 				url     : $('head base').attr('href')+'classifications'
 			});	        
 		}
+
 	}
 });

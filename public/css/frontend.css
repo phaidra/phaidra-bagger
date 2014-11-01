@@ -119,9 +119,9 @@ margin-top: 5px;
  	background-color: #51DBAF;
 }
 
-.img-rounded {
-	-webkit-box-shadow: 2px 2px 5px rgba(0, 0, 0, .5);
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, .5);
+.img-thumbnail-detail {
+	-webkit-box-shadow: 2px 2px 7px rgba(0, 0, 0, .1);
+    box-shadow: 2px 2px 7px rgba(0, 0, 0, .1);
     max-width: 100%;
 	margin: 15px 0 15px 0;
 }
@@ -245,4 +245,35 @@ margin-top: 5px;
 
 .class-search-form {
 	margin: 0 0 10px 0;
+}
+
+.project-settings {
+	width: 70%;
+	margin: 0 0 0 60px;
+}
+
+.settings-panel {
+   margin: 10px;
+}
+
+.settings-role {
+	height: 30px;
+	padding-top: 10px;
+}
+
+.dl-settings dt {
+	font-weight: inherit;
+}
+
+.dl-settings dd {
+	font-weight: 700;
+}
+
+.prev-bag {
+	padding: 0px;
+}
+
+.next-bag {
+	width: inherit;
+	padding: 0px;
 }

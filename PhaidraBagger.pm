@@ -29,7 +29,7 @@ sub startup {
 		if($config->{ingest_instances}->{$k}->{is_default} eq '1'){
 			$have_default_instance = 1;
 			$config->{phaidra} = $config->{ingest_instances}->{$k};
-			$self->log->info("Default ingest instance: ".$self->dumper($config->{phaidra}));
+			#$self->log->info("Default ingest instance: ".$self->dumper($config->{phaidra}));
 		}
 	}
 	unless($have_default_instance){
@@ -298,8 +298,9 @@ sub startup {
     $autz->route('templates') ->via('get')   ->to('template#templates');
     $autz->route('templates/my') ->via('get')   ->to('template#my');
     
-    $autz->route('bags') ->via('get')   ->to('bag#bags');
+    #$autz->route('bags') ->via('get')   ->to('bag#bags');
     $autz->route('bags/folder/:folderid') ->via('get')   ->to('bag#folder_bags');
+    $autz->route('bags/folder/:folderid') ->via('post')   ->to('bag#folder_bags_with_query');
     $autz->route('bags/search') ->via('post')   ->to('bag#search');    
     $autz->route('bags/search/:filterfield/:filtervalue') ->via('post')   ->to('bag#search');            
     $autz->route('bags/import') ->via('get')   ->to('bag#import');
