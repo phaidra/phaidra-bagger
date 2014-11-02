@@ -1,8 +1,24 @@
 % layout 'default', title => 'stage';
 
-	%= include 'alerts'
-    
-    
+%= include 'alerts'
+
+% content_for header => begin        
+    <link href="<%= url_for '/css/awesome-bootstrap-checkbox.css' %>" rel="stylesheet">
+% end
+
+	<script type="text/ng-template" id="checkbox_renderer.html">
+								    
+	    <div class="checkbox checkbox-primary">
+		   	<input type="checkbox" id="{{prefix}}checkbox{{i}}" data-ng-model="field.include" data-ng-change="checkTreeSanity(field, type)" data-ng-disabled="field.disabled">
+		   	<label for="{{prefix}}checkbox{{i}}" ng-class="{ 'text-danger': field.mandatory }">{{field.labels.en}}</label>
+	    </div>
+															
+		<ul data-ng-if="field.children.length">
+			<li data-ng-repeat="field in field.children | filter:filterHidden" ng-init="i = i*100+$index" data-ng-include="'checkbox_renderer.html'" class="checkbox-renderer"></li>
+		</ul>
+								    
+	</script>
+
     <tabset data-ng-init="initSettings('<%= $init_data %>')" class="project-settings">
 		
 		<tab>
@@ -10,34 +26,31 @@
 		   		<span>User settings</span>
 		   	</tab-heading>
 		   	
+			<div class="container-fluid">      			      
+				<div class="pull-right">			             
+					<button ng-disabled="form_disabled" data-ng-click="saveSettings('user')" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-save"></span> Save</button>									   
+				</div>				  
+			</div>
+		
 		   	<div class="panel panel-default settings-panel" >
-					<div class="panel-heading">
+					<div class="panel-heading" data-toggle="collapse" href="#collapseUsrMd" aria-controls="collapseUsrMd">
 					    <h3 class="panel-title">Metadata</h3>
 					</div>
-					<div class="panel-body">
+					<div id="collapseUsrMd" class="panel-collapse collapse" role="tabpanel">
+						<div class="panel-body">
+							<h4>Visible fields</h4>
+							
+							<div class="settings-metadata-tree">
+													
+								<span data-ng-hide="uwmfields.user">Please wait, the metadata tree loads...</span>
+																		
+								<ul data-ng-if="uwmfields.user" ng-init="i=1">
+									<li data-ng-repeat="field in uwmfields.user | filter:filterHidden" ng-init="i = i*100+$index; prefix= 'user_'; type='user'" data-ng-include="'checkbox_renderer.html'" class="checkbox-renderer"></li>
+								</ul>
+								  	
+							</div>
 					
-						<table class="table">
-						  <thead>
-							  <tr>
-							  	<th>URI</th>
-							  	<th>Include</th>
-							  	<th>Include children</th>
-						   	  </tr>
-					   	  </thead>
-						  <tbody>
-							  <tr data-ng-repeat="field in user_settings.uwmetadata.fieldfilter">	  
-							    <td>{{field.uri}}</td>
-							    <td>{{field.include}}</td>
-							    <td>{{field.include_children}}</td>
-							  </tr>
-							  <tr>	  
-							    <td><select class="form-control" ng-model="addfilter.uri" ng-options="option.uri as option.uri for option in uwmfields" ng-required="true" placeholder="-- please choose --"><option value="">-- please choose --</option></select></td>
-							    <td>{{field.include}}</td>
-							    <td>{{field.include_children}}</td>
-							  </tr>
-						  </tbody>	
-						</table>
-					
+						</div>
 					</div>
 			 </div>
 		   	  	
@@ -48,6 +61,12 @@
 		   		<span>Project settings</span>
 		   	</tab-heading>
 		   	
+		   	<div class="container-fluid">
+			   	<div class="pull-right">			             
+					<button ng-disabled="form_disabled" data-ng-click="saveSettings('project')" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-save"></span> Save</button>									   
+				</div>	
+			</div>
+		   	
 		   		<div class="panel panel-default settings-panel" >
 					<div class="panel-heading">
 					    <h3 class="panel-title">General</h3>
@@ -56,13 +75,13 @@
 					   	<dl class="dl-horizontal" >
 					   	  
 					   	  <dt>Name</dt>
-						  <dd>{{project_settings.name}}</dd>
+						  <dd>{{settings.project.name}}</dd>
 						  
 						  <dt>Account</dt>
-						  <dd>{{project_settings.account}}</dd>
+						  <dd>{{settings.project.account}}</dd>
 						  
 						  <dt>Folder</dt>
-						  <dd>{{project_settings.folders.in}}</dd>
+						  <dd>{{settings.project.folders.in}}</dd>
 						  
 						  <dt>Default assignee</dt>
 						  <dd>{{defaultAssigneeDisplayName()}}</dd>
@@ -76,7 +95,7 @@
 					    <h3 class="panel-title">Members</h3>
 					</div>
 					<div class="panel-body">
-					   	<dl class="dl-horizontal dl-settings" data-ng-repeat="member in project_settings.members">
+					   	<dl class="dl-horizontal dl-settings" data-ng-repeat="member in settings.project.members">
 					   	  
 					   	  <dt class="settings-role">Role</dt>
 						  <dd data-ng-if="member.role == 'manager'" ><img src="img/vader.png" height="30px" /></dd>
@@ -105,7 +124,7 @@
 						   	  </tr>
 					   	  </thead>
 						  <tbody>
-							  <tr data-ng-repeat="status in project_settings.statuses">	  
+							  <tr data-ng-repeat="status in settings.project.statuses">	  
 							    <td>{{status.label}}</td>
 							    <td>{{status.value}}</td>
 							  </tr>
@@ -114,6 +133,27 @@
 										   				
 					</div>
 			   	</div>
+			   	
+			   		<div class="panel panel-default settings-panel" >
+					<div class="panel-heading" data-toggle="collapse" href="#collapsePrjMd" aria-controls="collapsePrjMd">
+					    <h3 class="panel-title"><a href="#">Metadata</a></h3>
+					</div>
+					<div id="collapsePrjMd" class="panel-collapse collapse" role="tabpanel">
+						<div class="panel-body" >
+							<h4>Visible fields</h4>
+		
+							<div class="settings-metadata-tree">
+									
+								<span data-ng-hide="uwmfields.project.length">Please wait, the metadata tree loads...</span>
+								<ul data-ng-if="uwmfields.project.length" ng-init="i=1">
+									<li data-ng-repeat="field in uwmfields.project | filter:filterHidden" ng-init="i = i*100+$index; prefix= 'project_'; type='project'" data-ng-include="'checkbox_renderer.html'" class="checkbox-renderer"></li>
+								</ul>
+							
+							</div>
+					
+						</div>
+					</div>
+			 </div>
 		   	
 		</tab>
 		   	

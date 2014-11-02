@@ -126,6 +126,13 @@ margin-top: 5px;
 	margin: 15px 0 15px 0;
 }
 
+.img-rounded {
+	-webkit-box-shadow: 2px 2px 7px rgba(0, 0, 0, .1);
+    box-shadow: 2px 2px 7px rgba(0, 0, 0, .1);
+    max-width: 100%;
+	margin: 15px 0 15px 0;
+}
+
 .home-div{
 	min-height: 500px;
 }
@@ -269,6 +276,10 @@ margin-top: 5px;
 	font-weight: 700;
 }
 
+.settings-metadata-tree {
+	padding: 5px 0px 0px 0px;
+}
+
 .prev-bag {
 	padding: 0px;
 }
@@ -276,4 +287,8 @@ margin-top: 5px;
 .next-bag {
 	width: inherit;
 	padding: 0px;
+}
+
+.checkbox-renderer {
+	display: block;
 }

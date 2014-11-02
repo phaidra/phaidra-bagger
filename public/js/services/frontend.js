@@ -20,16 +20,18 @@ angular.module('frontendService', [])
 		
 		loadSettings: function(type){
 			return $http({
-				method  : 'POST',
-				url     : $('head base').attr('href')+'settings/'+type
+				method  : 'GET',
+				url     : $('head base').attr('href')+'settings/'
 			});	        
 		},
 		
 		saveSettings: function(type, settings){
+			var data = {};
+			data[type+'_settings'] = settings;			
 			return $http({
-				method  : 'GET',
-				url     : $('head base').attr('href')+'settings/'+type,
-				data    : { settings: settings }
+				method  : 'POST',
+				url     : $('head base').attr('href')+'settings/',
+				data    : data
 			});	        
 		},
 		
@@ -46,7 +48,7 @@ angular.module('frontendService', [])
 				method  : 'GET',
 				url     : $('head base').attr('href')+'classifications'
 			});	        
-		}
+		}	
 
 	}
 });

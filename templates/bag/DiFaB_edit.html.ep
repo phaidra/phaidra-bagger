@@ -101,7 +101,7 @@
 							      	</select>			      						     				    							
 							      </div>			
 							      
-							      <p class="navbar-text">{{bagid}}</p>      
+							      <p class="navbar-text" title="Bagid">{{bagid}}</p>      
 							      			      
 							      <div class="navbar-form navbar-right">			             
 									<button ng-disabled="form.$invalid || form_disabled" data-ng-click="save()" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-save"></span> Save</button>									   

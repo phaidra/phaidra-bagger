@@ -7,7 +7,7 @@ app.filter("nl2br", function($filter) {
  };
 });
 
-app.controller('FrontendCtrl', function($scope, $window, $modal, $log, DirectoryService, MetadataService, promiseTracker) {
+app.controller('FrontendCtrl', function($scope, $window, $modal, $log, DirectoryService, MetadataService, FrontendService, promiseTracker) {
     
 	// we will use this to track running ajax requests to show spinner	
 	$scope.loadingTracker = promiseTracker.register('loadingTrackerFrontend');
@@ -18,9 +18,16 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
 	$scope.initdata = '';
 	$scope.current_user = '';
 	
-	$scope.user_settings = [];
-	$scope.project_settings = [];
-			
+	$scope.uwmfields = { 
+	    user: [], 
+	    project: []
+	};
+	
+	$scope.settings = {
+		user: {},
+		project: {}
+	};		
+
 	$scope.init = function (initdata) {
 		$scope.initdata = angular.fromJson(initdata);
 		$scope.current_user = $scope.initdata.current_user;
@@ -32,8 +39,11 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
     	$scope.initdata = d;
 		$scope.current_user = d.current_user;
 		$scope.baseurl = $('head base').attr('href');
-		$scope.user_settings = d.user_settings;
-		$scope.project_settings = d.project_settings;
+		$scope.settings.user = d.user_settings;
+		if($scope.settings.user == null){
+			$scope.settings.user = {};
+		}		
+		$scope.settings.project = d.project_settings;
 		$scope.getUwmfields();
     };
     
@@ -43,7 +53,9 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
 		promise.then(
 		  	function(response) { 
 		  		$scope.alerts = response.data.alerts;	   
-		  		$scope.uwmfields = $scope.getUwmfieldsFromTree(response.data.tree);
+		  		$scope.uwmfields.user = response.data.tree;
+		  		angular.copy(response.data.tree, $scope.uwmfields.project); 
+		  		$scope.applyVisibleFieldsSettings();
 		  		$scope.form_disabled = false;		  		
 		  	}
 		  	,function(response) {
@@ -54,19 +66,130 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
 		);
 	};
 	
-	$scope.defaultAssigneeDisplayName = function() {
-		for (var i = 0; i < $scope.project_settings.members.length; ++i) {
-			if($scope.project_settings.members[i].username == $scope.project_settings.default_assignee){
-				return $scope.project_settings.members[i].displayname;
+	$scope.applyVisibleFieldsSettings = function(){
+		if($scope.settings['user'].visible_uwmfields){
+			$scope.applyVisibleFieldsSettingsRec($scope.uwmfields['user'], $scope.settings['user'].visible_uwmfields);
+		}
+		if($scope.settings['project'].visible_uwmfields){
+			$scope.applyVisibleFieldsSettingsRec($scope.uwmfields['project'], $scope.settings['project'].visible_uwmfields);
+		}
+	}
+
+	$scope.saveSettings = function(type){
+		
+		$scope.settings[type].visible_uwmfields = [];
+		$scope.saveVisibleFieldsSettingsRec($scope.uwmfields[type], type);
+		
+		$scope.form_disabled = true;		
+		var promise = FrontendService.saveSettings(type, $scope.settings[type]);		
+		$scope.loadingTracker.addPromise(promise);
+		promise.then(
+			function(response) { 
+				$scope.form_disabled = false;
+				$scope.alerts = response.data.alerts;    			    			
+			}
+			,function(response) {
+				$scope.form_disabled = false;
+				$scope.alerts = response.data.alerts;
+		    }
+		);	
+	};		
+
+	$scope.saveVisibleFieldsSettingsRec = function(children, type){		
+		for (var i = 0; i < children.length; ++i) {
+			if(children[i].include){
+				var uri;
+				if(children[i].help_id == "helpmeta_37"){
+					uri = children[i].xmlns+'/rights#'+children[i].xmlname;
+				}else{
+					uri = children[i].xmlns+'#'+children[i].xmlname;
+				}
+				$scope.settings[type].visible_uwmfields.push(uri);
+			}			
+			if(children[i].children){
+				$scope.saveVisibleFieldsSettingsRec(children[i].children, type);	
 			}			
 		}		
-	}
+	};
 	
-	$scope.getUwmfieldsFromTree = function (fields) {
-		for (var i = 0; i < fields.length; ++i) {
+	$scope.applyVisibleFieldsSettingsRec = function(children, visible){		
+		for (var i = 0; i < children.length; ++i) {			
+			var uri;
+			if(children[i].help_id == "helpmeta_37"){
+				uri = children[i].xmlns+'/rights#'+children[i].xmlname;
+			}else{
+				uri = children[i].xmlns+'#'+children[i].xmlname;
+			}
 			
+			for(var j = 0; j < visible.length; ++j) {
+				if(visible[j] == uri){
+					children[i].include = true;
+				}
+			}
+			
+			if(children[i].children){
+				$scope.applyVisibleFieldsSettingsRec(children[i].children, visible);	
+			}	
 		}		
+	}
+
+	$scope.checkTreeSanity = function (field, type) {
+		if(field.children){
+			// if parent is unchecked then all the children should be unchecked
+			$scope.setIncludeRec(field.children, field.include);
+		}
+		
+		// if some child is checked, then parent have to be checked
+		// if no child is checked, then parent have to be unchecked
+		$scope.checkParents($scope.uwmfields[type]);
+	};
+	
+	$scope.checkParents = function(children){
+		for (var i = 0; i < children.length; ++i) {			
+			if(children[i].children){
+				if($scope.hasCheckedChild(children[i].children)){
+					children[i].include = true;
+				}else{
+					children[i].include = false;
+				}				
+				$scope.checkParents(children[i].children);
+			}
+		}		
+	};
+	
+	$scope.hasCheckedChild = function(children){
+		for (var i = 0; i < children.length; ++i) {
+			if(children[i].include){
+				return true;
+			}			
+			if(children[i].children){				
+				return $scope.hasCheckedChild(children[i].children)
+			}
+		}		
+	};
+	
+	$scope.setIncludeRec = function (children, include){
+		for (var i = 0; i < children.length; ++i) {
+			children[i].include = include;
+			if(children[i].children){
+				$scope.setIncludeRec(children[i].children, include);
+			}			
+		}
 	};	
+		
+	// used to filter array of elements: if 'hidden' is set, the field will not be included in the array
+    $scope.filterHidden = function(e)
+    {
+        return !e.hidden;        
+    };
+	
+	$scope.defaultAssigneeDisplayName = function() {
+		for (var i = 0; i < $scope.settings.project.members.length; ++i) {
+			if($scope.settings.project.members[i].username == $scope.settings.project.default_assignee){
+				return $scope.settings.project.members[i].displayname;
+			}			
+		}		
+	}	
 
     $scope.forceLoadPage = function(link) {
     	$window.location = link;

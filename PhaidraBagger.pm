@@ -269,7 +269,7 @@ sub startup {
     my $autz = $autn->bridge->to('authorization#check');
     
     $autz->route('settings') 			->via('get')   ->to('settings#settings');
-    $autz->route('settings') 			->via('post')   ->to('settings#save');
+    $autz->route('settings') 			->via('post')  ->to('settings#save');
     
     $autz->route('selection') 			->via('post')   ->to('frontend#post_selection');
     $autz->route('selection') 			->via('get')   ->to('frontend#get_selection');

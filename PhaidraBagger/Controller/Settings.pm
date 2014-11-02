@@ -18,9 +18,11 @@ sub settings {
 	my $project_settings;
 	
 	if($self->current_user->{role} eq 'manager'){
-		$project_settings = $self->mango->db->collection('project.settings')->find_one({ username => $self->current_user->{username}, project => $self->current_user->{project}});		
-		unless($project_settings){
-			$project_settings = $self->config->{projects}->{$self->current_user->{project}};	
+		$project_settings = $self->mango->db->collection('project.settings')->find_one({project => $self->current_user->{project}});				
+		if($project_settings){
+			$project_settings = $project_settings->{settings};	
+		}else{
+			$project_settings = $self->config->{projects}->{$self->current_user->{project}};
 		}
 		$project_settings->{name} = $self->current_user->{project};
 	}			    
@@ -29,7 +31,7 @@ sub settings {
 			    
     my $init_data = { 
     	project_settings => $project_settings,
-    	user_settings => $user_settings,
+    	user_settings => $user_settings->{settings},
     	navtitlelink => "settings", 
     	navtitle => 'Settings', 
     	current_user => $self->current_user,
@@ -46,7 +48,7 @@ sub settings {
     $self->render('settings');			
 }
 
-sub user_save {	
+sub save {	
 	my $self = shift;  	
 	my $project_settings = $self->req->json->{project_settings};
 	my $user_settings = $self->req->json->{user_settings};
@@ -56,9 +58,11 @@ sub user_save {
 		my $reply = $self->mango->db->collection('user.settings')->update({ username => $self->current_user->{username}, project => $self->current_user->{project}},{'$set' => { username => $self->current_user->{username}, project => $self->current_user->{project}, updated => time, settings => $user_settings}}, {upsert => 1});	
 	}
 	
-	if($project_settings){
-		$self->app->log->info("[".$self->current_user->{username}."] Saving settings of project ".$self->current_user->{project});	
-		my $reply = $self->mango->db->collection('project.settings')->update({ project => $self->current_user->{project}},{'$set' => { project => $self->current_user->{project}, updated => time, settings => $project_settings }}, {upsert => 1});	
+	if($self->current_user->{role} eq 'manager'){
+		if($project_settings){
+			$self->app->log->info("[".$self->current_user->{username}."] Saving settings of project ".$self->current_user->{project});	
+			my $reply = $self->mango->db->collection('project.settings')->update({ project => $self->current_user->{project}},{'$set' => { project => $self->current_user->{project}, updated => time, settings => $project_settings }}, {upsert => 1});	
+		}
 	}
 	
 	$self->render(json => { alerts => [] }, status => 200);
