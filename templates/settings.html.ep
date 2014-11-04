@@ -2,160 +2,202 @@
 
 %= include 'alerts'
 
-% content_for header => begin        
+% content_for header => begin
     <link href="<%= url_for '/css/awesome-bootstrap-checkbox.css' %>" rel="stylesheet">
 % end
 
 	<script type="text/ng-template" id="checkbox_renderer.html">
-								    
+
 	    <div class="checkbox checkbox-primary">
 		   	<input type="checkbox" id="{{prefix}}checkbox{{i}}" data-ng-model="field.include" data-ng-change="checkTreeSanity(field, type)" data-ng-disabled="field.disabled">
 		   	<label for="{{prefix}}checkbox{{i}}" ng-class="{ 'text-danger': field.mandatory }">{{field.labels.en}}</label>
 	    </div>
-															
+
 		<ul data-ng-if="field.children.length">
 			<li data-ng-repeat="field in field.children | filter:filterHidden" ng-init="i = i*100+$index" data-ng-include="'checkbox_renderer.html'" class="checkbox-renderer"></li>
 		</ul>
-								    
+
 	</script>
 
     <tabset data-ng-init="initSettings('<%= $init_data %>')" class="project-settings">
-		
+
 		<tab>
 			<tab-heading>
 		   		<span>User settings</span>
 		   	</tab-heading>
-		   	
-			<div class="container-fluid">      			      
-				<div class="pull-right">			             
-					<button ng-disabled="form_disabled" data-ng-click="saveSettings('user')" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-save"></span> Save</button>									   
-				</div>				  
+
+			<div class="container-fluid">
+				<div class="pull-right">
+					<button ng-disabled="form_disabled" data-ng-click="saveSettings('user')" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-save"></span> Save</button>
+				</div>
 			</div>
-		
-		   	<div class="panel panel-default settings-panel" >
-					<div class="panel-heading" data-toggle="collapse" href="#collapseUsrMd" aria-controls="collapseUsrMd">
-					    <h3 class="panel-title">Metadata</h3>
+
+			<div class="panel panel-default settings-panel" >
+					<div class="panel-heading" id="headingUsrGeneral">
+					    <h3 class="panel-title"><a data-toggle="collapse" href="#collapseUsrGeneral" aria-controls="collapseUsrGeneral">General</a></h3>
 					</div>
-					<div id="collapseUsrMd" class="panel-collapse collapse" role="tabpanel">
+					<div id="collapseUsrGeneral" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingUsrGeneral">
+						<div class="panel-body" >
+						   	<dl class="dl-horizontal" >
+						   	  <dt>Current project</dt>
+							  <dd>{{current_user.project}}</dd>
+							  <dt>Display name</dt>
+							  <dd>{{current_user.displayname}}</dd>
+							  <dt>Role</dt>
+							  <dd>{{current_user.role}}</dd>
+							</dl>
+						</div>
+					</div>
+			</div>
+
+		   	<div class="panel panel-default settings-panel" >
+					<div class="panel-heading" id="headingUsrMd">
+					    <h3 class="panel-title"><a data-toggle="collapse" href="#collapseUsrMd" aria-controls="collapseUsrMd">Metadata</a></h3>
+					</div>
+					<div id="collapseUsrMd" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingUsrMd">
 						<div class="panel-body">
-							<h4>Visible fields</h4>
-							
-							<div class="settings-metadata-tree">
-													
-								<span data-ng-hide="uwmfields.user">Please wait, the metadata tree loads...</span>
-																		
-								<ul data-ng-if="uwmfields.user" ng-init="i=1">
-									<li data-ng-repeat="field in uwmfields.user | filter:filterHidden" ng-init="i = i*100+$index; prefix= 'user_'; type='user'" data-ng-include="'checkbox_renderer.html'" class="checkbox-renderer"></li>
-								</ul>
-								  	
-							</div>
-					
+
+							<dl class="dl-horizontal" >
+								<dt>Default template</dt>
+								<dd>
+									<ui-select ng-model="settings.user.default_template" theme="bootstrap" class="settings-select">
+								    	<ui-select-match placeholder="None">{{$select.selected.title}}</ui-select-match>
+									    	<ui-select-choices repeat="template._id as template in settings.templates | filter: $select.search">
+									        <strong><div ng-bind-html="template.title | highlight: $select.search"></div></strong>
+									    </ui-select-choices>
+								   	</ui-select>
+								</dd>
+								<dt>Visible fields</dt>
+								<dd>
+									<div class="settings-metadata-tree">
+										<span data-ng-hide="uwmfields.user">Please wait, the metadata tree loads...</span>
+										<ul data-ng-if="uwmfields.user" ng-init="i=1">
+											<li data-ng-repeat="field in uwmfields.user | filter:filterHidden" ng-init="i = i*100+$index; prefix= 'user_'; type='user'" data-ng-include="'checkbox_renderer.html'" class="checkbox-renderer"></li>
+										</ul>
+									</div>
+								</dd>
+							</dl>
 						</div>
 					</div>
 			 </div>
-		   	  	
+
 		</tab>
 
 		<tab data-ng-if="current_user.role == 'manager'">
 			<tab-heading>
 		   		<span>Project settings</span>
 		   	</tab-heading>
-		   	
+
 		   	<div class="container-fluid">
-			   	<div class="pull-right">			             
-					<button ng-disabled="form_disabled" data-ng-click="saveSettings('project')" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-save"></span> Save</button>									   
-				</div>	
+			   	<div class="pull-right">
+					<button ng-disabled="form_disabled" data-ng-click="saveSettings('project')" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-save"></span> Save</button>
+				</div>
 			</div>
-		   	
+
 		   		<div class="panel panel-default settings-panel" >
-					<div class="panel-heading">
-					    <h3 class="panel-title">General</h3>
+					<div class="panel-heading" id="headingPrjGeneral">
+					    <h3 class="panel-title"><a data-toggle="collapse" href="#collapsePrjGeneral" aria-controls="collapsePrjGeneral">General</a></h3>
 					</div>
-					<div class="panel-body">
-					   	<dl class="dl-horizontal" >
-					   	  
-					   	  <dt>Name</dt>
-						  <dd>{{settings.project.name}}</dd>
-						  
-						  <dt>Account</dt>
-						  <dd>{{settings.project.account}}</dd>
-						  
-						  <dt>Folder</dt>
-						  <dd>{{settings.project.folders.in}}</dd>
-						  
-						  <dt>Default assignee</dt>
-						  <dd>{{defaultAssigneeDisplayName()}}</dd>
-							
-						</dl>
-					</div>
-			   	</div>
-		   	
-			   	<div class="panel panel-default settings-panel" >
-					<div class="panel-heading">
-					    <h3 class="panel-title">Members</h3>
-					</div>
-					<div class="panel-body">
-					   	<dl class="dl-horizontal dl-settings" data-ng-repeat="member in settings.project.members">
-					   	  
-					   	  <dt class="settings-role">Role</dt>
-						  <dd data-ng-if="member.role == 'manager'" ><img src="img/vader.png" height="30px" /></dd>
-						  <dd data-ng-if="member.role != 'manager'" ><img src="img/trooper.png" height="30px"/></dd>
-						  
-						  <dt>Display name</dt>
-						  <dd>{{member.displayname}}</dd>
-						  <dt>Username</dt>
-						  <dd>{{member.username}}</dd>
-							
-						</dl>
-					</div>
-			   	</div>
-			   	
-			   	<div class="panel panel-default settings-panel" >
-					<div class="panel-heading">
-					    <h3 class="panel-title">Statuses</h3>
-					</div>
-					<div class="panel-body">
-					
-						<table class="table">
-						  <thead>
-							  <tr>
-							  	<th>Label</th>
-							  	<th>Value</th>
-						   	  </tr>
-					   	  </thead>
-						  <tbody>
-							  <tr data-ng-repeat="status in settings.project.statuses">	  
-							    <td>{{status.label}}</td>
-							    <td>{{status.value}}</td>
-							  </tr>
-						  </tbody>	
-						</table>
-										   				
-					</div>
-			   	</div>
-			   	
-			   		<div class="panel panel-default settings-panel" >
-					<div class="panel-heading" data-toggle="collapse" href="#collapsePrjMd" aria-controls="collapsePrjMd">
-					    <h3 class="panel-title"><a href="#">Metadata</a></h3>
-					</div>
-					<div id="collapsePrjMd" class="panel-collapse collapse" role="tabpanel">
+					<div id="collapsePrjGeneral" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingPrjGeneral">
 						<div class="panel-body" >
-							<h4>Visible fields</h4>
-		
-							<div class="settings-metadata-tree">
-									
-								<span data-ng-hide="uwmfields.project.length">Please wait, the metadata tree loads...</span>
-								<ul data-ng-if="uwmfields.project.length" ng-init="i=1">
-									<li data-ng-repeat="field in uwmfields.project | filter:filterHidden" ng-init="i = i*100+$index; prefix= 'project_'; type='project'" data-ng-include="'checkbox_renderer.html'" class="checkbox-renderer"></li>
-								</ul>
-							
-							</div>
-					
+						   	<dl class="dl-horizontal" >
+
+						   	  <dt>Name</dt>
+							  <dd>{{settings.project.name}}</dd>
+
+							  <dt>Account</dt>
+							  <dd>{{settings.project.account}}</dd>
+
+							  <dt>Folder</dt>
+							  <dd>{{settings.project.folders.in}}</dd>
+
+							  <dt>Default assignee</dt>
+							  <dd>{{defaultAssigneeDisplayName()}}</dd>
+
+							</dl>
+						</div>
+					</div>
+			   	</div>
+
+			   	<div class="panel panel-default settings-panel" >
+					<div class="panel-heading" id="headingMembers">
+					    <h3 class="panel-title"><a data-toggle="collapse" href="#collapseMembers" aria-controls="collapseMembers">Members</a></h3>
+					</div>
+					<div id="collapseMembers" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingMembers">
+						<div class="panel-body">
+						   	<dl class="dl-horizontal dl-settings" data-ng-repeat="member in settings.project.members">
+
+						   	  <dt class="settings-role">Role</dt>
+							  <dd data-ng-if="member.role == 'manager'" ><img src="img/vader.png" height="30px" /></dd>
+							  <dd data-ng-if="member.role != 'manager'" ><img src="img/trooper.png" height="30px"/></dd>
+
+							  <dt>Display name</dt>
+							  <dd>{{member.displayname}}</dd>
+							  <dt>Username</dt>
+							  <dd>{{member.username}}</dd>
+
+							</dl>
+						</div>
+					</div>
+			   	</div>
+
+			   	<div class="panel panel-default settings-panel" >
+					<div class="panel-heading" id="headingStatuses">
+					    <h3 class="panel-title"><a data-toggle="collapse" href="#collapseStatuses" aria-controls="collapseStatuses">Statuses</a></h3>
+					</div>
+					<div id="collapseStatuses" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingStatuses">
+						<div class="panel-body">
+
+							<table class="table">
+							  <thead>
+								  <tr>
+								  	<th>Label</th>
+								  	<th>Value</th>
+							   	  </tr>
+						   	  </thead>
+							  <tbody>
+								  <tr data-ng-repeat="status in settings.project.statuses">
+								    <td>{{status.label}}</td>
+								    <td>{{status.value}}</td>
+								  </tr>
+							  </tbody>
+							</table>
+
+						</div>
+					</div>
+			   	</div>
+
+			   		<div class="panel panel-default settings-panel" >
+					<div class="panel-heading" id="headingPrjMd">
+					    <h3 class="panel-title"><a data-toggle="collapse" href="#collapsePrjMd" aria-controls="collapsePrjMd">Metadata</a></h3>
+					</div>
+					<div id="collapsePrjMd" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingPrjMd">
+						<div class="panel-body" >
+
+							<dl class="dl-horizontal" >
+              <dt>Default template</dt>
+              <dd>
+                <ui-select ng-model="settings.project.default_template" theme="bootstrap" class="settings-select">
+                    <ui-select-match placeholder="None">{{$select.selected.title}}</ui-select-match>
+                      <ui-select-choices repeat="template._id as template in settings.templates | filter: $select.search">
+                        <strong><div ng-bind-html="template.title | highlight: $select.search"></div></strong>
+                    </ui-select-choices>
+                   </ui-select>
+              </dd>
+								<dt>Visible fields</dt>
+								<dd>
+									<div class="settings-metadata-tree">
+										<span data-ng-hide="uwmfields.project.length">Please wait, the metadata tree loads...</span>
+										<ul data-ng-if="uwmfields.project.length" ng-init="i=1">
+											<li data-ng-repeat="field in uwmfields.project | filter:filterHidden" ng-init="i = i*100+$index; prefix= 'project_'; type='project'" data-ng-include="'checkbox_renderer.html'" class="checkbox-renderer"></li>
+										</ul>
+									</div>
+								</dd>
+							</dl>
 						</div>
 					</div>
 			 </div>
-		   	
+
 		</tab>
-		   	
-    </tabset>	   
-	   
+
+    </tabset>

@@ -1,4 +1,4 @@
-% layout 'default', title => 'Bag editor';
+% layout 'default', title => 'Template editor';
 
 %= include 'partials_cache'
 
@@ -12,15 +12,15 @@
     <script type="text/javascript">
             $(document).ready(function(){
 
-				$('#resetEditor').click(function(){
-					var app = document.getElementById('UwmetadataeditorCtrl');
-					var scope = angular.element(app).scope();
-					scope.$apply(function() {
-						scope.resetEditor();
-					});
-				});
+        				$('#resetEditor').click(function(){
+        					var app = document.getElementById('UwmetadataeditorCtrl');
+        					var scope = angular.element(app).scope();
+        					scope.$apply(function() {
+        						scope.resetEditor();
+        					});
+        				});
 
-				$('.datepicker').datepicker();
+        				$('.datepicker').datepicker();
 
             });
     </script>
@@ -52,26 +52,7 @@
 
 		<div class="row">
 
-			<div class="col-md-5">
-				<div class="container-fluid">
-					<div class="row">
-						<div class="col-md-4 pull-left prev-bag">
-							<a data-ng-if="getPrevBagLink()" data-ng-href="{{getPrevBagLink()}}" title="Previous bag: {{initdata.prev_bag.label}}" class="btn btn-primary"><span class="glyphicon glyphicon-arrow-left"></span></a>
-						</div>
-						<div class="col-md-4">
-						<center>
-							<a data-ng-if="getBack2BagsLink()" data-ng-href="{{getBack2BagsLink()}}" title="Back to folder: {{initdata.folder.name}}" class="btn btn-primary"><span class="glyphicon glyphicon-list"></span></a>
-						</center>
-						</div>
-						<div class="col-md-4 pull-right next-bag">
-							<a data-ng-if="getNextBagLink()" data-ng-href="{{getNextBagLink()}}" title="Next bag: {{initdata.next_bag.label}}" class="btn btn-primary"><span class="glyphicon glyphicon-arrow-right"></span></a>
-						</div>
-					</div>
-				</div>
-				<img ng-src="{{initdata.thumb_path}}/m_{{bagid}}_1.png" class="img-thumbnail img-thumbnail-detail" title="{{bagid}}" alt="{{bagid}}">
-			</div>
-
-			<div class="col-md-7">
+			<div class="col-md-12">
 
 			%= include 'alerts'
 
@@ -79,36 +60,33 @@
 					<tab>
 						<tab-heading>
 				       		<span>Metadata</span>
-				   		</tab-heading>
+				   	</tab-heading>
 
 						<nav ng-if="fields" id="control-panel" class="navbar navbar-default">
-							<div class="navbar-header">
-							    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-							      <span class="sr-only">Toggle navigation</span>
-							      <span class="icon-bar"></span>
-							      <span class="icon-bar"></span>
-							      <span class="icon-bar"></span>
-							    </button>
-						   	</div>
+        			<div class="navbar-header">
+        			    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        			      <span class="sr-only">Toggle navigation</span>
+        			      <span class="icon-bar"></span>
+        			      <span class="icon-bar"></span>
+        			      <span class="icon-bar"></span>
+        			    </button>
+        		   	</div>
 
-							<!-- Collect the nav links, forms, and other content for toggling -->
-							<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        			<!-- Collect the nav links, forms, and other content for toggling -->
+        			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 
-							      <div class="navbar-form navbar-left">
-							        <button ng-disabled="form.$invalid || form_disabled" data-ng-click="saveTemplateAs()" class="btn btn-primary navbar-btn"><span class="glyphicon glyphicon-file"></span> Create template</button>
-							      	<select class="form-control" data-ng-model="selectedtemplate" data-ng-change="loadDifabTemplate()" ng-options="template as template.title for template in initdata.templates">
-							      		<option value="">Load template...</option>
-							      	</select>
-							      </div>
+        			      <p ng-if="templatetitle" class="navbar-text template-title">{{templatetitle}}</p>
 
-							      <p class="navbar-text" title="Bagid">{{bagid}}</p>
+        			      <div class="navbar-form navbar-right">
 
-							      <div class="navbar-form navbar-right">
-									<button ng-disabled="form.$invalid || form_disabled" data-ng-click="save()" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-save"></span> Save</button>
-								  </div>
+        			      	<button ng-if="fields && tid" ng-disabled="form_disabled" data-ng-click="saveTemplate()" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-floppy-save"></span> Save</button>
+        					    <button ng-if="fields" ng-disabled="form_disabled" data-ng-click="saveTemplateAs()" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-floppy-save"></span> Save as...</button>
 
-					    	</div>
-						</nav>
+        				    </div>
+
+        	    	</div>
+
+        		</nav>
 
 						<div class="well" id="UwmetadataeditorCtrl" data-ng-show="fields" data-ng-cloak >
 
@@ -136,7 +114,7 @@
 
 											          <div ng-switch-when="node">
 
-												          <div ng-if="!child.hide" class="panel panel-default">
+												          <div data-ng-if="filterHidden(child)" class="panel panel-default">
 
 															  <div class="panel-heading" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>
 															    <h3 class="panel-title pull-left"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.labels.en}}</h3>
@@ -152,7 +130,7 @@
 
 															  <div class="panel-body">
 
-																<div data-ng-hide="child.hidden" data-ng-include="'/views/partials/' + child.input_type + '.html'"></div>
+																<div data-ng-if="filterHidden(child)" data-ng-include="'/views/partials/' + child.input_type + '.html'"></div>
 
 																<!-- children fields of the field -->
 																<ul data-ng-show="child.children.length">
@@ -170,7 +148,7 @@
 
 											          <div ng-switch-default>
 
-											        	<div ng-if="!child.hide" data-ng-hide="child.hidden" data-ng-include="'/views/partials/' + child.input_type + '.html'"></div>
+											        	<div data-ng-if="filterHidden(child)" data-ng-include="'/views/partials/' + child.input_type + '.html'"></div>
 
 														<!-- children fields of the field -->
 														<ul data-ng-show="child.children.length">

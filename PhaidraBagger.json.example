@@ -3,32 +3,32 @@
     "installation_id": "nice_n_unique",
 
     "hypnotoad": {
-	
+
         "listen": ["http://*:3001"],
-        
+
         "proxy": 1
     },
 
 	"mode":"production",
-	
+
 	"secret":"changeme",
-	
+
 	"enc_key":"changeme",
-	
+
 	"session_expiration":"7200",
-	
+
 	"secure_cookies":"1",
-	
+
     "log_path":"/var/log/phaidra/PhaidraBagger.log",
-    
+
     "log_level":"debug",
-    
+
     "validate_uwmetadata":"1",
-      
+
     "defaults": {
-    
+
     	"metadata_field_language": "de"
-    	        
+
 	},
 
     "projects": {
@@ -51,8 +51,8 @@
                 "out": "/var/www/bagger/data/p1/bags/out"
             },
             "folders": {
-                "in": "/var/www/bagger/data/p1/folders/in",                
-            },              
+                "in": "/var/www/bagger/data/p1/folders/in",
+            },
             "thumbnails": {
 		    	"dir": "/var/www/bagger/public/thumbnails/p1",
 		    	"url_path": "thumbnails/p2",
@@ -61,7 +61,7 @@
 		    	"thumbnail_small_cmd": "/var/www/bagger/lib/downsize -s 60 -t 20"
 		    },
 		    "redmine_baseurl": "https://redmine.phaidra.org/redmine/"
-            
+
         },
         "p2": {
             "account": "username",
@@ -91,7 +91,7 @@
             "bags": {
                 "in": "/var/www/bagger/data/p2/bags/in",
                 "out": "/var/www/bagger/data/p2/bags/out"
-            },            
+            },
             "thumbnails": {
 		    	"dir": "/var/www/bagger/thumbnails/p2",
 		    	"url_path": "thumbnails/p2"
@@ -108,22 +108,22 @@
             "baseurl": "phaidra-instance.univie.ac.at",
             "apibaseurl": "services.phaidra-instance.univie.ac.at/api",
             "metadata_format_version": "1",
-            "local_uwmetadata_tree": "1",
+            "local_uwmetadata_tree": "/var/www/bagger/public/uwmetadata/tree.json",
             "is_default": "1",
-             "directory_user": {	    	        
-	        	"username": "username",        
+             "directory_user": {
+	        	"username": "username",
 	        	"password": "password"
-	    	}   
+	    	}
         },
         "phaidra-instance2": {
             "baseurl": "phaidra-instance2.univie.ac.at",
             "apibaseurl": "services.phaidra-instance2.univie.ac.at/api",
             "metadata_format_version": "1",
-            "local_uwmetadata_tree": "1",
+            "local_uwmetadata_tree": "/var/www/bagger/public/uwmetadata/tree.json",
             "is_default": "0"
         }
-    },         
-    
+    },
+
     "mongodb": {
         "host": "host",
         "port": "27017",
@@ -131,10 +131,10 @@
         "password": "password",
         "database": "database"
     },
-        
-    "authentication": {    
-    	"realm": "Phaidra",    	
+
+    "authentication": {
+    	"realm": "Phaidra",
     	"token_header": "X-XSRF-TOKEN",
-        "token_cookie": "XSRF-TOKEN",    	
-    }, 
+        "token_cookie": "XSRF-TOKEN",
+    },
 }

@@ -12,14 +12,14 @@
 %= include 'alerts'
 
 	<div data-ng-if="importResults" class="panel panel-primary">
-	    <div class="panel-heading" role="tab">
+	    <div class="panel-heading" role="tab" id="headingImportRes">
 	      <h4 class="panel-title">
-	        <a data-toggle="collapse" href="#collapseOne" aria-controls="collapseOne">
+	        <a data-toggle="collapse" href="#collapseImportRes" aria-controls="collapseImportRes">
 	          Import results
 	        </a>
 	      </h4>
 	    </div>
-	    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+	    <div id="collapseImportRes" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingImportRes">
 	      <div class="panel-body">
 	      	<ul>
 			  <li data-ng-repeat="res in importResults">{{res}}</li>

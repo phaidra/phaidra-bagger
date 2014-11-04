@@ -18,10 +18,10 @@ angular.module('frontendService', [])
 			});	        
 		},
 		
-		loadSettings: function(type){
+		loadSettings: function(){
 			return $http({
 				method  : 'GET',
-				url     : $('head base').attr('href')+'settings/'
+				url     : $('head base').attr('href')+'settings/my'
 			});	        
 		},
 		

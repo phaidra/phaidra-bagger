@@ -292,3 +292,8 @@ margin-top: 5px;
 .checkbox-renderer {
 	display: block;
 }
+
+.settings-select {
+	margin: 0 0 10px 0;
+	width: 50%;
+}
