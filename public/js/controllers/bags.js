@@ -1,93 +1,93 @@
 
 app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService, BagService, FrontendService, promiseTracker, Url) {
-    
+
 // we will use this to track running ajax requests to show spinner
 	$scope.loadingTracker = promiseTracker('loadingTrackerFrontend');
-	
-	$scope.alerts = [];	
-	
+
+	$scope.alerts = [];
+
 	$scope.selection = [];
-	
+
 	$scope.items = [];
 	$scope.itemstype = '';
-	
-	$scope.members = [];		
+
+	$scope.members = [];
 
 	$scope.initdata = '';
 	$scope.current_user = '';
 	$scope.folderid = '';
-	    
+
     $scope.totalItems = 0;
     $scope.currentPage = 1;
     $scope.maxSize = 10;
     $scope.filter = '';
     $scope.from = 0;
     $scope.limit = 10;
-    $scope.sortfield = 'updated';
+    $scope.sortfield = 'label';
     $scope.sortvalue = -1;
-    			
+
 	$scope.init = function (initdata) {
 		$scope.initdata = angular.fromJson(initdata);
 		$scope.current_user = $scope.initdata.current_user;
-		$scope.folderid = $scope.initdata.folderid;		
+		$scope.folderid = $scope.initdata.folderid;
 
-		$scope.filter = { 
+		$scope.filter = {
 		    folderid: $scope.folderid,
 		    // show only bags in these statuses
 		    status: ['new','to_check','checked','to_ingest']
 		};
-		
+
 		if($scope.initdata.query){
 			$scope.filter = $scope.initdata.query.filter;
 			$scope.from = $scope.initdata.query.from;
 			$scope.limit = $scope.initdata.query.limit;
 			$scope.sortfield = $scope.initdata.query.sortfield;
-			$scope.sortvalue = $scope.initdata.query.sortvalue;					
+			$scope.sortvalue = $scope.initdata.query.sortvalue;
 		}
-    	    	
+
 		$scope.refreshResults();
-		
+
     	if($scope.current_user){
     		$scope.loadSelection();
     	}
-    	
-    }; 
+
+    };
 
     $scope.closeAlert = function(index) {
     	$scope.alerts.splice(index, 1);
-    };       
-/*    
+    };
+/*
     $scope.qs = function(obj, prefix){
 	  var str = [];
 	  for (var p in obj) {
-	    var k = prefix ? prefix + "[" + p + "]" : p, 
+	    var k = prefix ? prefix + "[" + p + "]" : p,
 	        v = obj[p];
 	    str.push(angular.isObject(v) ? $scope.qs(v, k) : (k) + "=" + encodeURIComponent(v));
 	  }
 	  return str.join("&");
     };
-*/    	
+*/
 	$scope.getBagUrlWithQuery = function (bagid) {
 		var url = '/bag/'+bagid+'/edit';
 		var params = {
 			filter: $scope.filter,
-			from: $scope.from, 
-			limit: $scope.limit, 
-			sortfield: $scope.sortfield, 
+			from: $scope.from,
+			limit: $scope.limit,
+			sortfield: $scope.sortfield,
 			sortvalue: $scope.sortvalue
 		};
 		//return url+'?'+ $scope.qs(params, null);
 		return Url.buildUrl(url, params);
-	};	
-    
+	};
+
     $scope.selectNone = function(event){
-    	$scope.selection = [];	
+    	$scope.selection = [];
     	$scope.saveSelection();
     };
-    
+
     $scope.selectVisible = function(event){
-    	$scope.selection = [];	
-    	for( var i = 0 ; i < $scope.items.length ; i++ ){	     			
+    	$scope.selection = [];
+    	for( var i = 0 ; i < $scope.items.length ; i++ ){
 	    	$scope.selection.push($scope.items[i].bagid);
 	    }
     	$scope.saveSelection();
@@ -97,12 +97,12 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 	    var promise = BagService.search($scope.filter, 0, 0, $scope.sortfield, $scope.sortvalue);
 	    $scope.loadingTracker.addPromise(promise);
 	    promise.then(
-	     	function(response) { 
+	     	function(response) {
 	     		$scope.alerts = response.data.alerts;
 	     		$scope.selection = [];
-	     		for( var i = 0 ; i < response.data.items.length ; i++ ){	     			
+	     		for( var i = 0 ; i < response.data.items.length ; i++ ){
 	     			$scope.selection.push(response.data.items[i].bagid);
-	     		}	
+	     		}
 	     		$scope.saveSelection();
 	     		return false;
 	     	}
@@ -111,14 +111,14 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 	     		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
 	     		return false;
 	     	}
-	    );   	    	    
+	    );
     }
-    
+
     $scope.saveSelection = function() {
     	var promise = FrontendService.updateSelection($scope.selection);
 	    $scope.loadingTracker.addPromise(promise);
 	    promise.then(
-	     	function(response) { 
+	     	function(response) {
 	      		$scope.alerts = response.data.alerts;
 	      		$scope.form_disabled = false;
 	      	}
@@ -129,12 +129,12 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 	      	}
 	    );
     }
-    
+
     $scope.loadSelection = function() {
     	var promise = FrontendService.getSelection();
 	    $scope.loadingTracker.addPromise(promise);
 	    promise.then(
-	     	function(response) { 
+	     	function(response) {
 	      		$scope.alerts = response.data.alerts;
 	      		$scope.selection = response.data.selection;
 	      	}
@@ -144,41 +144,41 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 	      	}
 	    );
     }
-    
+
     $scope.toggleFile = function(pid) {
     	var idx = $scope.selection.indexOf(pid);
     	if(idx == -1){
     		$scope.selection.push(pid);
     	}else{
     		$scope.selection.splice(idx,1);
-    	}	
+    	}
     	$scope.saveSelection();
     };
 
-  
+
     $scope.setPage = function (page) {
     	if(page == 1){
 			$scope.from = 0;
-		}else{    		
+		}else{
 			$scope.from = (page-1)*$scope.limit;
 		}
-    	    		    		
+
     	$scope.refreshResults();
-    	
+
     	$scope.currentPage = page;
     };
-  
-    
+
+
  $scope.refreshResults = function() {
-	 $scope.searchBags($scope.filter, $scope.from, $scope.limit, $scope.sortfield, $scope.sortvalue); 
+	 $scope.searchBags($scope.filter, $scope.from, $scope.limit, $scope.sortfield, $scope.sortvalue);
  }
- 
+
  $scope.searchBags = function(filter, from, limit, sortfield, sortvalue) {
-	 
+
      var promise = BagService.search(filter, from, limit, sortfield, sortvalue);
      $scope.loadingTracker.addPromise(promise);
      promise.then(
-      	function(response) { 
+      	function(response) {
       		$scope.alerts = response.data.alerts;
       		$scope.items = response.data.items;
       		$scope.totalItems = response.data.hits;
@@ -187,80 +187,80 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
       		$scope.alerts = response.data.alerts;
       		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
       	}
-     );    	      
- }; 
- 
- $scope.toggleSort = function (sortfield, sortvalue) {	 
+     );
+ };
+
+ $scope.toggleSort = function (sortfield, sortvalue) {
 	 if($scope.sortfield == sortfield){
 		 $scope.sortvalue = $scope.sortvalue == 1 ? -1 : 1;
 	 }else{
 		 $scope.sortvalue = 1;
-	 }	 
-	 $scope.sortfield = sortfield; 
+	 }
+	 $scope.sortfield = sortfield;
 	 $scope.refreshResults();
  }
- 
-  
+
+
  $scope.addFilter = function (type, value) {
 	 if($scope.filter){
 		 if(type == 'status'){
 			 // always an array
 			 $scope.filter[type] = [value];
-		 }else{		 
+		 }else{
 			 $scope.filter[type] = value;
 		 }
 		 $scope.refreshResults();
 	 }
  }
- 
+
  $scope.removeFilter = function (type, value) {
 	 if($scope.filter){
 		 if(type == 'status'){
-			 // not setting a status filter means resetting it to all the allowed statuses 
+			 // not setting a status filter means resetting it to all the allowed statuses
 			 // (there are other statuses, like 'ingesting', bags with these should not be visible on the grid)
-			 $scope.filter[type] = ['new','to_check','checked','to_ingest'];	 
-		 }else{		 
+			 $scope.filter[type] = ['new','to_check','checked','to_ingest'];
+		 }else{
 			 delete $scope.filter[type];
 		 }
 		 $scope.refreshResults();
 	 }
- } 
- 
+ }
+
  $scope.isNotDefaultFilter = function(type, value){
 	 if(type == 'status'){
 		 if(value.length > 1){
 			 return false;
-		 }		 
+		 }
 	 }
-	 return true;		
+	 return true;
  }
- 
+
  $scope.getFilterLabel = function(type, value){
-	 
+
 	 if(type == 'status'){
-		 if(value.length == 1){ 
+		 if(value.length == 1){
 			 var statValue = value[0];
 			 for( var i = 0 ; i < $scope.initdata.statuses.length ; i++ ){
 				if($scope.initdata.statuses[i].value == statValue){
-					return $scope.initdata.statuses[i].label; 
-				}				 
+					return $scope.initdata.statuses[i].label;
+				}
 			 }
-		 }		 
+		 }
 	 }
-	 
+
 	 if(type == 'assignee'){
 		 return $scope.getMemberDisplayname(value);
 	 }
-	 
+
 	 return value;
  }
- 
- 
+
+
  $scope.setAttribute = function (bag, attribute, value) {
 	 var promise = BagService.setAttribute(bag.bagid, attribute, value);
      $scope.loadingTracker.addPromise(promise);
      promise.then(
-      	function(response) { 
+      	function(response) {
       		$scope.alerts = response.data.alerts;
       		bag[attribute] = value;
       	}
@@ -269,13 +269,13 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
       		//$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
       	}
      );
- } 
- 
+ }
+
  $scope.setAttributeMass = function (attribute, value) {
 	 var promise = BagService.setAttributeMass($scope.selection, attribute, value);
      $scope.loadingTracker.addPromise(promise);
      promise.then(
-      	function(response) { 
+      	function(response) {
       		$scope.alerts = response.data.alerts;
       		$scope.refreshResults();
       	}
@@ -284,12 +284,12 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
       		//$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
       	}
      );
- } 
+ }
 
  $scope.removeTag = function () {
-	 
+
  }
- 
+
   $scope.editTag = function (add) {
 
 	  var modalInstance = $modal.open({
@@ -299,7 +299,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
             resolve: {
 		      add: function(){
 			    return add;
-			  }	  
+			  }
 		    }
 	  });
   };
@@ -311,27 +311,27 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
           scope: $scope
 	  });
   }
-  
 
-  $scope.getMemberDisplayname = function (username) {	  
+
+  $scope.getMemberDisplayname = function (username) {
 	  for( var i = 0 ; i < $scope.initdata.members.length ; i++ ){
 		  if($scope.initdata.members[i].username == username){
-			  return $scope.initdata.members[i].displayname; 
-		  }		  
-	  }	  
+			  return $scope.initdata.members[i].displayname;
+		  }
+	  }
   }
-  
+
   $scope.canSetAttribute = function (attribute) {
 	  return $scope.initdata.restricted_ops.indexOf('set_'+attribute) == -1 || $scope.current_user.role == 'manager';
   }
-  
+
 
 });
 
 var TagModalCtrl = function ($scope, $modalInstance, FrontendService, BagService, promiseTracker, add) {
 
-	$scope.modaldata = { tag: '' };	
-	
+	$scope.modaldata = { tag: '' };
+
 	$scope.operation = add ? 'Add' : 'Remove';
 
     $scope.hitEnterTagEdit = function(evt){
@@ -339,9 +339,9 @@ var TagModalCtrl = function ($scope, $modalInstance, FrontendService, BagService
     		$scope.editTag();
     	}
     };
-    	
+
 	$scope.editTag = function () {
-		
+
 		$scope.form_disabled = true;
 
 		var promise;
@@ -349,24 +349,24 @@ var TagModalCtrl = function ($scope, $modalInstance, FrontendService, BagService
 			promise = BagService.setAttributeMass($scope.selection, 'tags', $scope.modaldata.tag);
 		}else{
 			promise = BagService.unsetAttributeMass($scope.selection, 'tags', $scope.modaldata.tag);
-		}		
-		
+		}
+
     	$scope.loadingTracker.addPromise(promise);
     	promise.then(
-    		function(response) { 
+    		function(response) {
     			$scope.form_disabled = false;
     			$scope.alerts = response.data.alerts;
     			$modalInstance.close();
     			$scope.refreshResults();
     		}
     		,function(response) {
-    			$scope.form_disabled = false;    			
+    			$scope.form_disabled = false;
     			$scope.alerts = response.data.alerts;
     			$modalInstance.close();
             }
         );
 		return;
-		
+
 	};
 
 	$scope.cancel = function () {
@@ -381,17 +381,17 @@ var CreateIngestJobModalCtrl = function ($scope, $modalInstance, FrontendService
 	$scope.today = function() {
 		$scope.modaldata.start_at = new Date();
 	};
-		
+
 	// init
 	$scope.today();
-	
+
 	$scope.ingestModalInit = function() {
-		Object.keys($scope.initdata.ingest_instances).forEach(function (key) { 
+		Object.keys($scope.initdata.ingest_instances).forEach(function (key) {
 		    if($scope.initdata.ingest_instances[key].is_default == '1'){
 		    	$scope.modaldata.ingest_instance = key;
 		    }
-		    
-		})				
+
+		})
 	}
 
 	$scope.clear = function () {
@@ -401,43 +401,41 @@ var CreateIngestJobModalCtrl = function ($scope, $modalInstance, FrontendService
 	$scope.open = function($event) {
 	    $event.preventDefault();
 	    $event.stopPropagation();
-	
+
 	    $scope.opened = true;
-	  };	
+	  };
 
 	$scope.hitEnterCreate = function(evt){
 		if(angular.equals(evt.keyCode,13)){
 			$scope.createJob();
 		}
 	};
-		
+
 	$scope.createJob = function () {
-		
+
 		$scope.form_disabled = true;
-	
-		var promise = JobService.create($scope.selection, $scope.modaldata);	
-		
+
+		var promise = JobService.create($scope.selection, $scope.modaldata);
+
 		$scope.loadingTracker.addPromise(promise);
 		promise.then(
-			function(response) { 
+			function(response) {
 				$scope.form_disabled = false;
 				$scope.alerts = response.data.alerts;
 				$modalInstance.close();
 				window.location = $('head base').attr('href')+'jobs';
 			}
 			,function(response) {
-				$scope.form_disabled = false;    			
+				$scope.form_disabled = false;
 				$scope.alerts = response.data.alerts;
 				$modalInstance.close();
 	        }
 	    );
 		return;
-		
+
 	};
-	
+
 	$scope.cancel = function () {
 		$modalInstance.dismiss('cancel');
 	};
 };
-
-

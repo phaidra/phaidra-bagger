@@ -1,5 +1,5 @@
 
-app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, DirectoryService, MetadataService, FrontendService, promiseTracker, Url) {
+app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, DirectoryService, MetadataService, FrontendService, BagService, promiseTracker, Url) {
 
 	$scope.regex_pid = /^[a-zA-Z\-]+:[0-9]+$/;
 	// use: <input ng-pattern="regex_identifier" ...
@@ -22,6 +22,7 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
 
 	$scope.bagid = '';
 	$scope.bag = [];
+	$scope.bag_info;
 
   $scope.mode = 'bag';
 
@@ -35,18 +36,16 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     	$scope.alerts.splice(index, 1);
     };
 
-    $scope.getFieldsCount = function() {
-        return $scope.fields.length;
-    };
-
     $scope.init = function (initdata) {
     	$scope.initdata = angular.fromJson(initdata);
     	$scope.current_user = $scope.initdata.current_user;
     	$scope.bagid = $scope.initdata.bagid;
+			$scope.baginfo = $scope.initdata.baginfo;
 
     	if($scope.initdata.bagid){
         $scope.mode = 'bag';
     		$scope.bagid = $scope.initdata.bagid;
+				$scope.bagid = $scope.initdata.bagid;
     		$scope.loadBag();
     	}else{
     		if($scope.initdata.tid){
@@ -58,9 +57,38 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
       	  $scope.getUwmetadataTree();
         }
     	}
-
-
     };
+
+		$scope.getMemberDisplayname = function (username) {
+			for( var i = 0 ; i < $scope.initdata.members.length ; i++ ){
+				if($scope.initdata.members[i].username == username){
+					return $scope.initdata.members[i].displayname;
+				}
+			}
+		}
+
+		$scope.canSetAttribute = function (attribute) {
+			return $scope.initdata.restricted_ops.indexOf('set_'+attribute) == -1 || $scope.current_user.role == 'manager';
+		}
+
+		$scope.setAttribute = function (bag, attribute, value) {
+			var promise = BagService.setAttribute(bag.bagid, attribute, value);
+				$scope.loadingTracker.addPromise(promise);
+				promise.then(
+					function(response) {
+						$scope.alerts = response.data.alerts;
+						$scope.baginfo[attribute] = value;
+					}
+					,function(response) {
+						$scope.alerts = response.data.alerts;
+						//$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
+					}
+				);
+		}
+
+		$scope.getFieldsCount = function() {
+				return $scope.fields.length;
+		};
 
     $scope.getBack2BagsLink = function (){
     	if($scope.initdata.current_bags_query){

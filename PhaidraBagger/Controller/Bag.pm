@@ -378,12 +378,21 @@ sub _edit_prepare_data {
 		->fields({ title => 1, created => 1, updated => 1, created_by => 1 })->all();
 
   my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-  my $bag = $self->mango->db->collection('bags')->find_one({bagid => $self->stash('bagid'), owner => $owner}, {label => 1, created => 1, updated => 1});
+  my $bag = $self->mango->db->collection('bags')->find_one({bagid => $self->stash('bagid'), owner => $owner}, {label => 1, created => 1, updated => 1, assignee => 1, status => 1, owner => 1});
 
-	my $init_data = { bagid => $self->stash('bagid'), label => $bag->{label}, created => $bag->{created}, updated => $bag->{updated} , templates => $templates, current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl};
-
-	$init_data->{navtitle} = $bag->{label};
-	$init_data->{navtitlelink} = 'bag/'.$self->stash('bagid').'/edit';
+	my $init_data = {
+    bagid => $self->stash('bagid'),
+    baginfo => $bag ,
+    templates => $templates,
+    current_user => $self->current_user,
+    thumb_path => $thumb_path,
+    redmine_baseurl => $redmine_baseurl,
+    navtitle => $bag->{label},
+    navtitlelink => 'bag/'.$self->stash('bagid').'/edit',
+    members => $self->config->{projects}->{$self->current_user->{project}}->{members},
+    statuses => $self->config->{projects}->{$self->current_user->{project}}->{statuses},
+    restricted_ops => $self->config->{projects}->{$self->current_user->{project}}->{restricted_operations}
+  };
 
 	$self->stash(
     	navtitle => $init_data->{navtitle},
@@ -564,7 +573,7 @@ sub _search {
     my $filtervalue = shift;
 
     unless($sortfield){
-    	$sortfield = 'updated';
+    	$sortfield = 'label';
     }
 
     unless($sortvalue){
