@@ -1,0 +1,20 @@
+
+	<div class="panel panel-default " >
+			<div class="panel-heading" id="headingBagGeneral">
+					<h3 class="panel-title"><a data-toggle="collapse" href="#collapseBagGeneral" aria-controls="collapseBagGeneral">General</a></h3>
+			</div>
+			<div id="collapseBagGeneral" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingBagGeneral">
+				<div class="panel-body" >
+						<dl class="dl-horizontal" >
+							<dt>Bag ID:</dt>
+						  <dd>{{initdata.bagid}}</dd>
+							<dt>Label:</dt>
+							<dd>{{initdata.label}}</dd>
+							<dt>Created:</dt>
+							<dd>{{initdata.created * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</dd>
+							<dt>Updated:</dt>
+							<dd>{{initdata.updated * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</dd>						
+					</dl>
+				</div>
+			</div>
+	</div>

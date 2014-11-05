@@ -377,10 +377,10 @@ sub _edit_prepare_data {
 		->sort({created => 1})
 		->fields({ title => 1, created => 1, updated => 1, created_by => 1 })->all();
 
-	my $init_data = { bagid => $self->stash('bagid'), templates => $templates, current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl};
+  my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
+  my $bag = $self->mango->db->collection('bags')->find_one({bagid => $self->stash('bagid'), owner => $owner}, {label => 1, created => 1, updated => 1});
 
-	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-	my $bag = $self->mango->db->collection('bags')->find_one({bagid => $self->stash('bagid'), owner => $owner}, {label => 1});
+	my $init_data = { bagid => $self->stash('bagid'), label => $bag->{label}, created => $bag->{created}, updated => $bag->{updated} , templates => $templates, current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl};
 
 	$init_data->{navtitle} = $bag->{label};
 	$init_data->{navtitlelink} = 'bag/'.$self->stash('bagid').'/edit';

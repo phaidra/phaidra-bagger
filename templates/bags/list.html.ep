@@ -1,9 +1,9 @@
 % layout 'default', title => 'Bags';
 
 % content_for header => begin
-   
-   <script type="text/javascript" src="<%= url_for '/js/controllers/bags.js' %>"></script>    
-        
+
+   <script type="text/javascript" src="<%= url_for '/js/controllers/bags.js' %>"></script>
+
 % end
 
 <div class="container" data-ng-controller="BagsCtrl" data-ng-init="init('<%= $init_data %>')">
@@ -11,7 +11,7 @@
 %= include 'alerts'
 
 	<nav  id="control-panel" class="navbar navbar-default list-navbar">
-	
+
 			<div class="navbar-header">
 			    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
 			      <span class="sr-only">Toggle navigation</span>
@@ -23,9 +23,9 @@
 
 			<!-- Collect the nav links, forms, and other content for toggling -->
 			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-			      
-			      <div class="navbar-form navbar-left">			      
-			      
+
+			      <div class="navbar-form navbar-left">
+
 				      <div class="btn-group">
 						  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
 						    <span class="glyphicon glyphicon-flag flag" ng-class="{'flag-selected': selection.length > 0}" ></span> <span class="caret"></span>
@@ -33,10 +33,10 @@
 						  <ul class="dropdown-menu" role="menu">
 						    <li><a href="" data-ng-click="selectAll(event)">All</a></li>
 						    <li><a href="" data-ng-click="selectNone()">None</a></li>
-						    <li><a href="" data-ng-click="selectVisible()">Visible</a></li>						    
-						  </ul>						 
+						    <li><a href="" data-ng-click="selectVisible()">Visible</a></li>
+						  </ul>
 					  </div>
-			      	
+
 			      	  <div class="btn-group animate-if" ng-if="selection.length" >
 						  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
 						    Action <span class="caret"></span>
@@ -56,30 +56,30 @@
 			                </li>
 						    <li><a href="" data-ng-click="editTag(1)">Add tag</a></li>
 						    <li><a href="" data-ng-click="editTag(0)">Remove tag</a></li>
-						    <li><a href="" data-ng-click="createIngestJob()">Create ingest job</a></li>						    					    						    
+						    <li><a href="" data-ng-click="createIngestJob()">Create ingest job</a></li>
 						  </ul>
-					  </div>		
-					  
-					  
-				  </div>				  
-			      
-			      
+					  </div>
+
+
+				  </div>
+
+
 			      <!--<p class="navbar-text" data-ng-if="filter">Filter: </p>-->
-			      <div class="navbar-form navbar-right">	
-				  	<a data-ng-if="filter && isNotDefaultFilter(type, value)" data-ng-hide="type == 'folderid'" class="btn btn-sm tag-filter btn-default" ng-class="{'btn-danger': (type == 'status' && value == 'new'), 'btn-warning': (type == 'status' && value == 'to_check'), 'btn-primary': (type == 'status' && value == 'checked'), 'btn-success': (type == 'status' && value == 'to_ingest'), 'btn-info': (type == 'tag') }" ng-repeat="(type, value) in filter" title="{{type}}">				  	   
-				  	   {{getFilterLabel(type, value)}} <span class="glyphicon glyphicon-remove" data-role="tag-remove" data-ng-click="removeFilter(type, value)"></span>				  	   
+			      <div class="navbar-form navbar-right">
+				  	<a data-ng-if="filter && isNotDefaultFilter(type, value)" data-ng-hide="type == 'folderid'" class="btn btn-sm tag-filter btn-default" ng-class="{'btn-danger': (type == 'status' && value == 'new'), 'btn-warning': (type == 'status' && value == 'to_check'), 'btn-primary': (type == 'status' && value == 'checked'), 'btn-success': (type == 'status' && value == 'to_ingest'), 'btn-info': (type == 'tag') }" ng-repeat="(type, value) in filter" title="{{type}}">
+				  	   {{getFilterLabel(type, value)}} <span class="glyphicon glyphicon-remove" data-role="tag-remove" data-ng-click="removeFilter(type, value)"></span>
 				  	</a>
-				  </div>						   
+				  </div>
 	    	</div>
-		
-	</nav>		
-	
+
+	</nav>
+
 	<div class="container-fluid">
 		<div class="row">
-			
+
 		</div>
 	</div>
-	
+
 	<div class="container-fluid">
 		<div class="row">
 	     	<div class="col-md-2">
@@ -88,10 +88,10 @@
 	        <div class="col-md-8"><center><pagination total-items="totalItems" on-select-page="setPage(page)" page="currentPage" items-per-page="limit" max-size="maxSize" boundary-links="true" rotate="false" num-pages="numPages"></pagination></center></div>
 	        <div class="col-md-2">
 	        	<span class="pages">{{currentPage}} / {{numPages}}</span>
-	        </div>                          
-    	</div> 
-	</div> 
-	
+	        </div>
+    	</div>
+	</div>
+
 	<table class="table">
 	  <thead>
 	  <tr>
@@ -99,28 +99,28 @@
 	  	<th></th>
 	  	<th><a href="" data-ng-click="toggleSort('label')">Label</a><span class="sorticon glyphicon glyphicon-sort-by-attributes" data-ng-if="(sortfield == 'label' && sortvalue == 1)"></span><span class="sorticon glyphicon glyphicon-sort-by-attributes-alt" data-ng-if="(sortfield == 'label' && sortvalue == -1)"></span></th>
 	  	<th><a href="" data-ng-click="toggleSort('status')">Status</a><span class="sorticon glyphicon glyphicon-sort-by-attributes" data-ng-if="(sortfield == 'status' && sortvalue == 1)"></span><span class="sorticon glyphicon glyphicon-sort-by-attributes-alt" data-ng-if="(sortfield == 'status' && sortvalue == -1)"></span></th>
-	  	<th><a href="" data-ng-click="toggleSort('assignee')">Assignee</a><span class="sorticon glyphicon glyphicon-sort-by-attributes" data-ng-if="(sortfield == 'assignee' && sortvalue == 1)"></span><span class="sorticon glyphicon glyphicon-sort-by-attributes-alt" data-ng-if="(sortfield == 'assignee' && sortvalue == -1)"></span></th>	  	
-	  	<th><a href="" data-ng-click="toggleSort('tags')">Tags</a><span class="sorticon glyphicon glyphicon-sort-by-attributes" data-ng-if="(sortfield == 'tags' && sortvalue == 1)"></span><span class="sorticon glyphicon glyphicon-sort-by-attributes-alt" data-ng-if="(sortfield == 'tags' && sortvalue == -1)"></span></th>	  	
-	  	<%# 
-	  		<th><a href="" data-ng-click="toggleSort('job')">Ingest job</a><span class="sorticon glyphicon glyphicon-sort-by-attributes" data-ng-if="(sortfield == 'job' && sortvalue == 1)"></span><span class="sorticon glyphicon glyphicon-sort-by-attributes-alt" data-ng-if="(sortfield == 'job' && sortvalue == -1)"></span></th>	  		
+	  	<th><a href="" data-ng-click="toggleSort('assignee')">Assignee</a><span class="sorticon glyphicon glyphicon-sort-by-attributes" data-ng-if="(sortfield == 'assignee' && sortvalue == 1)"></span><span class="sorticon glyphicon glyphicon-sort-by-attributes-alt" data-ng-if="(sortfield == 'assignee' && sortvalue == -1)"></span></th>
+	  	<th><a href="" data-ng-click="toggleSort('tags')">Tags</a><span class="sorticon glyphicon glyphicon-sort-by-attributes" data-ng-if="(sortfield == 'tags' && sortvalue == 1)"></span><span class="sorticon glyphicon glyphicon-sort-by-attributes-alt" data-ng-if="(sortfield == 'tags' && sortvalue == -1)"></span></th>
+	  	<%#
+	  		<th><a href="" data-ng-click="toggleSort('job')">Ingest job</a><span class="sorticon glyphicon glyphicon-sort-by-attributes" data-ng-if="(sortfield == 'job' && sortvalue == 1)"></span><span class="sorticon glyphicon glyphicon-sort-by-attributes-alt" data-ng-if="(sortfield == 'job' && sortvalue == -1)"></span></th>
 	  		<th><a href="" data-ng-click="toggleSort('pids')">Pids</a><span class="sorticon glyphicon glyphicon-sort-by-attributes" data-ng-if="(sortfield == 'pids' && sortvalue == 1)"></span><span class="sorticon glyphicon glyphicon-sort-by-attributes-alt" data-ng-if="(sortfield == 'pids' && sortvalue == -1)"></span></th>
 	  	%>
 	    <th><a href="" data-ng-click="toggleSort('created')">Created</a><span class="sorticon glyphicon glyphicon-sort-by-attributes" data-ng-if="(sortfield == 'created' && sortvalue == 1)"></span><span class="sorticon glyphicon glyphicon-sort-by-attributes-alt" data-ng-if="(sortfield == 'created' && sortvalue == -1)"></span></th>
-	    <th><a href="" data-ng-click="toggleSort('updated')">Updated</a><span class="sorticon glyphicon glyphicon-sort-by-attributes" data-ng-if="(sortfield == 'updated' && sortvalue == 1)"></span><span class="sorticon glyphicon glyphicon-sort-by-attributes-alt" data-ng-if="(sortfield == 'updated' && sortvalue == -1)"></span></th>				
+	    <th><a href="" data-ng-click="toggleSort('updated')">Updated</a><span class="sorticon glyphicon glyphicon-sort-by-attributes" data-ng-if="(sortfield == 'updated' && sortvalue == 1)"></span><span class="sorticon glyphicon glyphicon-sort-by-attributes-alt" data-ng-if="(sortfield == 'updated' && sortvalue == -1)"></span></th>
 	    <th></th>
 	  </tr>
 	  </thead>
 	  <tbody>
-	  <tr ng-repeat="bag in items">	  
+	  <tr ng-repeat="bag in items">
 	    <td ng-if="current_user"><span class="glyphicon glyphicon-flag flag" ng-class="{'flag-selected': selection.indexOf(bag.bagid) != -1}" data-ng-click="toggleFile(bag.bagid)"></span></td>
 	    <td><img ng-src="{{initdata.thumb_path}}/s_{{bag.bagid}}_1.png" class="img-thumbnail" width="60" height="60" title="{{bag.bagid}}" alt="{{bag.bagid}}"></td>
-	  	<td><a href="bag/{{bag.bagid}}/edit" target="_blank">{{bag.label}}</a></td>
+	  	<td><a href="{{getBagUrlWithQuery(bag.bagid)}}" target="_blank">{{bag.label}}</a></td>
 	  	<td>
 			<div ng-class="{'btn-group':canSetAttribute('status')}"  data-ng-if="bag.status">
 			  <button type="button" class="btn btn-sm" data-ng-click="addFilter('status', bag.status)" ng-class="{'btn-danger': (bag.status == 'new'), 'btn-warning': (bag.status == 'to_check'), 'btn-primary': (bag.status == 'checked'), 'btn-success': (bag.status == 'to_ingest') }">
 			    	<span ng-repeat="status in initdata.statuses">
 			    		<span ng-show="bag.status == status.value">{{status.label}}</span>
-			    	</span>			    				   
+			    	</span>
 			  </button>
 			  <button class="btn dropdown-toggle btn-sm" ng-show="canSetAttribute('status')" data-toggle="dropdown" ng-class="{'btn-danger': (bag.status == 'new'), 'btn-warning': (bag.status == 'to_check'), 'btn-primary': (bag.status == 'checked'), 'btn-success': (bag.status == 'to_ingest') }">
 			  	<span class="caret"></span>
@@ -129,37 +129,36 @@
 			  	<li ng-repeat="status in initdata.statuses" ng-hide="bag.status == status.value"><a href="" data-ng-click="setAttribute(bag, 'status', status.value)">{{status.label}}</a></li>
 			  </ul>
 			</div>
-	  	</td>	  	
-	  	<td>	  
+	  	</td>
+	  	<td>
 	  		<div ng-class="{'btn-group':canSetAttribute('assignee')}" data-ng-if="bag.assignee">
 			  <button type="button" class="btn btn-default btn-sm" data-ng-click="addFilter('assignee', bag.assignee)">
-			    {{getMemberDisplayname(bag.assignee)}} 
-			  </button>			  
+			    {{getMemberDisplayname(bag.assignee)}}
+			  </button>
 			  <button class="btn btn-default dropdown-toggle btn-sm" data-toggle="dropdown" ng-show="canSetAttribute('assignee')">
 				<span class="caret"></span>
 			  </button>
 			  <ul class="dropdown-menu" role="menu" ng-show="canSetAttribute('assignee')">
-				<li ng-repeat="member in initdata.members" ng-hide="bag.assignee == member.username"><a href="" data-ng-click="setAttribute(bag, 'assignee', member.username)">{{member.displayname}}</a></li> 
-			  </ul>			  
-			</div>	  	
-	  	</td>	  	
+				<li ng-repeat="member in initdata.members" ng-hide="bag.assignee == member.username"><a href="" data-ng-click="setAttribute(bag, 'assignee', member.username)">{{member.displayname}}</a></li>
+			  </ul>
+			</div>
+	  	</td>
 	  	<td>
 	  		<button type="button" class="btn btn-info btn-sm tag" ng-repeat="tag in bag.tags" data-ng-click="addFilter('tag', tag)">{{tag}}</span>
-	  	</td>  
-	  	<%# 
-		  	<td><a href="/job/{{bag.job}}/view">{{bag.job}}</a></td> 		  	
+	  	</td>
+	  	<%#
+		  	<td><a href="/job/{{bag.job}}/view">{{bag.job}}</a></td>
 		  	<td>
 		  		<a class="tag" ng-repeat="pid in bag.pids" >{{pid}}</a>
-		  	</td>  
+		  	</td>
 	  	%>
 	    <td><span class="gray-light">{{bag.created * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
 	    <td><span class="gray-light">{{bag.updated * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
 	    <td>
 	      <a data-ng-href="{{getBagUrlWithQuery(bag.bagid)}}"><i class="glyphicon glyphicon-pencil"></i></a>
 	    </td>
-	  </tr>	  
+	  </tr>
 	  </tbody>
 	</table>
-	
-</div>
 
+</div>

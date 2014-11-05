@@ -6,6 +6,7 @@
 
    <script type="text/javascript" src="<%= url_for '/js/controllers/uwmetadataeditor.js' %>"></script>
    <script type="text/javascript" src="<%= url_for '/js/controllers/classification.js' %>"></script>
+   <script type="text/javascript" src="<%= url_for '/js/controllers/baginfo.js' %>"></script>
 
    <link href="<%= url_for '/css/uwmetadataeditor.css' %>" rel="stylesheet">
 
@@ -69,6 +70,7 @@
 					</div>
 				</div>
 				<img ng-src="{{initdata.thumb_path}}/m_{{bagid}}_1.png" class="img-thumbnail img-thumbnail-detail" title="{{bagid}}" alt="{{bagid}}">
+
 			</div>
 
 			<div class="col-md-7">
@@ -100,8 +102,6 @@
 							      		<option value="">Load template...</option>
 							      	</select>
 							      </div>
-
-							      <p class="navbar-text" title="Bagid">{{bagid}}</p>
 
 							      <div class="navbar-form navbar-right">
 									<button ng-disabled="form.$invalid || form_disabled" data-ng-click="save()" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-save"></span> Save</button>
@@ -203,6 +203,12 @@
 				   		</tab-heading>
 				   		<div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>')" data-ng-include="'/views/partials/classification.html'"></div>
 					</tab>
+          <tab>
+            <tab-heading>
+                   <span>Info</span>
+               </tab-heading>
+               <div data-ng-controller="BaginfoCtrl" data-ng-init="init('<%= $init_data %>')" data-ng-include="'/views/partials/baginfo.html'"></div>
+          </tab>
 				</tabset>
 
 			</div>
