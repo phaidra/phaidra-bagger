@@ -7,6 +7,7 @@ use Mango::BSON ':bson';
 use Mango::BSON::ObjectID;
 use Mojo::JSON qw(encode_json decode_json);
 use File::Find;
+use Mojo::Util qw(slurp);
 use lib "lib";
 use PhaidraBagMan qw(list_bags print_bags);
 use base 'Mojolicious::Controller';
@@ -91,11 +92,120 @@ sub get_uwmetadata_tree {
 			  		return $res;
 				 }
 			}
-
-
-
 }
 
+sub import_uwmetadata_xml {
+  my $self = shift;
+  my $res = { alerts => [], status => 200 };
+
+  my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
+  my $projectconfig = $self->app->config->{projects}->{$self->current_user->{project}};
+  my $basepath = $projectconfig->{folders}->{uwmetadata_import};
+  $self->app->log->info("[Uwmetadata import] Basepath: $basepath");
+  my $folders = $self->hashdir($basepath);
+
+  $self->app->log->info($self->app->dumper($folders));
+
+  my $cnt = 0;
+  foreach my $folder (keys %{$folders}){
+    $self->app->log->info("[Uwmetadata import] folder $folder");
+
+    my $folderpath = $basepath;
+
+    $folderpath .= '/' unless substr($folderpath, -1) eq '/';
+    $folderpath .= $folder;
+
+    $self->app->log->info("[Uwmetadata import] folderpath $folderpath");
+
+    # folder name is the folder id
+    my $folderid = $folder;
+    # clean folder id of special chars
+    $folderid =~ s/\W//g;
+    my $owner = $projectconfig->{account};
+
+    # importing files
+    foreach my $file (@{$folders->{$folder}->{'.'}}){
+      $cnt++;
+      last if($cnt > 1);
+      $self->app->log->info("[Uwmetadata import] $cnt Importing object ".$file);
+
+      # remove the .xml, then it should be the same bagid as the data file had
+      my $file_no_xml_suff = $file;
+      $file_no_xml_suff =~ s/\.xml//g;
+
+      # folder + filename, is the id
+      my $bagid = $folderid."_".$file_no_xml_suff;
+      # clean file id of special chars
+      $bagid =~ s/\W//g;
+
+      my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, owner => $owner});
+
+      if(defined($bag->{folderid})){
+
+        push @{$res->{alerts}}, "[Uwmetadata import] $cnt Found bag ".$bag->{bagid};
+
+        if($bag->{metadata}){
+            if($bag->{metadata}->{uwmetadata}){
+              push @{$res->{alerts}}, "[Uwmetadata import] $cnt bag ".$bag->{bagid}." already contains metadata, skipping.";
+              next;
+            }
+        }
+
+        my $filepath = $basepath;
+        $filepath.= '/' unless substr($basepath, -1) eq '/';
+        $filepath .= $folder.'/'.$file;
+
+        my $xml = slurp($filepath);
+        $self->app->log->info("[Uwmetadata import] reading file $filepath");
+
+        # use api to turn xml to json
+        my $url = Mojo::URL->new;
+        $url->scheme('https');
+        my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
+        $url->host($base[0]);
+        if(exists($base[1])){
+          $url->path($base[1]."/uwmetadata/xml2json");
+        }else{
+          $url->path("/uwmetadata/xml2json");
+        }
+
+        my $token = $self->load_token;
+        #$self->app->log->info("[Uwmetadata import] posting to ".$url);
+        my $tx = $self->ua->post($url => {$self->app->config->{authentication}->{token_header} => $token} => $xml);
+
+        if (my $result = $tx->success) {
+           $self->app->log->debug("[Uwmetadata import] got json ".$self->app->dumper($result->json));
+           push @{$res->{alerts}}, "[Uwmetadata import] $cnt saving uwmetadata bag ".$bag->{bagid};
+           my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => time, 'metadata.uwmetadata' => $result->json->{uwmetadata}} } );
+        }else {
+           my ($err, $code) = $tx->error;
+           $self->app->log->error("[Uwmetadata import] got error ".$self->app->dumper($err));
+           if($tx->res->json){
+              if(exists($tx->res->json->{alerts})) {
+                foreach my $a (@{$tx->res->json->{alerts}}){
+                  push @{$res->{alerts}}, "[Uwmetadata import] $cnt ERROR bag ".$bag->{bagid}.": ".$a->{msg};
+                }
+              }else{
+                push @{$res->{alerts}}, "[Uwmetadata import] $cnt ERROR bag ".$bag->{bagid}.": ".$self->app->dumper($tx->res->json);
+              }
+           }else{
+             push @{$res->{alerts}}, "[Uwmetadata import] $cnt ERROR bag ".$bag->{bagid}.": ".$self->app->dumper($err);
+           }
+       }
+
+
+      }else{
+        push @{$res->{alerts}}, "[Uwmetadata import] $cnt Bag $bagid not found";
+      }
+
+    }
+
+  }
+
+  $self->render(json => $res, status => $res->{status});
+}
+
+=cut not used currently, Folder::import is used instead
 sub import {
 	my $self = shift;
 
@@ -107,7 +217,7 @@ sub import {
 	my $bags = list_bags($bagdirpath);
 
 	foreach my $bag (keys %{$bags}){
-		$self->app->log->info("Importing bag ".$bag);
+		$self->app->log->info("Found bag ".$bag);
 
 		my $bagpath = $bagdirpath;
 
@@ -239,6 +349,7 @@ sub generate_thumbnails {
 		}
 	}
 }
+=cut
 
 sub get_languages() {
 	my $self = shift;
@@ -1011,13 +1122,14 @@ sub load_difab_template {
 =cut
 
 sub hashdir {
+  my $self = shift;
     my $dir = shift;
     opendir my $dh, $dir or die $!;
     my $tree = {}->{$dir} = {};
     while( my $file = readdir($dh) ) {
         next if $file =~ m[^\.{1,2}$];
         my $path = $dir .'/' . $file;
-        $tree->{$file} = hashdir($path), next if -d $path;
+        $tree->{$file} = $self->hashdir($path), next if -d $path;
         push @{$tree->{'.'}}, $file;
     }
     return $tree;

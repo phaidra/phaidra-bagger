@@ -303,7 +303,8 @@ sub startup {
     $autz->route('bags/folder/:folderid') ->via('post')   ->to('bag#folder_bags_with_query');
     $autz->route('bags/search') ->via('post')   ->to('bag#search');
     $autz->route('bags/search/:filterfield/:filtervalue') ->via('post')   ->to('bag#search');
-    $autz->route('bags/import') ->via('get')   ->to('bag#import');
+    #$autz->route('bags/import') ->via('get')   ->to('bag#import');
+    $autz->route('bags/import/uwmetadata') ->via('get')   ->to('bag#import_uwmetadata_xml');
     $autz->route('bags/set/:attribute/:value') ->via('post')   ->to('bag#set_attribute_mass');
     $autz->route('bags/unset/:attribute/:value') ->via('post')   ->to('bag#unset_attribute_mass');
 
@@ -312,6 +313,7 @@ sub startup {
     $autz->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');
     $autz->route('bag/:bagid/:attribute/:value') ->via('put')   ->to('bag#set_attribute');
     $autz->route('bag/:bagid/:attribute/:value') ->via('delete')   ->to('bag#unset_attribute');
+
     #$autz->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
 
 	$autz->route('job')                        ->via('put')    ->to('job#create');

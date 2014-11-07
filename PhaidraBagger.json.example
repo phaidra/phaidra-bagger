@@ -52,6 +52,7 @@
             },
             "folders": {
                 "in": "/var/www/bagger/data/p1/folders/in",
+                "uwmetadata_import": "/var/www/bagger/data/p1/folders/in"
             },
             "thumbnails": {
 		    	"dir": "/var/www/bagger/public/thumbnails/p1",
