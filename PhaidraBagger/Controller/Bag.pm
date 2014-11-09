@@ -174,9 +174,14 @@ sub import_uwmetadata_xml {
         my $tx = $self->ua->post($url => {$self->app->config->{authentication}->{token_header} => $token} => $xml);
 
         if (my $result = $tx->success) {
-           $self->app->log->debug("[Uwmetadata import] got json ".$self->app->dumper($result->json));
+           my $uwmetadata = $result->json->{uwmetadata};
+
+           if($self->current_user->{project} eq 'DiFaB'){
+             $self->fix_difab_taxon_paths($uwmetadata);
+           }
+           #$self->app->log->debug("[Uwmetadata import] got json ".$self->app->dumper($uwmetadata));
            push @{$res->{alerts}}, "[Uwmetadata import] $cnt saving uwmetadata bag ".$bag->{bagid};
-           my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => time, 'metadata.uwmetadata' => $result->json->{uwmetadata}} } );
+           my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => time, 'metadata.uwmetadata' => $uwmetadata} } );
         }else {
            my ($err, $code) = $tx->error;
            $self->app->log->error("[Uwmetadata import] got error ".$self->app->dumper($err));
@@ -192,17 +197,153 @@ sub import_uwmetadata_xml {
              push @{$res->{alerts}}, "[Uwmetadata import] $cnt ERROR bag ".$bag->{bagid}.": ".$self->app->dumper($err);
            }
        }
-
-
       }else{
         push @{$res->{alerts}}, "[Uwmetadata import] $cnt Bag $bagid not found";
       }
-
     }
+  }
+  $self->render(json => $res, status => $res->{status});
+}
 
+# hack, remove after DiFaB stops using xmls as ingest input
+sub fix_difab_taxon_paths {
+  my $self = shift;
+  my $uwmetadata = shift;
+
+  my $basicns = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0';
+  my $classns = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification';
+
+  # get classification node paths
+  my $class_node = $self->get_json_node($self, $basicns, 'classification', $uwmetadata);
+
+  # if there's just one taxon and seq is -1 then it's not a phaidra taxon path, but just upstreamid
+  # get taxon id (tid) for this upstream_id and get the whole taxon path
+  foreach my $n (@{$class_node->{children}}){
+    if($n->{xmlname} eq 'taxonpath'){
+      my $source;
+      my $taxon;
+      my $taxon_seq;
+      my $taxon_cnt = 0;
+      foreach my $tn (@{$n->{children}}){
+
+        if($tn->{xmlname} eq 'source'){
+            $source = $tn->{ui_value};
+        }
+        if($tn->{xmlname} eq 'taxon'){
+            $taxon_cnt++;
+            $taxon_seq = $tn->{data_order};
+            $taxon = $tn->{ui_value};
+        }
+     }
+     if($taxon_cnt == 1 && $taxon_seq eq '-1'){
+
+        # parse upstream_identifier out of the 'uri'
+        # 300000994 out of http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification/cls_5/300000994
+        $taxon =~ m/($classns)\/(cls)_(\d+)\/(\w+)\/?$/;
+        my $upstream_identifier = $4;
+
+        unless($upstream_identifier){
+          $self->app->log->error("ERROR: cannot parse upstream_identifier out of uri: $taxon");
+          next;
+        }
+
+        # get tid for this upstream identifier
+        my $projectconfig = $self->app->config->{projects}->{'DiFaB'};
+        use DBI;
+        my $dbh = DBI->connect($projectconfig->{phaidradb}->{connection_string}, $projectconfig->{phaidradb}->{username}, $projectconfig->{phaidradb}->{password}, {AutoCommit => 1, mysql_enable_utf8 => 1});
+        my $ss = qq/SELECT tid FROM taxon WHERE upstream_identifier = (?)/;
+        my $sth = $dbh->prepare($ss) || $self->app->log->error("DB ERROR:".$dbh->errstr);
+        $sth->execute($upstream_identifier) || $self->app->log->error("DB ERROR:".$dbh->errstr);
+        my ($tid);
+        sth->bind_columns(undef,\$tid) || $self->app->log->error("DB ERROR:".$dbh->errstr);
+        $sth->fetch;
+
+        unless($tid){
+          $self->app->log->error("ERROR: cannot get tid for upstream_identifier: $upstream_identifier");
+          next;
+        }
+
+        # get taxonpath for this tid
+        my $url = Mojo::URL->new;
+        $url->scheme('https');
+        my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
+        $url->host($base[0]);
+        if(exists($base[1])){
+          $url->path($base[1]."/terms/taxonpath");
+        }else{
+          $url->path("/terms/taxonpath/");
+        }
+        $url->query({uri => "$source/$tid"});
+        my $token = $self->load_token;
+        my $tx = $self->ua->get($url => {$self->app->config->{authentication}->{token_header} => $token});
+        if (my $result = $tx->success) {
+
+          # remove taxon
+          splice($n->{children},1,1);
+
+           my $taxonpath = $result->json->{taxonpath};
+           my $i = 0;
+           foreach my $taxondata (@{$taxonpath}){
+             $i++;
+             next if($i == 1); # first is 'source', that was ok, we don't need to change it
+
+             my $txn = {
+               xmlns => $classns,
+               xmlname => "taxon",
+               datatype => "Taxon",
+               ordered => 1,
+               data_order => $i-2,
+               ui_value => $taxondata->{uri},
+               value_labels => {
+                 labels => $taxondata->{labels},
+                 upstream_identifier => $taxondata->{upstream_identifier},
+                 term_id => $taxondata->{term_id},
+                 nonpreferred => $taxondata->{nonpreferred}
+               }
+             };
+
+             push $n->{children}, $txn;
+           }
+
+        }else{
+          $self->app->log->error("ERROR: cannot get taxonpath for tid: $tid");
+          next;
+        }
+
+      }
+    }
   }
 
-  $self->render(json => $res, status => $res->{status});
+}
+
+# this method finds node of given namespace and xmlname
+#
+# xxx !! DANGER !! xxx
+# A node is generally not defined only with namespace and xmlname
+# but also with the position in the tree.
+# The only node however, where the namespace and xmlname is not enough is:
+# namespace: http://phaidra.univie.ac.at/XML/metadata/lom/V1.0
+# xmlname: description
+# because there are two, one on 'general' tab and one on 'rights'
+# xxx !! xxxxxx !! xxx
+#
+sub get_json_node(){
+	my ($self, $c, $namespace, $xmlname, $metadata) = @_;
+
+	my $ret;
+	foreach my $n (@{$metadata}){
+		if($n->{xmlns} eq $namespace && $n->{xmlname} eq $xmlname){
+			$ret = $n;
+			last;
+		}else{
+			my $children_size = defined($n->{children}) ? scalar (@{$n->{children}}) : 0;
+			if($children_size > 0){
+				$ret = $self->get_json_node($c, $namespace, $xmlname, $n->{children});
+				last if($ret);
+			}
+		}
+	}
+	return $ret;
 }
 
 =cut not used currently, Folder::import is used instead
