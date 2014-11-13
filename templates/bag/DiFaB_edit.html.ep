@@ -10,22 +10,6 @@
 
    <link href="<%= url_for '/css/uwmetadataeditor.css' %>" rel="stylesheet">
 
-    <script type="text/javascript">
-            $(document).ready(function(){
-
-				$('#resetEditor').click(function(){
-					var app = document.getElementById('UwmetadataeditorCtrl');
-					var scope = angular.element(app).scope();
-					scope.$apply(function() {
-						scope.resetEditor();
-					});
-				});
-
-				$('.datepicker').datepicker();
-
-            });
-    </script>
-
 % end
 
 

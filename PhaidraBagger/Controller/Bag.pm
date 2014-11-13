@@ -126,7 +126,7 @@ sub import_uwmetadata_xml {
     # importing files
     foreach my $file (@{$folders->{$folder}->{'.'}}){
       $cnt++;
-      last if($cnt > 1);
+      #last if($cnt > 1);
       $self->app->log->info("[Uwmetadata import] $cnt Importing object ".$file);
 
       # remove the .xml, then it should be the same bagid as the data file had
@@ -177,7 +177,7 @@ sub import_uwmetadata_xml {
            my $uwmetadata = $result->json->{uwmetadata};
 
            if($self->current_user->{project} eq 'DiFaB'){
-             $self->fix_difab_taxon_paths($uwmetadata);
+             $self->fix_difab_taxon_paths($bag->{bagid}, $uwmetadata);
            }
            #$self->app->log->debug("[Uwmetadata import] got json ".$self->app->dumper($uwmetadata));
            push @{$res->{alerts}}, "[Uwmetadata import] $cnt saving uwmetadata bag ".$bag->{bagid};
@@ -208,6 +208,7 @@ sub import_uwmetadata_xml {
 # hack, remove after DiFaB stops using xmls as ingest input
 sub fix_difab_taxon_paths {
   my $self = shift;
+  my $bagid = shift;
   my $uwmetadata = shift;
 
   my $basicns = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0';
@@ -243,7 +244,7 @@ sub fix_difab_taxon_paths {
         my $upstream_identifier = $4;
 
         unless($upstream_identifier){
-          $self->app->log->error("ERROR: cannot parse upstream_identifier out of uri: $taxon");
+          $self->app->log->error("[fix_difab_taxon_paths][$bagid] ERROR: cannot parse upstream_identifier out of uri: $taxon");
           next;
         }
 
@@ -255,11 +256,11 @@ sub fix_difab_taxon_paths {
         my $sth = $dbh->prepare($ss) || $self->app->log->error("DB ERROR:".$dbh->errstr);
         $sth->execute($upstream_identifier) || $self->app->log->error("DB ERROR:".$dbh->errstr);
         my ($tid);
-        sth->bind_columns(undef,\$tid) || $self->app->log->error("DB ERROR:".$dbh->errstr);
+        $sth->bind_columns(undef,\$tid) || $self->app->log->error("DB ERROR:".$dbh->errstr);
         $sth->fetch;
 
         unless($tid){
-          $self->app->log->error("ERROR: cannot get tid for upstream_identifier: $upstream_identifier");
+          $self->app->log->error("[fix_difab_taxon_paths][$bagid] ERROR: cannot get tid for upstream_identifier: $upstream_identifier");
           next;
         }
 
@@ -306,7 +307,7 @@ sub fix_difab_taxon_paths {
            }
 
         }else{
-          $self->app->log->error("ERROR: cannot get taxonpath for tid: $tid");
+          $self->app->log->error("[fix_difab_taxon_paths][$bagid] ERROR: cannot get taxonpath for tid: $tid");
           next;
         }
 
