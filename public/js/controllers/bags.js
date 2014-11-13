@@ -378,6 +378,8 @@ var CreateIngestJobModalCtrl = function ($scope, $modalInstance, FrontendService
 
 	$scope.modaldata = { name: '', start_at: null, ingest_instance: null};
 
+	$scope.baseurl = $('head base').attr('href');
+
 	$scope.today = function() {
 		$scope.modaldata.start_at = new Date();
 	};

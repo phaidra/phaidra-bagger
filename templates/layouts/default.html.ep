@@ -154,7 +154,7 @@
       </ul>
       
       <ul class="nav navbar-right">
-      	<img class="load-spinner" ng-show="loadingTracker.active()" src="../img/ajax-loader.gif">
+      	<img class="load-spinner" ng-show="loadingTracker.active()" src="<%= url_for '/img/ajax-loader.gif' %>">
       </ul>
       
     </div><!-- /.navbar-collapse -->

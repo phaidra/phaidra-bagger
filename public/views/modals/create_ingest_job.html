@@ -3,29 +3,29 @@
 	<div class="modal-dialog">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h4 class="modal-title"><span class="glyphicon glyphicon-asterisk"></span> Create new ingest job <img class="load-spinner" ng-show="loadingTracker.active()" src="/img/ajax-loader.gif"></h4>
-					
+					<h4 class="modal-title"><span class="glyphicon glyphicon-asterisk"></span> Create new ingest job <img class="load-spinner" ng-show="loadingTracker.active()" ng-src="{{baseurl+'/img/ajax-loader.gif'}}"></h4>
+
 				</div>
 				<div class="modal-body">
-				
+
 					<alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert($index)">{{alert.msg}}</alert>
-				
+
 					<data-ng-form name="form" novalidate role="form">
-						<fieldset data-ng-disabled="form_disabled">							
+						<fieldset data-ng-disabled="form_disabled">
 							<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.start_at.$dirty && form.start_at.$invalid]">
 								<label class="control-label">Start at:</label>
 								<div class="row">
 									<div class="col-md-6">
 								    	<input type="text" name="start_at" id="start_at" class="form-control ingest-date-input" datepicker-popup="dd.MM.yyyy" ng-model="modaldata.start_at" is-open="opened" min-date="minDate" ng-required="true" close-text="Close" />
 								    </div>
-									<div class="col-md-6">            					               
+									<div class="col-md-6">
 										<timepicker data-ng-model="modaldata.start_at" show-meridian="false"></timepicker>
-									</div>				
-								</div>							
+									</div>
+								</div>
 							</div>
 							<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.instance.$dirty && form.instance.$invalid]">
 								<label class="control-label" for="name">Phaidra instance:</label>
-								<select class="form-control" name="instance" id="instance" ng-required="1" ng-model="modaldata.ingest_instance" ng-keyup="hitEnterCreate($event)" required ng-options="key as value.baseurl for (key, value) in initdata.ingest_instances" ></select>								
+								<select class="form-control" name="instance" id="instance" ng-required="1" ng-model="modaldata.ingest_instance" ng-keyup="hitEnterCreate($event)" required ng-options="key as value.baseurl for (key, value) in initdata.ingest_instances" ></select>
 							</div>
 							<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.name.$dirty && form.name.$invalid]">
 								<label class="control-label" for="name">Name:</label>
@@ -33,7 +33,7 @@
 							</div>
 						</fieldset>
 					</data-ng-form>
-					
+
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>

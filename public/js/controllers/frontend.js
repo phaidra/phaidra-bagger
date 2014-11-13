@@ -238,7 +238,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
     $scope.signin_open = function () {
 
       var modalInstance = $modal.open({
-            templateUrl: $('head base').attr('href')+'views/modals/loginform.html',
+            templateUrl: $('head base').attr('href')+'/views/modals/loginform.html',
             controller: SigninModalCtrl
       });
     };
@@ -255,6 +255,8 @@ var SigninModalCtrl = function ($scope, $modalInstance, DirectoryService, Fronte
 
   $scope.user = {username: '', password: ''};
   $scope.alerts = [];
+
+  $scope.baseurl = $('head base').attr('href');
 
   // we will use this to track running ajax requests to show spinner
   $scope.loadingTracker = promiseTracker('loadingTrackerFrontend');

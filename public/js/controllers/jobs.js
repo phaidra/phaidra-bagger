@@ -1,10 +1,10 @@
 var ConfirmDeleteModalCtrl = function ($scope, $modalInstance, itemname) {
 
 	$scope.itemname = itemname;
-	
+
 	$scope.itemtype = 'job';
-	
-	$scope.ok = function () {		
+
+	$scope.ok = function () {
 		$modalInstance.close();
 	};
 
@@ -14,27 +14,27 @@ var ConfirmDeleteModalCtrl = function ($scope, $modalInstance, itemname) {
 };
 
 app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService, JobService, promiseTracker) {
-    
+
 	// we will use this to track running ajax requests to show spinner
 	$scope.loadingTracker = promiseTracker('loadingTrackerFrontend');
-	
+
 	$scope.alerts = [];
-	
-	$scope.jobs = [];        
-    
+
+	$scope.jobs = [];
+
     $scope.closeAlert = function(index) {
     	$scope.alerts.splice(index, 1);
     };
-            
+
 	$scope.initdata = '';
 	$scope.current_user = '';
-			
+
 	$scope.init = function (initdata) {
 		$scope.initdata = angular.fromJson(initdata);
-		$scope.current_user = $scope.initdata.current_user;		
-    	$scope.refreshResults();    	
+		$scope.current_user = $scope.initdata.current_user;
+    	$scope.refreshResults();
     };
-    
+
     $scope.deleteJob = function (jobid, jobname) {
 
     	var modalInstance = $modal.open({
@@ -43,22 +43,22 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
             resolve: {
 	    		itemname: function(){
 			    	return jobname;
-			  }	 
+			  }
             }
-    	
+
     	});
-    	
+
     	modalInstance.result.then(function () {
     		var promise = JobService.remove(jobid);
             $scope.loadingTracker.addPromise(promise);
             promise.then(
-             	function(response) { 
+             	function(response) {
              		$scope.alerts = response.data.alerts;
              		for(var i = 0 ; i < $scope.jobs.length; i++){
              			if($scope.jobs[i]._id == jobid){
              				$scope.jobs.splice(i,1);
-             			}             			
-             		}             		
+             			}
+             		}
              		$scope.form_disabled = false;
              	}
              	,function(response) {
@@ -68,14 +68,14 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
              	}
             );
 	    });
-    };	
+    };
 
  $scope.refreshResults = function() {
 	 $scope.form_disabled = true;
      var promise = JobService.getMyJobs();
      $scope.loadingTracker.addPromise(promise);
      promise.then(
-      	function(response) { 
+      	function(response) {
       		$scope.alerts = response.data.alerts;
       		$scope.jobs = response.data.jobs;
       		$scope.form_disabled = false;
@@ -85,17 +85,17 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
       		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
       		$scope.form_disabled = false;
       	}
-     );    	      
+     );
  };
- 
+
   $scope.toogleRun = function(jobid) {
 	 $scope.form_disabled = true;
      var promise = JobService.toggleRun(jobid);
      $scope.loadingTracker.addPromise(promise);
      promise.then(
-      	function(response) { 
+      	function(response) {
       		$scope.alerts = response.data.alerts;
-      		$scope.refreshResults();   
+      		$scope.refreshResults();
       		$scope.form_disabled = false;
       	}
       	,function(response) {
@@ -103,9 +103,9 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
       		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
       		$scope.form_disabled = false;
       	}
-     );    	      
- };   
- 
+     );
+ };
+
  $scope.editIngestJob = function (job) {
 	  var modalInstance = $modal.open({
           templateUrl: $('head base').attr('href')+'views/modals/edit_ingest_job.html',
@@ -114,76 +114,74 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
 		  resolve: {
 		      job: function(){
 			    return job;
-			  }	  
+			  }
 		  }
 	  });
   }
- 
-  $scope.getMemberDisplayname = function (username) {	  
+
+  $scope.getMemberDisplayname = function (username) {
 	  for( var i = 0 ; i < $scope.initdata.members.length ; i++ ){
 		  if($scope.initdata.members[i].username == username){
-			  return $scope.initdata.members[i].displayname; 
-		  }		  
-	  }	  
+			  return $scope.initdata.members[i].displayname;
+		  }
+	  }
   }
-       
+
 });
 
 var EditIngestJobModalCtrl = function ($scope, $modalInstance, FrontendService, JobService, promiseTracker, job) {
 
 	$scope.job = job;
-	
+
+	$scope.baseurl = $('head base').attr('href');
+
 	$scope.modaldata = { name: job.name, start_at: job.start_at, ingest_instance: job.ingest_instance};
 
 	$scope.today = function() {
 		$scope.modaldata.start_at = new Date();
 	};
-	
+
 	$scope.clear = function () {
 		 $scope.modaldata.start_at = null;
 	};
 
 	$scope.open = function($event) {
 	    $event.preventDefault();
-	    $event.stopPropagation();	
+	    $event.stopPropagation();
 	    $scope.opened = true;
-	};	
+	};
 
 	$scope.hitEnterSave = function(evt){
 		if(angular.equals(evt.keyCode,13)){
 			$scope.saveJob();
 		}
 	};
-		
+
 	$scope.saveJob = function () {
-		
+
 		$scope.form_disabled = true;
-	
-		var promise = JobService.save($scope.job._id, $scope.modaldata);	
-		
+
+		var promise = JobService.save($scope.job._id, $scope.modaldata);
+
 		$scope.loadingTracker.addPromise(promise);
 		promise.then(
-			function(response) { 
+			function(response) {
 				$scope.form_disabled = false;
 				$scope.alerts = response.data.alerts;
 				$modalInstance.close();
 				$scope.refreshResults();
 			}
 			,function(response) {
-				$scope.form_disabled = false;    			
+				$scope.form_disabled = false;
 				$scope.alerts = response.data.alerts;
 				$modalInstance.close();
 	        }
 	    );
 		return;
-		
+
 	};
-	
+
 	$scope.cancel = function () {
 		$modalInstance.dismiss('cancel');
 	};
 };
-
-
-
-
