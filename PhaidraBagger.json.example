@@ -19,16 +19,17 @@
 
 	"secure_cookies":"1",
 
-    "log_path":"/var/log/phaidra/PhaidraBagger.log",
+  "log_path":"/var/log/phaidra/PhaidraBagger.log",
 
-    "log_level":"debug",
+  "log_level":"debug",
 
-    "validate_uwmetadata":"1",
+  "bagger_agent_path":"/var/www/bagger/lib/PhaidraBaggerAgent/phaidra_bagger_agent.pl",
 
-    "defaults": {
+  "validate_uwmetadata":"1",
+
+  "defaults": {
 
     	"metadata_field_language": "de"
-
 	},
 
     "projects": {

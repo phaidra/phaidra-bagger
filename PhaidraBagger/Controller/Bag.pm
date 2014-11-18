@@ -11,6 +11,7 @@ use Mojo::Util qw(slurp);
 use lib "lib";
 use PhaidraBagMan qw(list_bags print_bags);
 use base 'Mojolicious::Controller';
+use utf8;
 
 sub get_uwmetadata_tree {
     my $self = shift;
@@ -110,6 +111,9 @@ sub import_uwmetadata_xml {
   foreach my $folder (keys %{$folders}){
     $self->app->log->info("[Uwmetadata import] folder $folder");
 
+	$cnt++;
+    last if($cnt > 1);
+
     my $folderpath = $basepath;
 
     $folderpath .= '/' unless substr($folderpath, -1) eq '/';
@@ -124,9 +128,12 @@ sub import_uwmetadata_xml {
     my $owner = $projectconfig->{account};
 
     # importing files
+    my $cntf = 0;
     foreach my $file (@{$folders->{$folder}->{'.'}}){
-      $cnt++;
-      #last if($cnt > 1);
+
+      $cntf++;
+    	last if($cntf > 1);
+
       $self->app->log->info("[Uwmetadata import] $cnt Importing object ".$file);
 
       # remove the .xml, then it should be the same bagid as the data file had
@@ -205,6 +212,19 @@ sub import_uwmetadata_xml {
   $self->render(json => $res, status => $res->{status});
 }
 
+sub _to_degrees {
+	my $self = shift;
+	my $dec = shift;
+
+	my $deg = int($dec);
+	my $dm = abs($dec - $deg) * 60;
+
+	my $mm = int($dm);
+	my $ss = sprintf("%3.5f", (abs($mm - $dm) * 60));
+
+	return ($deg, $mm, $ss);
+}
+
 # hack, remove after DiFaB stops using xmls as ingest input
 sub fix_difab_taxon_paths {
   my $self = shift;
@@ -213,12 +233,44 @@ sub fix_difab_taxon_paths {
 
   my $basicns = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0';
   my $classns = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification';
+  my $hns = 'http://phaidra.univie.ac.at/XML/metadata/histkult/V1.0';
+
+  # get alt_titles node - fix 'gr', greece is 'el'
+  my $gen_node = $self->get_json_node($self, $basicns, 'general', $uwmetadata);
+  foreach my $n (@{$gen_node->{children}}){
+  	if($n->{xmlname} eq 'alt_title' && $n->{value_lang} eq 'gr'){
+  		$n->{value_lang} = 'el';
+  	}
+  }
+
+  my $gps_node = $self->get_json_node($self, $hns, 'gps', $uwmetadata);
+  my $val = $gps_node->{ui_value};
+
+  if($val){
+	  my @s = split('\|',$val);
+
+	  my $lat = $s[0];
+	  my $lon = $s[1];
+
+	  my $lat_char = ($lat =~ m/([-]+)/) ? 'S' : 'N';
+	  my $lon_char = ($lon =~ m/([-]+)/) ? 'W' : 'E';
+
+	  my ($deg_lat, $mm_lat, $ss_lat) = $self->_to_degrees($lat);
+	  my ($deg_lon, $mm_lon, $ss_lon) = $self->_to_degrees($lon);
+
+	  my $new = "$deg_lat°$mm_lat'$ss_lat''$lat_char|$deg_lon°$mm_lon'$ss_lon''$lon_char";
+
+	  $gps_node->{ui_value} = $new;
+	  $gps_node->{loaded_ui_value} = $new;
+	  $gps_node->{loaded_value} = $new;
+  }
 
   # get classification node paths
   my $class_node = $self->get_json_node($self, $basicns, 'classification', $uwmetadata);
 
   # if there's just one taxon and seq is -1 then it's not a phaidra taxon path, but just upstreamid
   # get taxon id (tid) for this upstream_id and get the whole taxon path
+  my @ok_children;
   foreach my $n (@{$class_node->{children}}){
     if($n->{xmlname} eq 'taxonpath'){
       my $source;
@@ -306,14 +358,22 @@ sub fix_difab_taxon_paths {
              push $n->{children}, $txn;
            }
 
+           push @ok_children, $n;
+
         }else{
           $self->app->log->error("[fix_difab_taxon_paths][$bagid] ERROR: cannot get taxonpath for tid: $tid");
           next;
         }
 
+      }else{
+      	   push	@ok_children, $n;
       }
+    }else{
+    	push @ok_children, $n;
     }
   }
+  # this deletes the failed onesg
+  $class_node->{children} = \@ok_children;
 
 }
 

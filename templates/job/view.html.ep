@@ -1,16 +1,16 @@
 % layout 'default', title => 'Job';
 
 % content_for header => begin
-   
-   <script type="text/javascript" src="<%= url_for '/js/controllers/job.js' %>"></script>    
-        
+
+   <script type="text/javascript" src="<%= url_for '/js/controllers/job.js' %>"></script>
+
 % end
 
 <div class="container" data-ng-controller="JobCtrl" data-ng-init="init('<%= $init_data %>')">
 
 %= include 'alerts'
 
-		
+
 	<div class="container-fluid">
 		<div class="row">
 	     	<div class="col-md-2">
@@ -19,36 +19,35 @@
 	        <div class="col-md-8"><center><pagination total-items="totalItems" on-select-page="setPage(page)" page="currentPage" items-per-page="limit" max-size="maxSize" boundary-links="true" rotate="false" num-pages="numPages"></pagination></center></div>
 	        <div class="col-md-2">
 	        	<span class="pages">{{currentPage}} / {{numPages}}</span>
-	        </div>                          
-    	</div> 
-	</div> 
-	
+	        </div>
+    	</div>
+	</div>
+
 	<table class="table">
 	  <thead>
 		  <tr>
-		  	<th></th>	  	
+		  	<th></th>
 		  	<th>Label</th>
 		  	<th>Pid</th>
 		    <th>Started at</th>
 		    <th>Finished at</th>
-		  	<th>Alerts</th>	  		  				  	
+		  	<th>Alerts</th>
 		  </tr>
 	  </thead>
 	  <tbody>
-		  <tr ng-repeat="bag in items">	  
-		    <td><img ng-src="{{initdata.thumb_path}}/s_{{bag.bagid}}_1.png" class="img-thumbnail" width="60" height="60" title="{{bag.bagid}}" alt="{{bag.bagid}}"></td>
+		  <tr ng-repeat="bag in items">
+		    <td class="job-thumbnail"><img ng-src="{{initdata.thumb_path}}/s_{{bag.bagid}}_1.png" class="img-thumbnail" width="60" height="60" title="{{bag.bagid}}" alt="{{bag.bagid}}"></td>
 		  	<td>{{bag.label}}</td>
 		  	<td>
 		  		{{bag.jobs[0].pid}}
-		  	</td>	  		  			  	
+		  	</td>
 		    <td><span class="gray-light" ng-if="bag.jobs[0].started_at">{{bag.jobs[0].started_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
 		    <td><span class="gray-light" ng-if="bag.jobs[0].finished_at">{{bag.jobs[0].finished_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
 		    <td>
-		    	<alert ng-repeat="alert in bag.jobs[0].alerts" type="alert.type">{{alert.msg}}</alert>
+		    	<alert ng-repeat="alert in bag.jobs[0].alerts" type="alert.type" ng-if="alert.type == 'danger'">{{alert.msg}}</alert>
 		    </td>
-		  </tr>	  
+		  </tr>
 	  </tbody>
 	</table>
-	
-</div>
 
+</div>

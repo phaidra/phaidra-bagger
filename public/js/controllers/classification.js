@@ -8,12 +8,12 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 	$scope.initdata = '';
 	$scope.current_user = '';
 
-	$scope.init = function (initdata) {
+	$scope.init = function (initdata, mode) {
 		$scope.initdata = angular.fromJson(initdata);
 		$scope.current_user = $scope.initdata.current_user;
 		$scope.getClassifications();
-    	$scope.getMyClassifications();
-    };
+  	$scope.getMyClassifications();
+  };
 
     $scope.clsns = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification';
 
@@ -24,7 +24,7 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
       'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification/cls_8': 3,
       'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification/cls_9': 4,
     	'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification/cls_7': 5,
-    	'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification/cls_5': 6    	    	
+    	'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification/cls_5': 6
     };
 
     $scope.lastSelectedTaxons = {};
@@ -37,6 +37,7 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
     $scope.class_search = {query: ''};
 
     $scope.class_roots = [];
+		$scope.class_roots_all = [];
 
     $scope.getClassifications = function() {
 		 $scope.form_disabled = true;
@@ -45,18 +46,21 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 	     promise.then(
 	      	function(response) {
 	      		$scope.alerts = response.data.alerts;
-
+						$scope.class_roots_all = [];
 	      		// filter and order
 	      		$scope.class_roots = [];
 	      		for (var i = 0; i < response.data.terms.length; ++i) {
+							var term = response.data.terms[i];
+							term.current_path = [];
 	      			var pos = $scope.classes_config[response.data.terms[i].uri];
 	      			if(pos > 0){
 	      				// pos goes from 1
 	      				$scope.class_roots[pos-1] = response.data.terms[i];
 		      			// init current_path array
 	      				$scope.class_roots[pos-1].current_path = [];
-
 	      			}
+
+							$scope.class_roots_all.push(term);
 	      		}
 
 	      		$scope.form_disabled = false;

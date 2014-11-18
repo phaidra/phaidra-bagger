@@ -1,14 +1,16 @@
 % layout 'default', title => 'Jobs';
 
 % content_for header => begin
-   
-   <script type="text/javascript" src="<%= url_for '/js/controllers/jobs.js' %>"></script>   
-        
+
+   <script type="text/javascript" src="<%= url_for '/js/controllers/jobs.js' %>"></script>
+
 % end
-	
+
 <div class="container" data-ng-controller="JobsCtrl"  data-ng-init="init('<%= $init_data %>')">
 
 %= include 'alerts'
+
+  <pre>{{stop}}</pre>
 
 	<input type="text" ng-model="filterinput" class="search-query form-control" placeholder="Filter">
 
@@ -24,7 +26,7 @@
 	    <th>Created</th>
 	    <th>Updated</th>
 	    <th></th>
-	    <th></th>
+      <th></th>
 	    <th></th>
 	  </tr>
 	  </thead>
@@ -39,11 +41,10 @@
 	    <td><span class="gray-light" ng-if="job.created">{{job.created * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
 	    <td><span class="gray-light" ng-if="job.updated">{{job.updated * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
 	    <td><a href="" ng-click="editIngestJob(job)"><i class="glyphicon glyphicon-pencil"></i></a></td>
-	    <td><a href="" ng-click="toogleRun(job._id)"><i class="glyphicon glyphicon-pause" ng-show="job.status == 'running'"></i><i class="glyphicon glyphicon-play" ng-show="job.status == 'suspended'"></i></a></td>
+	    <td><a href="" ng-click="toogleRun(job._id)"><i class="glyphicon glyphicon-pause" ng-show="job.status == 'running'"></i><i class="glyphicon glyphicon-play" ng-show="job.status == 'suspended' || job.status == 'scheduled'"></i></a></td>
 	    <td><a href="" ng-click="deleteJob(job._id,job.name)"><i class="glyphicon glyphicon-remove"></i></a></td>
 	  </tr>
 	  </tbody>
 	</table>
 
 </div>
-

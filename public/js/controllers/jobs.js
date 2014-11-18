@@ -13,7 +13,7 @@ var ConfirmDeleteModalCtrl = function ($scope, $modalInstance, itemname) {
 	};
 };
 
-app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService, JobService, promiseTracker) {
+app.controller('JobsCtrl',  function($scope, $interval, $modal, $location, DirectoryService, JobService, promiseTracker) {
 
 	// we will use this to track running ajax requests to show spinner
 	$scope.loadingTracker = promiseTracker('loadingTrackerFrontend');
@@ -32,8 +32,9 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
 	$scope.init = function (initdata) {
 		$scope.initdata = angular.fromJson(initdata);
 		$scope.current_user = $scope.initdata.current_user;
-    	$scope.refreshResults();
-    };
+    $scope.refreshResults();
+		//$scope.refresh();
+  };
 
     $scope.deleteJob = function (jobid, jobname) {
 
@@ -70,7 +71,7 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
 	    });
     };
 
- $scope.refreshResults = function() {
+  $scope.refreshResults = function() {
 	 $scope.form_disabled = true;
      var promise = JobService.getMyJobs();
      $scope.loadingTracker.addPromise(promise);
@@ -86,8 +87,36 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
       		$scope.form_disabled = false;
       	}
      );
- };
+  };
+/*
+  $scope.stop;
+  $scope.refresh = function() {
+  	if ( angular.isDefined($scope.stop) ) return;
+    $scope.stop = $interval($scope.refreshResults(), 3000);
+		$scope.loadingTracker.addPromise($scope.stop);
+		var running_job_found = false;
+		for( var i = 0 ; i < $scope.jobs.length ; i++ ){
+			if($scope.jobs[i].status == 'running'){
+					running_job_found = true;
+			}
+		}
+		if(!running_job_found){
+			$scope.stopRefresh();
+		}
+  };
 
+  $scope.stopRefresh = function() {
+  	if (angular.isDefined($scope.stop)) {
+      $interval.cancel($scope.stop);
+      stop = undefined;
+    }
+  };
+
+  $scope.$on('$destroy', function() {
+    // Make sure that the interval is destroyed too
+    $scope.stopRefresh();
+  });
+*/
   $scope.toogleRun = function(jobid) {
 	 $scope.form_disabled = true;
      var promise = JobService.toggleRun(jobid);
@@ -96,6 +125,7 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
       	function(response) {
       		$scope.alerts = response.data.alerts;
       		$scope.refreshResults();
+					//$scope.refresh();
       		$scope.form_disabled = false;
       	}
       	,function(response) {
@@ -135,7 +165,7 @@ var EditIngestJobModalCtrl = function ($scope, $modalInstance, FrontendService, 
 
 	$scope.baseurl = $('head base').attr('href');
 
-	$scope.modaldata = { name: job.name, start_at: job.start_at, ingest_instance: job.ingest_instance};
+	$scope.modaldata = { name: job.name, start_at: job.start_at*1000, ingest_instance: job.ingest_instance};
 
 	$scope.today = function() {
 		$scope.modaldata.start_at = new Date();

@@ -306,3 +306,15 @@ margin-top: 5px;
 .navbar-bag-assignee {
 	padding-left: 5px;
 }
+
+.settings-classification .tab-content {
+	margin-top: 20px;
+}
+
+.settings-classification .container {
+	width: 970px;
+}
+
+.job-thumbnail {
+	min-width: 80px
+}

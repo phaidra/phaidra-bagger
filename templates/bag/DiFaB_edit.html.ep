@@ -211,7 +211,7 @@
 						<tab-heading>
 				       		<span>Classification</span>
 				   		</tab-heading>
-				   		<div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>')" data-ng-include="'/views/partials/classification.html'"></div>
+				   		<div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>', 'bagedit')" data-ng-include="'/views/partials/classification.html'"></div>
 					</tab>
           <tab>
             <tab-heading>
