@@ -10,8 +10,6 @@
 
 %= include 'alerts'
 
-  <pre>{{stop}}</pre>
-
 	<input type="text" ng-model="filterinput" class="search-query form-control" placeholder="Filter">
 
 	<table class="table">
@@ -21,7 +19,8 @@
 	    <th>Status</th>
 	    <th>Instance</th>
 	    <th>Created by</th>
-	    <th>Start at</th>
+	    <th>Scheduled at</th>
+      <th>Started at</th>
 	    <th>Finished at</th>
 	    <th>Created</th>
 	    <th>Updated</th>
@@ -33,10 +32,11 @@
 	  <tbody>
 	  <tr ng-repeat="job in jobs| filter:filterinput | orderBy:'updated':true">
 	    <td><a href="/job/{{job._id}}/view">{{job.name}}</a></td>
-	    <td>{{job.status}}</td>
+	    <td ng-class="{'job-running': job.status == 'running'}">{{job.status}}</td>
 	    <td>{{job.ingest_instance}}</td>
 	    <td>{{getMemberDisplayname(job.created_by)}}</td>
 	    <td><span class="gray-light" ng-if="job.start_at">{{job.start_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
+      <td><span class="gray-light" ng-if="job.started_at">{{job.started_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
 	    <td><span class="gray-light" ng-if="job.finished_at">{{job.finished_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
 	    <td><span class="gray-light" ng-if="job.created">{{job.created * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
 	    <td><span class="gray-light" ng-if="job.updated">{{job.updated * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>

@@ -33,6 +33,8 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
     project: {}
   };
 
+  $scope.projectclasses = [];
+
   $scope.init = function (initdata) {
     $scope.initdata = angular.fromJson(initdata);
     $scope.current_user = $scope.initdata.current_user;
@@ -58,6 +60,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
           if($scope.settings.user == null){
               $scope.settings.user = {};
           }
+          $scope.getProjectClasses();
           $scope.getUwmfields();
           $scope.form_disabled = false;
         }
@@ -116,6 +119,47 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
         }
     );
   };
+
+  $scope.addClassToConfig = function(uri){
+    if(typeof $scope.settings.project.classifications == 'undefined'){
+      $scope.settings.project['classifications'] = [];
+    }
+    $scope.settings.project.classifications.push(uri);
+    $scope.saveSettings();
+    $scope.getProjectClasses();
+  }
+
+  $scope.removeClassFromConfig = function(index){
+    if(typeof $scope.settings.project.classifications == 'undefined'){
+      $scope.settings.project['classifications'] = [];
+    }else{
+      $scope.settings['project'].classifications.splice(index, 1);
+    }
+    $scope.saveSettings();
+    $scope.getProjectClasses();
+  }
+
+  $scope.getProjectClasses = function(index){
+    $scope.form_disabled = true;
+    var promise = FrontendService.getClassifications();
+    $scope.loadingTracker.addPromise(promise);
+    promise.then(
+      function(response) {
+        $scope.form_disabled = false;
+        $scope.projectclasses = [];
+        for (var i = 0; i < response.data.classifications.length; ++i) {
+            if(response.data.classifications[i].type == 'project'){
+              $scope.projectclasses.push(response.data.classifications[i]);
+            }
+        }
+        $scope.alerts = response.data.alerts;
+      }
+      ,function(response) {
+        $scope.form_disabled = false;
+        $scope.alerts = response.data.alerts;
+        }
+    );
+  }
 
   $scope.saveVisibleFieldsSettingsRec = function(children, type){
     for (var i = 0; i < children.length; ++i) {

@@ -318,3 +318,34 @@ margin-top: 5px;
 .job-thumbnail {
 	min-width: 80px
 }
+
+.job-running {
+	-moz-animation-duration: 3s;
+	-webkit-animation-duration: 3s;
+	-moz-animation-name: pulsate;
+	-webkit-animation-name: pulsate;
+	-moz-animation-iteration-count: infinite;
+	-webkit-animation-iteration-count: infinite;
+	-moz-animation-direction: alternate;
+	-webkit-animation-direction: alternate;
+}
+
+@-webkit-keyframes pulsate {
+  from {
+    color: #428bca;
+  }
+
+  to {
+    color: #d9534f;
+  }
+}
+
+@-moz-keyframes pulsate {
+	from {
+		color: #428bca;
+	}
+
+	to {
+		color: #d9534f;
+	}
+}

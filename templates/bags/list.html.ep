@@ -37,7 +37,7 @@
 						  </ul>
 					  </div>
 
-			      	  <div class="btn-group animate-if" ng-if="selection.length" >
+			      <div class="btn-group animate-if" ng-if="selection.length" >
 						  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
 						    Action <span class="caret"></span>
 						  </button>
@@ -54,19 +54,53 @@
 			                    <li ng-repeat="status in initdata.statuses"><a href="" data-ng-click="setAttributeMass('status', status.value)">{{status.label}}</a></li>
 			                  </ul>
 			                </li>
-						    <li><a href="" data-ng-click="editTag(1)">Add tag</a></li>
-						    <li><a href="" data-ng-click="editTag(0)">Remove tag</a></li>
+						    <li><a href="" data-ng-click="tagModal('add')">Add tag</a></li>
+						    <li><a href="" data-ng-click="tagModal('remove')">Remove tag</a></li>
 						    <li><a href="" data-ng-click="createIngestJob()">Create ingest job</a></li>
 						  </ul>
 					  </div>
 
-
 				  </div>
 
+          <div class="navbar-form navbar-right">
 
-			      <!--<p class="navbar-text" data-ng-if="filter">Filter: </p>-->
+          <div class="btn-group" >
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            Filter <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              <li class="dropdown-submenu">
+                <a href="">Assignee</a>
+                <ul class="dropdown-menu">
+                  <li ng-repeat="member in initdata.members"><a href="" data-ng-click="addFilter('assignee', member.username)">{{member.displayname}}</a></li>
+                </ul>
+              </li>
+              <li class="dropdown-submenu">
+                <a href="">Status</a>
+                <ul class="dropdown-menu">
+                  <li ng-repeat="status in initdata.statuses"><a href="" data-ng-click="addFilter('status', status.value)">{{status.label}}</a></li>
+                </ul>
+              </li>
+              <li><a href="" data-ng-click="tagModal('filter')">Tag</a></li>
+            </ul>
+          </div>
+
+            <div class="btn-group" ng-if="totalItems > limit" >
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+              Page size <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="" data-ng-click="setLimit(10)">10</a></li>
+                <li><a href="" data-ng-click="setLimit(50)">50</a></li>
+                <li><a href="" data-ng-click="setLimit(100)">100</a></li>
+              </ul>
+            </div>
+          </div>
+
+
+
 			      <div class="navbar-form navbar-right">
-				  	<a data-ng-if="filter && isNotDefaultFilter(type, value)" data-ng-hide="type == 'folderid'" class="btn btn-sm tag-filter btn-default" ng-class="{'btn-danger': (type == 'status' && value == 'new'), 'btn-warning': (type == 'status' && value == 'to_check'), 'btn-primary': (type == 'status' && value == 'checked'), 'btn-success': (type == 'status' && value == 'to_ingest'), 'btn-info': (type == 'tag') }" ng-repeat="(type, value) in filter" title="{{type}}">
+				  	<a data-ng-if="filter && isNotDefaultFilter(type, value)" data-ng-hide="type == 'folderid'" class="btn tag-filter btn-default" ng-class="{'btn-danger': (type == 'status' && value == 'new'), 'btn-warning': (type == 'status' && value == 'to_check'), 'btn-primary': (type == 'status' && value == 'checked'), 'btn-success': (type == 'status' && value == 'to_ingest'), 'btn-info': (type == 'tag') }" ng-repeat="(type, value) in filter" title="{{type}}">
 				  	   {{getFilterLabel(type, value)}} <span class="glyphicon glyphicon-remove" data-role="tag-remove" data-ng-click="removeFilter(type, value)"></span>
 				  	</a>
 				  </div>

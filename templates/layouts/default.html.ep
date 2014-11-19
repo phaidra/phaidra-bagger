@@ -8,19 +8,19 @@
 <!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
 
   <head>
-  	
+
   	<meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    
+
     <% if($config->{proxy_path}){ %>
     <base href="<%= url_for->path('/'.$config->{proxy_path})->to_abs %>">
     <% }else{ %>
     <base href="<%= url_for->path('/')->to_abs %>">
     <% } %>
   	<title><%= $title %></title>
-  	
+
   	<link rel="ICON" href="<%= url_for '/img/favicon.ico' %>" type="image/x-icon" />
-  	
+
   	<!-- jQuery -->
   	<!--<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>-->
   	<script src="<%= url_for '/js/jquery.min.js' %>"></script>
@@ -29,46 +29,46 @@
   	<!-- AngularJS -->
   	<!--<script src="<%= url_for '/js/angular-1.2.6.min.js' %>"></script>-->
   	<!--<script src="<%= url_for '/js/angular-animate-1.2.6.min.js' %>"></script>-->
-  	
+
   	<script src="<%= url_for '/js/angular-1.2.26.min.js' %>"></script>
   	<script src="<%= url_for '/js/angular-animate-1.2.26.min.js' %>"></script>
-  	<script src="<%= url_for '/js/angular-sanitize-1.2.26.min.js' %>"></script>  	
-  	
+  	<script src="<%= url_for '/js/angular-sanitize-1.2.26.min.js' %>"></script>
+
   	<!--<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.js"></script>-->
   	<!--<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular-animate.js"></script>-->
   	<script src="<%= url_for '/js/sortable-angular-1.2.js' %>"></script>
-  	
+
   	<!-- AngularJS i18n -->
   	<!--<script src="http://cdnjs.cloudflare.com/ajax/libs/angular-i18n/1.2.5/angular-locale_de-at.js"></script>-->
   	<script src="<%= url_for '/js/angular-locale_de-at.js' %>"></script>
-  	
-  	<!-- Bootstrap 3 CSS & js -->   	    
+
+  	<!-- Bootstrap 3 CSS & js -->
     <!--<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">-->
-  	<!--<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>-->  	  	
+  	<!--<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>-->
   	<script src="<%= url_for '/js/bootstrap-3.2.0.min.js' %>"></script>
   	<link href="<%= url_for '/css/bootstrap-3.2.0.min.css' %>" rel="stylesheet">
-  	
+
   	<!-- AngularJS ui-select -->
   	<script type="text/javascript" src="<%= url_for '/js/angular-ui-select-0.8.0.min.js' %>"></script>
   	<link rel="stylesheet" href="<%= url_for '/css/angular-ui-select-0.8.0.min.css' %>">
-  	
+
   	<!-- Bootstrap datepicker -->
   	<!--<link href="<%= url_for '/css/bootstrap-datepicker.css' %>" rel="stylesheet">-->
   	<link href="<%= url_for '/css/datepicker.css' %>" rel="stylesheet">
-  	<link href="<%= url_for '/css/datepicker3.css' %>" rel="stylesheet">  	
+  	<link href="<%= url_for '/css/datepicker3.css' %>" rel="stylesheet">
   	<script src="<%= url_for '/js/datepicker/bootstrap-datepicker.js' %>"></script>
-    
+
   	<!-- Angular-xeditable -->
-	<link href="<%= url_for '/css/bootstrap-xeditable-1.5.0.css' %>" rel="stylesheet">  	
+	<link href="<%= url_for '/css/bootstrap-xeditable-1.5.0.css' %>" rel="stylesheet">
   	<script src="<%= url_for '/js/bootstrap-xeditable-1.5.0.min.js' %>"></script>
-  	
+
   	<!-- UI-Bootstrap js (AngularJS) -->
-  	<!--<script src="http://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.10.0.js"></script>-->  	  
-  	<script src="<%= url_for '/js/ui-bootstrap-tpls-0.10.0.js' %>"></script>  	
-  	
+  	<!--<script src="http://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.10.0.js"></script>-->
+  	<script src="<%= url_for '/js/ui-bootstrap-tpls-0.10.0.js' %>"></script>
+
   	<!-- Promise tracker -->
   	<script src="<%= url_for '/js/promise-tracker.min.js' %>"></script>
-  	
+
   	<!-- Custom Phaidra scripts -->
   	<script type="text/javascript" src="<%= url_for '/js/services/url.js' %>"></script>
   	<script type="text/javascript" src="<%= url_for '/js/services/base64.js' %>"></script>
@@ -77,19 +77,19 @@
 	<script type="text/javascript" src="<%= url_for '/js/services/frontend.js' %>"></script>
 	<script type="text/javascript" src="<%= url_for '/js/services/bag.js' %>"></script>
 	<script type="text/javascript" src="<%= url_for '/js/services/job.js' %>"></script>
-	<script type="text/javascript" src="<%= url_for '/js/services/vocabulary.js' %>"></script>   	    	    	    	 
+	<script type="text/javascript" src="<%= url_for '/js/services/vocabulary.js' %>"></script>
   	<script type="text/javascript" src="<%= url_for '/js/controllers/frontend.js' %>"></script>
-  	
-  	<!-- Custom Phaidra CSS --> 
+
+  	<!-- Custom Phaidra CSS -->
   	<link href="<%= url_for '/css/frontend.css' %>" rel="stylesheet">
   	<link href="<%= url_for '/css/main.css' %>" rel="stylesheet">
-  	
+
   	<%= content_for 'header' %>
-  </head>	
-  
-  
+  </head>
+
+
   <body data-ng-app="frontendApp" data-ng-controller="FrontendCtrl" data-ng-init="init('<%= $init_data %>')">
-  
+
   	<!--[if lt IE 7]>
       <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a>.</p>
     <![endif]-->
@@ -97,8 +97,8 @@
     <!--[if lt IE 9]>
       <script src="<%= url_for '/js/es5-shim.js' %>"></script>
       <script src="<%= url_for '/js/json3.min.js' %>"></script>
-    <![endif]-->	
-	
+    <![endif]-->
+
         <nav class="navbar navbar-default" role="navigation">
   <div class="container-fluid">
     <!-- Brand and toggle get grouped for better mobile display -->
@@ -110,7 +110,7 @@
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand" href=""><img src="<%= url_for '/img/phaidra_shadow_small.png' %>" height="25"></a>
-      
+
     </div>
 
     <!-- Collect the nav links, forms, and other content for toggling -->
@@ -118,23 +118,24 @@
 
 	  <% if (is_user_authenticated) { %>
       <ul class="nav navbar-nav navbar-left">
-        
+
         <% if (my $navtitle = stash 'navtitle') { %>
         	<% if (my $navtitlelink = stash 'navtitlelink' ) { %>
         		<li class="active" data-ng-click="forceLoadPage('<%= $navtitlelink %>')"><a ><%= $navtitle %></a></li>
         	<% } %>
         <% } %>
         <li><a href="/folders/">Folders</a></li>
+        <li><a href="/bags/">Bags</a></li>
         <li><a href="/templates/">Templates</a></li>
-        <li><a href="/jobs/">Jobs</a></li>            
+        <li><a href="/jobs/">Jobs</a></li>
         <li><a href="/settings/">Settings</a></li>
-         
+
       </ul>
       <% } %>
 
-      <ul class="nav navbar-right">      
+      <ul class="nav navbar-right">
       	<% if (is_user_authenticated) { %>
-      		<a href="/signout" id="signout" class="btn btn-default navbar-btn signin-btn" ng-click="sign_out()">Sign out</a>      		
+      		<a href="/signout" id="signout" class="btn btn-default navbar-btn signin-btn" ng-click="sign_out()">Sign out</a>
       	<% }else{ %>
       		<button type="button" id="signin" data-redirect="<%= flash 'redirect_to' %>" data-open="<%= flash 'opensignin' %>" class="btn btn-default navbar-btn signin-btn" ng-click="signin_open()">Sign in</button>
       	<% } %>
@@ -144,39 +145,39 @@
       	<span class="navbar-text">Signed in as <%= current_user->{firstname} %> <%= current_user->{lastname} %></span>
       </ul>
       <% } %>
-      
+
       <ul class="nav navbar-right">
-      <% if(current_user){ %> 
+      <% if(current_user){ %>
 	    	<% if(current_user->{project} eq 'DiFaB') { %>
 	    		<center><img src="img/home/difab_logo_small.jpg" class="difab_logo img-rounded" title="DiFaB" alt="DiFaB"></center>
 	    	<% } %>
 	   <%  } %>
       </ul>
-      
+
       <ul class="nav navbar-right">
       	<img class="load-spinner" ng-show="loadingTracker.active()" src="<%= url_for '/img/ajax-loader.gif' %>">
       </ul>
-      
+
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
 </nav>
-    
-  
-  
-  	<%# ######### Content ########## %> 
-  	<%= content %>
-  	<%# ############################ %> 
 
-  	
-  	<footer class="footer" ng-cloak>  	
+
+
+  	<%# ######### Content ########## %>
+  	<%= content %>
+  	<%# ############################ %>
+
+
+  	<footer class="footer" ng-cloak>
   		<div class="container-fluid">
                   <div class="row">
                           <div class="col-md-3">
                           	<a href="https://github.com/phaidra/phaidra-bagger"><i class="glyphicon icon-github"></i> Code</a> licensed under <a href="https://github.com/phaidra/phaidra-bagger/blob/master/LICENSE">Apache License</a>. <a href="https://github.com/phaidra/phaidra-bagger/issues?state=open">Issues</a>
                           </div>
                           <div class="col-md-6"></div>
-                          <div class="col-md-3"></div>                          
-                  </div>                  
+                          <div class="col-md-3"></div>
+                  </div>
   		</div>
   	</footer>
   </body>

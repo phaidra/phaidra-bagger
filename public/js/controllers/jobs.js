@@ -22,18 +22,21 @@ app.controller('JobsCtrl',  function($scope, $interval, $modal, $location, Direc
 
 	$scope.jobs = [];
 
-    $scope.closeAlert = function(index) {
-    	$scope.alerts.splice(index, 1);
-    };
+  $scope.closeAlert = function(index) {
+  	$scope.alerts.splice(index, 1);
+  };
 
 	$scope.initdata = '';
 	$scope.current_user = '';
+
+	$scope.refresh_promise;
+	$scope.refresh_cnt = 0;
 
 	$scope.init = function (initdata) {
 		$scope.initdata = angular.fromJson(initdata);
 		$scope.current_user = $scope.initdata.current_user;
     $scope.refreshResults();
-		//$scope.refresh();
+		$scope.refresh();
   };
 
     $scope.deleteJob = function (jobid, jobname) {
@@ -88,27 +91,33 @@ app.controller('JobsCtrl',  function($scope, $interval, $modal, $location, Direc
       	}
      );
   };
-/*
-  $scope.stop;
+
   $scope.refresh = function() {
-  	if ( angular.isDefined($scope.stop) ) return;
-    $scope.stop = $interval($scope.refreshResults(), 3000);
-		$scope.loadingTracker.addPromise($scope.stop);
-		var running_job_found = false;
-		for( var i = 0 ; i < $scope.jobs.length ; i++ ){
-			if($scope.jobs[i].status == 'running'){
-					running_job_found = true;
+
+    $scope.refresh_promise = $interval(function(){
+			$scope.refreshResults();
+			// the change in status might not be immediately visible
+			// we stop refresh first then, when we haven't saw any change in 3 refreshes
+			$scope.refresh_cnt++;
+			var running_job_found = false;
+			for( var i = 0 ; i < $scope.jobs.length ; i++ ){
+				if($scope.jobs[i].status == 'running'){
+						running_job_found = true;
+				}
 			}
-		}
-		if(!running_job_found){
-			$scope.stopRefresh();
-		}
+
+			if(!running_job_found && $scope.refresh_cnt >= 2){
+				$scope.stopRefresh();
+				$scope.refresh_cnt = 0;
+			}
+
+		}, 5000);
+
   };
 
   $scope.stopRefresh = function() {
-  	if (angular.isDefined($scope.stop)) {
-      $interval.cancel($scope.stop);
-      stop = undefined;
+  	if (angular.isDefined($scope.refresh_promise)) {
+      $interval.cancel($scope.refresh_promise);
     }
   };
 
@@ -116,7 +125,7 @@ app.controller('JobsCtrl',  function($scope, $interval, $modal, $location, Direc
     // Make sure that the interval is destroyed too
     $scope.stopRefresh();
   });
-*/
+
   $scope.toogleRun = function(jobid) {
 	 $scope.form_disabled = true;
      var promise = JobService.toggleRun(jobid);
@@ -124,8 +133,8 @@ app.controller('JobsCtrl',  function($scope, $interval, $modal, $location, Direc
      promise.then(
       	function(response) {
       		$scope.alerts = response.data.alerts;
-      		$scope.refreshResults();
-					//$scope.refresh();
+					$scope.refresh_cnt = 0;
+					$scope.refresh();
       		$scope.form_disabled = false;
       	}
       	,function(response) {

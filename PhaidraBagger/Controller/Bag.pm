@@ -785,24 +785,34 @@ sub edit {
 	$self->render('bag/'.$self->current_user->{project}.'_edit');
 }
 
-=cut /bags, currently not used
 sub bags {
-    my $self = shift;
-	my $thumb_path = $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path};
-	my $members = $self->config->{projects}->{$self->current_user->{project}}->{members};
-	my $redmine_baseurl = $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl};
-	my $ingest_instances = $self->config->{ingest_instances};
-    my $init_data = { current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl, members => $members, ingest_instances => $ingest_instances };
-    $self->stash(init_data => encode_json($init_data));
+  my $self = shift;
+
+  my $init_data = {
+    current_user => $self->current_user,
+    thumb_path => $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path},
+    redmine_baseurl => $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl},
+    members => $self->config->{projects}->{$self->current_user->{project}}->{members},
+    statuses => $self->config->{projects}->{$self->current_user->{project}}->{statuses},
+    restricted_ops => $self->config->{projects}->{$self->current_user->{project}}->{restricted_operations},
+    ingest_instances => $self->config->{ingest_instances}
+  };
+
+  $self->stash(
+    navtitle => $init_data->{navtitle},
+    navtitlelink => $init_data->{navtitlelink}
+  );
+
+  $self->stash(init_data => encode_json($init_data));
 
 	$self->render('bags/list');
 }
-=cut
+
 
 sub _folder_bags_prepare_data {
 	my $self = shift;
 
-    my $folderid = $self->stash('folderid');
+  my $folderid = $self->stash('folderid');
 
 	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
 	my $folder = $self->mango->db->collection('folders')->find_one({folderid => $folderid, owner => $owner},{ name => 1 });
@@ -834,41 +844,41 @@ sub folder_bags_with_query {
 	my $payload = $self->req->json;
 	my $query = $payload->{query};
 
-    my $init_data = $self->_folder_bags_prepare_data();
+  my $init_data = $self->_folder_bags_prepare_data();
 
-    if($query){
-    	$init_data->{query} = $query;
-    }
+  if($query){
+  	$init_data->{query} = $query;
+  }
 
-    $self->stash(init_data => encode_json($init_data));
+  $self->stash(init_data => encode_json($init_data));
 
-    $self->render('bags/list');
+  $self->render('bags/list');
 }
 
 sub folder_bags {
-    my $self = shift;
+  my $self = shift;
 
-    my $init_data = $self->_folder_bags_prepare_data();
+  my $init_data = $self->_folder_bags_prepare_data();
 
-    $self->stash(init_data => encode_json($init_data));
+  $self->stash(init_data => encode_json($init_data));
 
 	$self->render('bags/list');
 }
 
 sub search {
-    my $self = shift;
+  my $self = shift;
 
-    my $filterfield = $self->stash('filterfield');
-    my $filtervalue = $self->stash('filtervalue');
+  my $filterfield = $self->stash('filterfield');
+  my $filtervalue = $self->stash('filtervalue');
 
-    my $payload = $self->req->json;
+  my $payload = $self->req->json;
 	my $query = $payload->{query};
 
-    my $filter = $query->{'filter'};
-    my $from = $query->{'from'};
-    my $limit = $query->{'limit'};
-    my $sortfield = $query->{'sortfield'};
-    my $sortvalue = $query->{'sortvalue'};
+  my $filter = $query->{'filter'};
+  my $from = $query->{'from'};
+  my $limit = $query->{'limit'};
+  my $sortfield = $query->{'sortfield'};
+  my $sortvalue = $query->{'sortvalue'};
 
 	my ($hits, $coll) = $self->_search($filter, $from, $limit, $sortfield, $sortvalue, $filterfield, $filtervalue);
 	#$self->app->log->debug("XXXXXXXX :".$self->app->dumper($coll));
@@ -905,7 +915,9 @@ sub _search {
     my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
 
     $find{owner} = $owner;
-    $find{folderid} = $folderid;
+    if($folderid){
+      $find{folderid} = $folderid;
+    }
     if($assignee){
     	$find{assignee} = $assignee;
     }

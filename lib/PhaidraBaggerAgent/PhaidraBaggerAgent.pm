@@ -140,7 +140,7 @@ sub run_job {
 	$self->_update_activity("running", "ingesting job $jobid");
 
 	# update job status
-	$self->{jobs_coll}->update({'_id' => MongoDB::OID->new(value => $jobid)},{'$set' => {"updated" => time, "status" => 'running'}});
+	$self->{jobs_coll}->update({'_id' => MongoDB::OID->new(value => $jobid)},{'$set' => {"updated" => time, "status" => 'running', "started_at" => time}});
 
 	my $count = $self->{bags_coll}->count({'jobs.jobid' => $jobid});
 
@@ -238,6 +238,16 @@ sub run_job {
 		# update bag-job start_at and clean alerst
 		my @alerts = ();
 		$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid },{'$set' => {'jobs.$.started_at' => time, 'jobs.$.alerts' => \@alerts}});
+
+		my $b = $self->{bags_coll}->find_one({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid}, {'jobs.$.pid' => 1});
+		my $current_job = @{$b->{jobs}}[0];
+		if($current_job->{pid}){
+				my @alerts = [{ type => 'info', msg => "Bag ".$bag->{bagid}." already imported in this job, skipping"}];
+				$self->{'log'}->info(Dumper(\@alerts));
+				# save error to bag
+				$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => \@alerts}});
+				next;
+		}
 
 		# ingest bag
 		my ($pid, $alerts) = $self->_ingest_bag($filepath, $bag, $ingest_instance, $username, $password);

@@ -51,7 +51,7 @@ sub startup {
 
 	    		my $url = Mojo::URL->new;
 				$url->scheme('https');
-				$url->userinfo($self->app->config->{phaidra}->{directory_user}->{username}.":".$self->app->config->{phaidra}->{directory_user}->{password});
+				$url->userinfo($self->app->config->{directory_user}->{username}.":".$self->app->config->{directory_user}->{password});
 				my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
 				$url->host($base[0]);
 				$url->path($base[1]."/directory/user/$username/data") if exists($base[1]);
@@ -298,7 +298,7 @@ sub startup {
     $autz->route('templates') ->via('get')   ->to('template#templates');
     $autz->route('templates/my') ->via('get')   ->to('template#my');
 
-    #$autz->route('bags') ->via('get')   ->to('bag#bags');
+    $autz->route('bags') ->via('get')   ->to('bag#bags');
     $autz->route('bags/folder/:folderid') ->via('get')   ->to('bag#folder_bags');
     $autz->route('bags/folder/:folderid') ->via('post')   ->to('bag#folder_bags_with_query');
     $autz->route('bags/search') ->via('post')   ->to('bag#search');

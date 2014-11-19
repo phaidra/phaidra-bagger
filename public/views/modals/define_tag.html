@@ -2,28 +2,28 @@
 <div class="modal">
 	<div class="modal-dialog">
 			<div class="modal-content">
-				
+
 				<div class="modal-body">
-				
+
 					<alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert($index)">{{alert.msg}}</alert>
-				
+
 					<data-ng-form name="tagform" novalidate role="form">
-					
-						<fieldset data-ng-disabled="form_disabled">							
-							<div class="form-group input-group" ng-class="{true: 'has-error'}[tagform.tag.$dirty && tagform.tag.$invalid]">										
+
+						<fieldset data-ng-disabled="form_disabled">
+							<div class="form-group input-group" ng-class="{true: 'has-error'}[tagform.tag.$dirty && tagform.tag.$invalid]">
 							  <span class="input-group-addon"><span class="glyphicon glyphicon-tag"></span></span>
 							  <input type="text" class="form-control" name="tag" id="tag" ng-required="1" ng-model="modaldata.tag" ng-keyup="hitEnterTagEdit($event)" required autofocus>
 							  <span class="input-group-btn">
 							  <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
-							  <button type="button" class="btn btn-primary" ng-click="editTag()" ng-disabled="(tagform.$dirty && tagform.$invalid) || tagform.$pristine || form_disabled">{{operation}}</button>											
+							  <button type="button" class="btn btn-primary" ng-click="applyAction()" ng-disabled="(tagform.$dirty && tagform.$invalid) || tagform.$pristine || form_disabled">{{operation}}</button>											
 							</div>
 							</span>
 						</fieldset>
-						
+
 					</data-ng-form>
-					
+
 				</div>
-				
+
 			</div>
 		</div>
 	</div>

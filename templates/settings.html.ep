@@ -1,4 +1,4 @@
-% layout 'default', title => 'stage';
+% layout 'default', title => 'Settings';
 
 %= include 'alerts'
 
