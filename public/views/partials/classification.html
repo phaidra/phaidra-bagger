@@ -38,7 +38,7 @@
 					  <div class="panel-heading">
 					    <h3 class="panel-title pull-left">{{selectedmyclass.selected.labels.en}}</h3>
 					    <span class="btn-group pull-right">
-						    <button class="btn btn-default" ng-click="toggleClassification(selectedmyclass.selected.uri)"><span class="glyphicon glyphicon-star star-class" ng-class="{'star-class-fav': isMyClass(selectedmyclass.selected.uri)}"></span></button>
+						    <button class="btn btn-default"  ng-if="selectedmyclass.selected.type == 'user'" ng-click="toggleClassification(selectedmyclass.selected.uri)"><span class="glyphicon glyphicon-star star-class" ng-class="{'star-class-fav': isMyClass(selectedmyclass.selected.uri)}"></span></button>
 						    <button class="btn btn-success" ng-click="addClassToObjectFromTaxon(selectedmyclass.selected.uri)"><span class="glyphicon glyphicon-plus-sign"></span></button>
 					    </span>
 					    <div class="clearfix"></div>
@@ -112,7 +112,7 @@
 
 					<div class="panel panel-default" data-ng-if="term.uri" data-ng-repeat="term in class.terms">
 					  <div class="panel-heading">
-					    <h3 class="panel-title pull-left">{{term.labels.en}} <small class="text-muted"><span data-ng-if="term.preferred">Preferred</span><span data-ng-if="term.preferred == 0">Non-preferred</span></h3>
+					    <h3 class="panel-title pull-left">{{term.labels.en}} <small class="text-muted"><span data-ng-if="term.preferred">Preferred</span><span data-ng-if="term.preferred == 0">Non-preferred</span></small></h3>
 					    <span class="btn-group pull-right">
 						    <button class="btn btn-default" ng-click="toggleClassification(term.uri)"><span class="glyphicon glyphicon-star star-class" ng-class="{'star-class-fav': isMyClass(term.uri)}"></span></button>
 						    <button class="btn btn-success" ng-click="addClassToObjectFromTaxon(term.uri)"><span class="glyphicon glyphicon-plus-sign"></span></button>

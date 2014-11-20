@@ -79,6 +79,15 @@ sub startup {
 						}
 					}
 				}
+
+        # rewrite project config with the one from db (if any is found)
+        my $project_settings = $self->mango->db->collection('project.settings')->find_one({project => $login_data->{project}});
+        if($project_settings){
+          $self->app->log->info("Loading db project config");
+          $project_settings->{name} = $login_data->{project};
+          $self->config->{projects}->{$login_data->{project}} = $project_settings->{settings};
+        }
+
 				$self->app->log->info("Loaded user: ".$self->app->dumper($login_data));
 	    		$self->app->chi->set($username, $login_data, '1 day');
 	    		# keep this here, the set method may change the structure a bit so we better read it again

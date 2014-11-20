@@ -25,6 +25,11 @@ sub load {
 			$project_settings = $self->config->{projects}->{$self->current_user->{project}};
 		}
 		$project_settings->{name} = $self->current_user->{project};
+
+		#if($project_settings->{included_classifications}){
+		#	my %included_classifications_hash = map { $_ => 1 } @{$project_settings->{included_classifications}};
+		#	$project_settings->{included_classifications} = \%included_classifications_hash;
+		#}
 	}
 
 	my $user_settings = $self->mango->db->collection('user.settings')->find_one({ username => $self->current_user->{username}, project => $self->current_user->{project}});
@@ -39,7 +44,7 @@ sub load {
     my $settings = {
     	project => $project_settings,
     	user => $user_settings->{settings},
-    	templates => $templates,    	
+    	templates => $templates,
     	members => $self->config->{projects}->{$self->current_user->{project}}->{members},
     	statuses => $self->config->{projects}->{$self->current_user->{project}}->{statuses}
     };
@@ -78,8 +83,25 @@ sub save {
 
 	if($self->current_user->{role} eq 'manager'){
 		if($project_settings){
+			my @included_classifications_array;
+			foreach my $uri (keys %{$project_settings->{included_classifications}}){
+				# only if true
+				if($project_settings->{included_classifications}->{$uri}){
+					push @included_classifications_array, $uri;
+				}
+			}
+			if(scalar @included_classifications_array > 0){
+				$project_settings->{included_classifications} = \@included_classifications_array;
+			}
+
 			$self->app->log->info("[".$self->current_user->{username}."] Saving settings of project ".$self->current_user->{project});
 			my $reply = $self->mango->db->collection('project.settings')->update({ project => $self->current_user->{project}},{'$set' => { project => $self->current_user->{project}, updated => time, settings => $project_settings }}, {upsert => 1});
+
+			# rewrite the app config, the app config gets only refreshed on restart
+			if($project_settings){
+				$self->app->log->info("Rewriting db project config");
+				$self->config->{projects}->{$self->current_user->{project}} = $project_settings;
+			}
 		}
 	}
 

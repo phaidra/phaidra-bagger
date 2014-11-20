@@ -684,6 +684,7 @@ sub _edit_prepare_data {
 	my $project_config = $self->config->{projects}->{$self->current_user->{project}};
 	my $thumb_path = $project_config->{thumbnails}->{url_path};
 	my $redmine_baseurl = $project_config->{redmine_baseurl};
+  my $included_classifications = $project_config->{included_classifications};
 
     my $templates = $self->mango->db->collection('templates.uwmetadata')
 		->find({ project => $self->current_user->{project}})
@@ -700,6 +701,7 @@ sub _edit_prepare_data {
     current_user => $self->current_user,
     thumb_path => $thumb_path,
     redmine_baseurl => $redmine_baseurl,
+    included_classifications => $included_classifications,
     navtitle => $bag->{label},
     navtitlelink => 'bag/'.$self->stash('bagid').'/edit',
     members => $self->config->{projects}->{$self->current_user->{project}}->{members},

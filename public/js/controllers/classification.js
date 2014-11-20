@@ -1,4 +1,4 @@
-app.controller('ClassificationCtrl',  function($scope, $modal, $location, DirectoryService, FrontendService, VocabularyService, JobService, promiseTracker) {
+app.controller('ClassificationCtrl', function($scope, $modal, $location, DirectoryService, FrontendService, VocabularyService, JobService, promiseTracker) {
 
 	// we will use this to track running ajax requests to show spinner
 	$scope.loadingTracker = promiseTracker('loadingTrackerFrontend');
@@ -52,13 +52,26 @@ app.controller('ClassificationCtrl',  function($scope, $modal, $location, Direct
 	      		for (var i = 0; i < response.data.terms.length; ++i) {
 							var term = response.data.terms[i];
 							term.current_path = [];
-	      			var pos = $scope.classes_config[response.data.terms[i].uri];
+
+							/*
+							var pos = $scope.classes_config[response.data.terms[i].uri];
 	      			if(pos > 0){
 	      				// pos goes from 1
 	      				$scope.class_roots[pos-1] = response.data.terms[i];
 		      			// init current_path array
 	      				$scope.class_roots[pos-1].current_path = [];
 	      			}
+							*/
+
+							if($scope.initdata['included_classifications']){
+								for (var j = 0; j < $scope.initdata.included_classifications.length; ++j) {
+										if($scope.initdata.included_classifications[j] == response.data.terms[i].uri){
+												$scope.class_roots.push(term);
+										}
+								}
+							}else{
+								$scope.class_roots.push(term);
+							}
 
 							$scope.class_roots_all.push(term);
 	      		}

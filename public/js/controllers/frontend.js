@@ -56,6 +56,13 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
         function(response) {
           $scope.alerts = response.data.alerts;
           $scope.settings = response.data.settings;
+          if($scope.settings.project['included_classifications']){
+            var included_classifications = {};
+            for (var i = 0; i < $scope.settings.project.included_classifications.length; ++i) {
+              included_classifications[$scope.settings.project.included_classifications[i]] = true;
+            }
+            $scope.settings.project['included_classifications'] = included_classifications;
+          }
           $scope.settings.templates.push({title:'None',_id:''});
           if($scope.settings.user == null){
               $scope.settings.user = {};
@@ -125,7 +132,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
       $scope.settings.project['classifications'] = [];
     }
     $scope.settings.project.classifications.push(uri);
-    $scope.saveSettings();
+    $scope.saveSettings('project');
     $scope.getProjectClasses();
   }
 
@@ -135,7 +142,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
     }else{
       $scope.settings['project'].classifications.splice(index, 1);
     }
-    $scope.saveSettings();
+    $scope.saveSettings('project');
     $scope.getProjectClasses();
   }
 

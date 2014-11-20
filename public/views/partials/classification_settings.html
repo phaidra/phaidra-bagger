@@ -2,13 +2,13 @@
 <div class="container">
 
 
-	<div class="class-panel" data-ng-repeat="item in settings.project.classifications">
+	<div class="class-panel" data-ng-repeat="item in projectclasses">
 		<div class="class-panel-header">{{item.classification.en}}</div>
 		<span class="pull-left">
 			<strong>{{item.labels.en}}</strong> <small>{{item.upstream_identifier}}</small>
 		</span>
 		<span class="btn-group pull-right class-panel-buttons">
-		  <button class="btn btn-primary" ng-click="removeClassFromConfig($index)"><span class="glyphicon glyphicon-minus-sign"></span></button>
+		  <button class="btn btn-primary" ng-click="removeClassFromConfig($index)"><span class="glyphicon glyphicon-minus-sign"></span> Remove and save</button>
 		</span>
 		<div class="clearfix"></div>
 	</div>
@@ -22,33 +22,32 @@
 
 
 			<accordion close-others="false" >
-				<accordion-group heading="{{class.labels.en}}" data-ng-repeat="class in class_roots" data-ng-click="browse_class_opened(class)">
+				<accordion-group data-ng-repeat="class in class_roots_all" heading="{{class.labels.en}}" data-ng-click="browse_class_opened(class)">
 
-				<div>
-					<ui-select class="classification-select" data-ng-model="level.selected" theme="bootstrap" on-select="update_current_path($item, $model, class, $index)" data-ng-repeat="level in class.current_path">
-					  <ui-select-match placeholder="Select or search a classification in the list...">{{level.selected.labels.en}} <small class="text-muted">{{level.selected.upstream_identifier}}</small></ui-select-match>
-					  <ui-select-choices repeat="term in level.terms | filter: $select.search">
-						<div data-ng-bind-html="term.labels.en | highlight: $select.search"></div>
-						<small data-ng-bind-html="term.upstream_identifier | highlight: $select.search" tooltip="Upstream ID"></small>
-					  </ui-select-choices>
-					</ui-select>
+						<ui-select class="classification-select" data-ng-model="level.selected" theme="bootstrap" on-select="update_current_path($item, $model, class, $index)" data-ng-repeat="level in class.current_path">
+						  <ui-select-match placeholder="Select or search a classification in the list...">{{level.selected.labels.en}} <small class="text-muted">{{level.selected.upstream_identifier}}</small></ui-select-match>
+						  <ui-select-choices repeat="term in level.terms | filter: $select.search">
+							<div data-ng-bind-html="term.labels.en | highlight: $select.search"></div>
+							<small data-ng-bind-html="term.upstream_identifier | highlight: $select.search" tooltip="Upstream ID"></small>
+						  </ui-select-choices>
+						</ui-select>
 
-					<div class="panel panel-default" data-ng-if="lastSelectedTaxons[class.uri].uri">
-					  <div class="panel-heading">
-					    <h3 class="panel-title pull-left">{{lastSelectedTaxons[class.uri].labels.en}}</h3>
-					    <span class="btn-group pull-right">
-						    <button class="btn btn-success" ng-click="addClassToConfig(lastSelectedTaxons[class.uri].uri)"><span class="glyphicon glyphicon-plus-sign"></span> Add and save</button>
-					    </span>
-					    <div class="clearfix"></div>
-					  </div>
-					  <div class="panel-body" data-ng-if="lastSelectedTaxons[class.uri].nonpreferred.length > 0">
-					    <dl class="dl-horizontal" >
-						  <dt>Non-preferred labels</dt>
-						  <dd data-ng-repeat="term in lastSelectedTaxons[class.uri].nonpreferred" >{{term.labels.en}}</dd>
-						</dl>
-					  </div>
-					</div>
-</div>
+						<div class="panel panel-default" data-ng-if="lastSelectedTaxons[class.uri].uri">
+						  <div class="panel-heading">
+						    <h3 class="panel-title pull-left">{{lastSelectedTaxons[class.uri].labels.en}}</h3>
+						    <span class="btn-group pull-right">
+							    <button class="btn btn-success" ng-click="addClassToConfig(lastSelectedTaxons[class.uri].uri)"><span class="glyphicon glyphicon-plus-sign"></span> Add and save</button>
+						    </span>
+						    <div class="clearfix"></div>
+						  </div>
+						  <div class="panel-body" data-ng-if="lastSelectedTaxons[class.uri].nonpreferred.length > 0">
+						    <dl class="dl-horizontal" >
+							  <dt>Non-preferred labels</dt>
+							  <dd data-ng-repeat="term in lastSelectedTaxons[class.uri].nonpreferred" >{{term.labels.en}}</dd>
+							</dl>
+						  </div>
+						</div>
+
 				</accordion-group>
 			</accordion>
 
@@ -73,7 +72,7 @@
 
 					<div class="panel panel-default" data-ng-if="term.uri" data-ng-repeat="term in class.terms">
 					  <div class="panel-heading">
-					    <h3 class="panel-title pull-left">{{term.labels.en}} <small class="text-muted"><span data-ng-if="term.preferred">Preferred</span><span data-ng-if="term.preferred == 0">Non-preferred</span></h3>
+					    <h3 class="panel-title pull-left">{{term.labels.en}} <small class="text-muted"><span data-ng-if="term.preferred">Preferred</span><span data-ng-if="term.preferred == 0">Non-preferred</span></small></h3>
 					    <span class="btn-group pull-right">
 						    <button class="btn btn-success" ng-click="addClassToConfig(term.uri)"><span class="glyphicon glyphicon-plus-sign"></span> Add and save</button>
 					    </span>
@@ -85,6 +84,24 @@
 			</accordion>
 
 		</tab>
+
+		<tab>
+			<tab-heading>
+				<span>Include</span>
+			</tab-heading>
+
+			<blockquote>
+		  	<small>Check classifications which should be included for browsing and searching on the bag detail page</small>
+			</blockquote>
+
+			<div class="class-include-settings">
+				<div class="checkbox checkbox-primary" data-ng-repeat="class in class_roots_all" >
+					<input type="checkbox" id="class_checkbox{{$index}}" data-ng-model="$parent.settings.project.included_classifications[class.uri]" >
+					<label for="class_checkbox{{$index}}">{{class.labels.en}}</label>
+				</div>
+			</div>
+		</tab>
+
 	</tabset>
 
 </div>
