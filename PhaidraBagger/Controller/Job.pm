@@ -18,12 +18,13 @@ sub view {
     my $self = shift;
     my $jobid = $self->stash('jobid');
 
-	my $job = $self->mango->db->collection('jobs')->find_one({_id => Mango::BSON::ObjectID->new($jobid), project => $self->current_user->{project}},{ name => 1 });
+	my $job = $self->mango->db->collection('jobs')->find_one({_id => Mango::BSON::ObjectID->new($jobid), project => $self->current_user->{project}},{ name => 1, alerts => 1, ingest_instance => 1 });
 
     my $init_data = {
     	jobid => $jobid,
     	navtitlelink => "job/$jobid/view",
     	navtitle => $job->{name},
+    	ingest_instance => $self->config->{ingest_instances}->{$job->{ingest_instance}},  	    	
     	current_user => $self->current_user,
     	thumb_path => $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path},
     	members => $self->config->{projects}->{$self->current_user->{project}}->{members},
@@ -31,9 +32,10 @@ sub view {
     };
 
     $self->stash(
-    	init_data => encode_json($init_data),
+    	init_data => encode_json($init_data),        		
     	navtitle => $job->{name},
-    	navtitlelink => "job/$jobid/view"
+    	navtitlelink => "job/$jobid/view",
+    	alerts => $job->{alerts}
     );
 
     $self->render('job/view');
@@ -64,9 +66,7 @@ sub bags {
 
     my %find;
 
-    my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-
-    $find{owner} = $owner;
+    $find{project} = $self->current_user->{project};
     $find{'jobs.jobid'} = $jobid;
 
     $self->render_later;
@@ -107,7 +107,7 @@ sub load {
 	}
 
 	$self->app->log->info("[".$self->current_user->{username}."] Loaded job ".$job->{name}." [$jobid]");
-	$self->render(json => {job => $job}, status => 200);
+	$self->render(json => {job => $job, alerts => $job->{alerts}}, status => 200);
 }
 
 sub save {
@@ -115,12 +115,18 @@ sub save {
 	my $self = shift;
 	my $jobid = $self->stash('jobid');
 	my $jobdata = $self->req->json->{jobdata};
-  my $start_at = str2time($jobdata->{start_at});
+	my $start_at = $jobdata->{start_at};
+	if($start_at =~ /^[0-9]+$/g){
+		$start_at = int $start_at;
+		$start_at = int ($start_at/1000);	
+	}else{
+  		$start_at = str2time($jobdata->{start_at});
+	}
 	$self->app->log->info("[".$self->current_user->{username}."] Saving job $jobid");
 
 	my $oid = Mango::BSON::ObjectID->new($jobid);
 
-	my $reply = $self->mango->db->collection('jobs')->update({_id => $oid},{ '$set' => { name => $jobdata->{name}, updated => time, status => 'scheduled', start_at => $start_at, ingest_instance => $jobdata->{ingest_instance}} } );
+	my $reply = $self->mango->db->collection('jobs')->update({_id => $oid},{ '$set' => { name => $jobdata->{name}, add_to_collection => $jobdata->{add_to_collection}, create_collection => $jobdata->{create_collection}, updated => time, status => 'scheduled', start_at => $start_at, ingest_instance => $jobdata->{ingest_instance}} } );
 
 	$self->render(json => { alerts => [] }, status => 200);
 }
@@ -149,9 +155,9 @@ sub toggle_run {
 	my $new_status;
 	if($current_status eq 'running'){
 		$new_status = 'suspended';
-    $self->mango->db->collection('jobs')->update({_id => $oid},{ '$set' => {updated => time, status => $new_status} } );
+    	$self->mango->db->collection('jobs')->update({_id => $oid},{ '$set' => {updated => time, status => $new_status} } );
 	}
-	if($current_status eq 'suspended' || $current_status eq 'scheduled'){
+	if($current_status eq 'suspended' || $current_status eq 'scheduled' || $current_status eq 'finished'){
     $self->app->log->info("[".$self->current_user->{username}."] Running job $jobid: ".$self->app->config->{bagger_agent_path}." -j $jobid");
 
     my $proc = Mojo::IOLoop::ProcBackground->new;
@@ -210,7 +216,7 @@ sub create {
 
 	$self->app->log->info("[".$self->current_user->{username}."] Creating job ".$self->app->dumper($jobdata));
 
-	my $reply = $self->mango->db->collection('jobs')->insert({ name => $jobdata->{name}, created => time, updated => time, project => $self->current_user->{project}, created_by => $self->current_user->{username}, status => 'scheduled', start_at => $start_at, finished_at => '', ingest_instance => $jobdata->{ingest_instance}} );
+	my $reply = $self->mango->db->collection('jobs')->insert({ name => $jobdata->{name}, add_to_collection => $jobdata->{add_to_collection}, create_collection => $jobdata->{create_collection}, created => time, updated => time, project => $self->current_user->{project}, created_by => $self->current_user->{username}, status => 'scheduled', start_at => $start_at, finished_at => '', ingest_instance => $jobdata->{ingest_instance}} );
 
 	my $jobid = $reply->{oid};
 	if($jobid){
@@ -295,7 +301,7 @@ sub my {
 	my $coll = $self->mango->db->collection('jobs')
 		->find({ created_by => $self->current_user->{username}, project => $self->current_user->{project}})
 		->sort({created => 1})
-		->fields({ _id => 1, name => 1, created => 1, updated => 1, created_by => 1, status => 1, start_at => 1, started_at => 1, finished_at => 1, ingest_instance => 1  })
+		->fields({ _id => 1, name => 1, created => 1, updated => 1, created_by => 1, status => 1, start_at => 1, started_at => 1, finished_at => 1, ingest_instance => 1, add_to_collection => 1, create_collection => 1, created_collection => 1 })
 		->all();
 
 	unless(defined($coll)){

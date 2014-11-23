@@ -437,9 +437,9 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
      );
  };
 
- $scope.loadDifabTemplate = function() {
+ $scope.loadTemplateToBag = function() {
 	 $scope.form_disabled = true;
-     var promise = MetadataService.loadDifabTemplate(this.selectedtemplate._id);
+     var promise = MetadataService.loadTemplateToBag(this.selectedtemplate._id);
      $scope.loadingTracker.addPromise(promise);
      promise.then(
       	function(response) {

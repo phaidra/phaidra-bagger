@@ -10,7 +10,6 @@
 
 %= include 'alerts'
 
-
 	<div class="container-fluid">
 		<div class="row">
 	     	<div class="col-md-2">
@@ -37,10 +36,8 @@
 	  <tbody>
 		  <tr ng-repeat="bag in items">
 		    <td class="job-thumbnail"><img ng-src="{{initdata.thumb_path}}/s_{{bag.bagid}}_1.png" class="img-thumbnail" width="60" height="60" title="{{bag.bagid}}" alt="{{bag.bagid}}"></td>
-		  	<td>{{bag.label}}</td>
-		  	<td>
-		  		{{bag.jobs[0].pid}}
-		  	</td>
+		  	<td><a data-ng-href="/bag/{{bag.bagid}}/edit">{{bag.label}}</a></td>
+		  	<td><a target="_blank" data-ng-href="https://{{initdata.ingest_instance.baseurl}}/{{bag.jobs[0].pid}}">{{bag.jobs[0].pid}}</a></td>
 		    <td><span class="gray-light" ng-if="bag.jobs[0].started_at">{{bag.jobs[0].started_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
 		    <td><span class="gray-light" ng-if="bag.jobs[0].finished_at">{{bag.jobs[0].finished_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
 		    <td>

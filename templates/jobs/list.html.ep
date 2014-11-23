@@ -2,7 +2,7 @@
 
 % content_for header => begin
 
-   <script type="text/javascript" src="<%= url_for '/js/controllers/jobs.js' %>"></script>
+   <script type="text/javascript" src="<%= url_for '/js/controllers/jobs.js' %>"></script>   
 
 % end
 
@@ -19,13 +19,13 @@
 	    <th>Status</th>
 	    <th>Instance</th>
 	    <th>Created by</th>
-	    <th>Scheduled at</th>
-      <th>Started at</th>
-	    <th>Finished at</th>
-	    <th>Created</th>
-	    <th>Updated</th>
+	    <th>Scheduled</th>
+      	<th>Started</th>
+	    <th>Finished</th>
+	    <th>Add to collection</th>
+	    <th>Collection</th>
 	    <th></th>
-      <th></th>
+      	<th></th>
 	    <th></th>
 	  </tr>
 	  </thead>
@@ -35,13 +35,13 @@
 	    <td ng-class="{'job-running': job.status == 'running'}">{{job.status}}</td>
 	    <td>{{job.ingest_instance}}</td>
 	    <td>{{getMemberDisplayname(job.created_by)}}</td>
-	    <td><span class="gray-light" ng-if="job.start_at">{{job.start_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
-      <td><span class="gray-light" ng-if="job.started_at">{{job.started_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
+	    <td><span class="gray-light" ng-if="job.start_at">{{job.start_at * 1000 | date:'dd.MM.yyyy HH:mm'}}</span></td>
+      	<td><span class="gray-light" ng-if="job.started_at">{{job.started_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
 	    <td><span class="gray-light" ng-if="job.finished_at">{{job.finished_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
-	    <td><span class="gray-light" ng-if="job.created">{{job.created * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
-	    <td><span class="gray-light" ng-if="job.updated">{{job.updated * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</span></td>
+	    <td><a ng-if="job.add_to_collection" data-ng-href="https://{{initdata.ingest_instances[job.ingest_instance].baseurl}}/{{job.add_to_collection}}" target="_blank">{{job.add_to_collection}}</a></td>
+	    <td><span class="gray-light" ng-if="job.create_collection"><span class="glyphicon glyphicon-ok create-coll-ok" data-ng-if="job.create_collection"></span> <a data-ng-if="job.created_collection"  target="_blank" data-ng-href="https://{{initdata.ingest_instances[job.ingest_instance].baseurl}}/{{job.created_collection}}" >{{job.created_collection}}</a></span></td>
 	    <td><a href="" ng-click="editIngestJob(job)"><i class="glyphicon glyphicon-pencil"></i></a></td>
-	    <td><a href="" ng-click="toogleRun(job._id)"><i class="glyphicon glyphicon-pause" ng-show="job.status == 'running'"></i><i class="glyphicon glyphicon-play" ng-show="job.status == 'suspended' || job.status == 'scheduled'"></i></a></td>
+	    <td><a href="" ng-click="toogleRun(job._id)"><i class="glyphicon glyphicon-pause" ng-show="job.status == 'running'"></i><i class="glyphicon glyphicon-play" ng-show="job.status == 'suspended' || job.status == 'scheduled' || job.status == 'finished'"></i></a></td>
 	    <td><a href="" ng-click="deleteJob(job._id,job.name)"><i class="glyphicon glyphicon-remove"></i></a></td>
 	  </tr>
 	  </tbody>

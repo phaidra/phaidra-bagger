@@ -83,6 +83,9 @@
   	<!-- Custom Phaidra CSS -->
   	<link href="<%= url_for '/css/frontend.css' %>" rel="stylesheet">
   	<link href="<%= url_for '/css/main.css' %>" rel="stylesheet">
+  	
+  	<!-- Checkbox -->
+  	<link href="<%= url_for '/css/awesome-bootstrap-checkbox.css' %>" rel="stylesheet">
 
   	<%= content_for 'header' %>
   </head>

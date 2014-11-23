@@ -99,7 +99,6 @@ sub import_uwmetadata_xml {
   my $self = shift;
   my $res = { alerts => [], status => 200 };
 
-  my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
   my $projectconfig = $self->app->config->{projects}->{$self->current_user->{project}};
   my $basepath = $projectconfig->{folders}->{uwmetadata_import};
   $self->app->log->info("[Uwmetadata import] Basepath: $basepath");
@@ -125,7 +124,6 @@ sub import_uwmetadata_xml {
     my $folderid = $folder;
     # clean folder id of special chars
     $folderid =~ s/\W//g;
-    my $owner = $projectconfig->{account};
 
     # importing files
     my $cntf = 0;
@@ -145,7 +143,7 @@ sub import_uwmetadata_xml {
       # clean file id of special chars
       $bagid =~ s/\W//g;
 
-      my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, owner => $owner});
+      my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, project => $self->current_user->{project}});
 
       if(defined($bag->{folderid})){
 
@@ -188,7 +186,7 @@ sub import_uwmetadata_xml {
            }
            #$self->app->log->debug("[Uwmetadata import] got json ".$self->app->dumper($uwmetadata));
            push @{$res->{alerts}}, "[Uwmetadata import] $cnt saving uwmetadata bag ".$bag->{bagid};
-           my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => time, 'metadata.uwmetadata' => $uwmetadata} } );
+           my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time, 'metadata.uwmetadata' => $uwmetadata} } );
         }else {
            my ($err, $code) = $tx->error;
            $self->app->log->error("[Uwmetadata import] got error ".$self->app->dumper($err));
@@ -442,25 +440,25 @@ sub import {
 		my $metadata = decode_json($content);
 
 		my $bagid = $metadata->{'ticket-reference'};
-		my $owner = $metadata->{owner};
+		my $project = $metadata->{project};
 
 		unless(defined($bagid)){
 	    	push @{$res->{alerts}}, { type => 'danger', msg => "Error reading metadata.json of bag $bag, no bagid"};
 	    	next;
 	    }
-	    unless(defined($owner)){
-	    	push @{$res->{alerts}}, { type => 'danger', msg => "Error reading metadata.json of bag $bag, no owner"};
+	    unless(defined($self->current_user->{project})){
+	    	push @{$res->{alerts}}, { type => 'danger', msg => "Error reading metadata.json of bag $bag, no project"};
 	    	next;
 	    }
 
-	    my $found = $self->mango->db->collection('bags')->find_one({bagid => $bagid, owner => $owner});
+	    my $found = $self->mango->db->collection('bags')->find_one({bagid => $bagid, project => $self->current_user->{project}});
 
 		if(defined($found->{bagid})){
 			push @{$res->{alerts}}, { type => 'warning', msg => "Not importing bag $bag, already exists with bagid ".$found->{bagid}};
 			next;
 		}
 
-		my $reply  = $self->mango->db->collection('bags')->insert({ bagid => $bagid, label => $bagid, folderid => '', owner => $owner, path => $bagpath, , metadata => $metadata, created => time, updated => time } );
+		my $reply  = $self->mango->db->collection('bags')->insert({ bagid => $bagid, label => $bagid, folderid => '', project => $self->current_user->{project}, path => $bagpath, , metadata => $metadata, created => time, updated => time } );
 
 		my $oid = $reply->{oid};
 		if($oid){
@@ -564,11 +562,9 @@ sub load {
 	my $self = shift;
 	my $bagid = $self->stash('bagid');
 
-	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-
 	$self->app->log->info("[".$self->current_user->{username}."] Loading bag $bagid");
 
-	my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, owner => $owner});
+	my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, project => $self->current_user->{project}});
 
 	if(defined($bag)){
 
@@ -654,11 +650,9 @@ sub save_uwmetadata {
 	my $self = shift;
 	my $bagid = $self->stash('bagid');
 
-	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-
 	$self->app->log->info("[".$self->current_user->{username}."] Saving bag $bagid");
 
-	my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => time, 'metadata.uwmetadata' => $self->req->json->{uwmetadata}} } );
+	my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time, 'metadata.uwmetadata' => $self->req->json->{uwmetadata}} } );
 
 	$self->render(json => { alerts => [] }, status => 200);
 
@@ -669,11 +663,9 @@ sub delete {
 	my $self = shift;
 	my $bagid = $self->stash('bagid');
 
-	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-
 	$self->app->log->info("[".$self->current_user->{username}."] Removing bag $bagid");
 
-	my $reply = $self->mango->db->collection('bags')->remove({bagid => $bagid, owner => $owner});
+	my $reply = $self->mango->db->collection('bags')->remove({bagid => $bagid, project => $self->current_user->{project}});
 
 	$self->render(json => { alerts => [] }, status => 200);
 }
@@ -687,12 +679,18 @@ sub _edit_prepare_data {
   my $included_classifications = $project_config->{included_classifications};
 
     my $templates = $self->mango->db->collection('templates.uwmetadata')
-		->find({ project => $self->current_user->{project}})
+		->find(
+			{ '$or' => 
+				[ 
+					{ project => $self->current_user->{project}, created_by => $self->current_user->{username} }, 					 
+					{ project => $self->current_user->{project}, shared => Mojo::JSON->true }
+				]
+			}
+		)
 		->sort({created => 1})
-		->fields({ title => 1, created => 1, updated => 1, created_by => 1 })->all();
+		->fields({ title => 1, created => 1, updated => 1, created_by => 1, shared => 1 })->all();
 
-  my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-  my $bag = $self->mango->db->collection('bags')->find_one({bagid => $self->stash('bagid'), owner => $owner}, {label => 1, created => 1, updated => 1, assignee => 1, status => 1, owner => 1});
+  my $bag = $self->mango->db->collection('bags')->find_one({bagid => $self->stash('bagid'), project => $self->current_user->{project}}, {label => 1, created => 1, updated => 1, assignee => 1, status => 1, project => 1});
 
 	my $init_data = {
     bagid => $self->stash('bagid'),
@@ -774,8 +772,7 @@ sub edit {
 
 
 	   	if($filter->{folderid}){
-	   		my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-	   		my $folder = $self->mango->db->collection('folders')->find_one({folderid => $filter->{folderid}, owner => $owner},{ name => 1 });
+	   		my $folder = $self->mango->db->collection('folders')->find_one({folderid => $filter->{folderid}, project => $self->current_user->{project}},{ name => 1 });
 	   		$init_data->{folder} = { folderid => $filter->{folderid}, name => $folder->{name} };
 	   	}
     }
@@ -816,8 +813,7 @@ sub _folder_bags_prepare_data {
 
   my $folderid = $self->stash('folderid');
 
-	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-	my $folder = $self->mango->db->collection('folders')->find_one({folderid => $folderid, owner => $owner},{ name => 1 });
+	my $folder = $self->mango->db->collection('folders')->find_one({folderid => $folderid, project => $self->current_user->{project}},{ name => 1 });
 
     my $init_data = {
     	folderid => $folderid,
@@ -914,9 +910,7 @@ sub _search {
 
     my %find;
 
-    my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-
-    $find{owner} = $owner;
+    $find{project} = $self->current_user->{project};
     if($folderid){
       $find{folderid} = $folderid;
     }
@@ -950,7 +944,7 @@ sub _search {
 
 	$cursor
 		->sort({$sortfield => int $sortvalue})
-		->fields({ bagid => 1, status => 1, label => 1, created => 1, updated => 1, owner => 1, tags => 1, assignee => 1, alerts => 1, pids => 1, job => 1 })
+		->fields({ bagid => 1, status => 1, label => 1, created => 1, updated => 1, project => 1, tags => 1, assignee => 1, alerts => 1, pids => 1, job => 1 })
 		->skip($from)
 		->limit($limit);
 
@@ -1002,15 +996,13 @@ sub set_attribute {
 		}
 	}
 
-	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-
 	my $reply;
 	if($attribute eq 'tags'){
 		$self->app->log->info("[".$self->current_user->{username}."] Adding $attribute $value to bag $bagid");
-		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => time}, '$addToSet' =>	{ tags => $value }} );
+		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time}, '$addToSet' =>	{ tags => $value }} );
 	}else{
 		$self->app->log->info("[".$self->current_user->{username}."] Changing $attribute of bag $bagid to $value");
-		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => time, $attribute => $value }} );
+		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time, $attribute => $value }} );
 	}
 
 	$self->render(json => { alerts => [] }, status => 200);
@@ -1036,15 +1028,13 @@ sub unset_attribute {
 		}
 	}
 
-	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-
 	my $reply;
 	if($attribute eq 'tags'){
 		$self->app->log->info("[".$self->current_user->{username}."] Removing $attribute $value from bag $bagid");
-		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => time}, '$pullAll' =>	{ tags => $value }} );
+		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time}, '$pullAll' =>	{ tags => $value }} );
 	}else{
 		$self->app->log->info("[".$self->current_user->{username}."] Changing $attribute of bag $bagid to ''");
-		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, owner => $owner},{ '$set' => {updated => time, $attribute => '' }} );
+		$reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time, $attribute => '' }} );
 	}
 
 	$self->render(json => { alerts => [] }, status => 200);
@@ -1072,15 +1062,13 @@ sub set_attribute_mass {
 		}
 	}
 
-	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-
 	my $reply;
 	if($attribute eq 'tags'){
 		$self->app->log->info("[".$self->current_user->{username}."] Adding $attribute $value for bags:".$self->app->dumper($selection));
-		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, owner => $owner},{ '$set' => {updated => time }, '$addToSet' =>	{ tags => $value }}, { multi => 1 } );
+		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, project => $self->current_user->{project}},{ '$set' => {updated => time }, '$addToSet' =>	{ tags => $value }}, { multi => 1 } );
 	}else{
 		$self->app->log->info("[".$self->current_user->{username}."] Changing $attribute to $value for bags:".$self->app->dumper($selection));
-		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, owner => $owner},{ '$set' => {updated => time, $attribute => $value }}, { multi => 1 } );
+		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, project => $self->current_user->{project}},{ '$set' => {updated => time, $attribute => $value }}, { multi => 1 } );
 	}
 
 	$self->render(json => { alerts => [] }, status => 200);
@@ -1109,15 +1097,13 @@ sub unset_attribute_mass {
 		}
 	}
 
-	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-
 	my $reply;
 	if($attribute eq 'tags'){
 		$self->app->log->info("[".$self->current_user->{username}."] Removing $attribute $value from bags:".$self->app->dumper($selection));
-		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, owner => $owner},{ '$set' => {updated => time}, '$pullAll' => { tags => [$value] }}, { multi => 1 }  );
+		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, project => $self->current_user->{project}},{ '$set' => {updated => time}, '$pullAll' => { tags => [$value] }}, { multi => 1 }  );
 	}else{
 		$self->app->log->info("[".$self->current_user->{username}."] Changing $attribute to '' for bags:".$self->app->dumper($selection));
-		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, owner => $owner},{ '$set' => {updated => time, $attribute => '' }}, { multi => 1 }  );
+		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, project => $self->current_user->{project}},{ '$set' => {updated => time, $attribute => '' }}, { multi => 1 }  );
 	}
 
 	$self->render(json => { alerts => [] }, status => 200);

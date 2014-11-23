@@ -5,7 +5,7 @@ use warnings;
 use v5.10;
 use Mango::BSON ':bson';
 use Mango::BSON::ObjectID;
-use Mojo::JSON qw(encode_json);
+use Mojo::JSON qw(decode_json encode_json);
 use base 'Mojolicious::Controller';
 
 
@@ -48,6 +48,37 @@ sub load {
 		status => 200
 	);
 
+}
+
+sub toggle_shared {	
+	my $self = shift;
+	my $tid = $self->stash('tid');
+	
+	$self->app->log->info("[".$self->current_user->{username}."] Toggle shared on template $tid");
+
+	my $oid = Mango::BSON::ObjectID->new($tid);
+
+	my $t = $self->mango->db->collection('templates.uwmetadata')->find_one({_id => $oid}, {shared => 1, created_by => 1});
+	
+	if($t->{created_by} ne $self->current_user->{username}){
+		$self->app->log->error("[".$self->current_user->{username}."] Cannot toggle shared: User is not the owner of the template ".$tid);
+		$self->render(
+			json => {
+				alerts => [{ type => 'danger', msg => "User ".$self->current_user->{username}." is not the owner of the template $tid" }]
+			},
+		status => 400);
+		return;
+	}
+	
+	my $shared;
+	if($t->{shared}){
+		$shared = Mojo::JSON->false;
+	}else{
+		$shared = Mojo::JSON->true;
+	}
+	$self->mango->db->collection('templates.uwmetadata')->update({_id => $oid},{ '$set' => {shared => $shared} } );
+
+	$self->render(json => { alerts => [] }, status => 200);		
 }
 
 sub save {
@@ -115,9 +146,16 @@ sub my {
     $self->render_later;
 
 	my $coll = $self->mango->db->collection('templates.uwmetadata')
-		->find({ created_by => $self->current_user->{username}})
+		->find(
+			{ '$or' => 
+				[ 
+					{ project => $self->current_user->{project}, created_by => $self->current_user->{username} }, 					 
+					{ project => $self->current_user->{project}, shared => Mojo::JSON->true }
+				]
+			}
+		)
 		->sort({created => 1})
-		->fields({ title => 1, created => 1, updated => 1, created_by => 1 })
+		->fields({ title => 1, created => 1, updated => 1, created_by => 1, shared => 1 , created_by => 1 })
 		->all();
 
 	unless(defined($coll)){

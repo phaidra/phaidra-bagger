@@ -126,8 +126,24 @@ sub run_job {
 	}
 
 	# check job status
-	if($job->{status} ne 'scheduled'){
-		my @alerts = [{ type => 'danger', msg => "Job $jobid not in 'scheduled' status"}];
+	if($job->{status} ne 'scheduled' && $job->{status} ne 'finished'){
+		my @alerts = [{ type => 'danger', msg => "Job $jobid not in 'scheduled' or 'finished' status"}];
+		$self->{'log'}->error(Dumper(\@alerts));
+		return;
+	}
+	
+	
+	# check if we have projects's credentials
+	my $credentials = $self->{config}->{accounts}->{$job->{project}};
+	unless($credentials){
+		my @alerts = [{ type => 'danger', msg => "Bag ".$job->{bagid}.": Bag project: ".$job->{project}." not found in config."}];
+		$self->{'log'}->error(Dumper(\@alerts));
+		return;
+	}
+	my $username = $credentials->{username};
+	my $password = $credentials->{password};
+	unless(defined($username) && defined($password)){
+		my @alerts = [{ type => 'danger', msg => "Bag ".$job->{bagid}.": Credentials missing for bag project: ".$job->{project}}];
 		$self->{'log'}->error(Dumper(\@alerts));
 		return;
 	}
@@ -152,11 +168,12 @@ sub run_job {
 			status => 1,
 			path => 1,
 			metadata => 1,
-			owner => 1
+			project => 1
 		}
 	);
 
 	my $i = 0;
+	my @pids;
 	while (my $bag = $bags->next) {
 		$i++;
 
@@ -205,25 +222,6 @@ sub run_job {
 			next;
 		}
 
-		# check if we have owner's credentials
-		my $credentials = $self->{config}->{accounts}->{$bag->{owner}};
-		unless($credentials){
-			my @alerts = [{ type => 'danger', msg => "Bag ".$bag->{bagid}.": Bag owner: ".$bag->{owner}." not found in config."}];
-			$self->{'log'}->error(Dumper(\@alerts));
-			# save error to bag
-			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => \@alerts}});
-			next;
-		}
-		my $username = $credentials->{username};
-		my $password = $credentials->{password};
-		unless(defined($username) && defined($password)){
-			my @alerts = [{ type => 'danger', msg => "Bag ".$bag->{bagid}.": Credentials missing for bag owner: ".$bag->{owner}}];
-			$self->{'log'}->error(Dumper(\@alerts));
-			# save error to bag
-			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => \@alerts}});
-			next;
-		}
-
 		# check if there are metadata
 		unless($bag->{metadata}->{uwmetadata}){ # or mods later
 			my @alerts = [{ type => 'danger', msg => "Bag ".$bag->{bagid}." has no bibliographical metadata"}];
@@ -242,16 +240,16 @@ sub run_job {
 		my $b = $self->{bags_coll}->find_one({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid}, {'jobs.$.pid' => 1});
 		my $current_job = @{$b->{jobs}}[0];
 		if($current_job->{pid}){
-				my @alerts = [{ type => 'info', msg => "Bag ".$bag->{bagid}." already imported in this job, skipping"}];
-				$self->{'log'}->info(Dumper(\@alerts));
-				# save error to bag
-				$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => \@alerts}});
-				next;
+			my @alerts = [{ type => 'info', msg => "Bag ".$bag->{bagid}." already imported in this job, skipping"}];
+			$self->{'log'}->info(Dumper(\@alerts));
+			# save error to bag
+			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => \@alerts}});
+			next;
 		}
 
 		# ingest bag
 		my ($pid, $alerts) = $self->_ingest_bag($filepath, $bag, $ingest_instance, $username, $password);
-
+		
 		# update bag-job pid, alerts and ts
 		$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.pid' => $pid, 'jobs.$.finished_at' => time}});
 		if(defined($alerts)){
@@ -261,17 +259,62 @@ sub run_job {
 				$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => $alerts}});
 			}
 		}
+		
+		if($pid){		
+			push @pids, $pid;
+			
+			# add to collection?
+			if($job->{add_to_collection}){
+				$self->{'log'}->info("Adding ".$bag->{bagid}."/$pid to collection ".$job->{add_to_collection});
+				my $add_coll_alerts = $self->_add_to_collection($job->{add_to_collection}, $pid,  $ingest_instance, $username, $password);
+				if($add_coll_alerts){
+					foreach my $a (@{$add_coll_alerts}){
+						push $alerts, $a;
+					}	
+				}			
+			}
+		}
 
 		# insert event
 		$self->{events_coll}->insert({ts_iso => $self->ts_iso(),event => 'bag_ingest_finished',e => time,pid => $pid});
 
 		$self->{'log'}->info("[$i/$count] Done ".$bag->{bagid});
 	}
+		
+	my %jobdata = (
+		"updated" => time, 
+		"finished_at" => time, 
+		"status" => 'finished',
+		"alerts" => []
+	);	
 
-	$self->{'log'}->info("Finished job ".$jobid);
+	my $coll_pid;
+	my $coll_alerts;
+	# create collection?
+	if($job->{create_collection}){
+		if(scalar @pids > 0){				
+			($coll_pid, $coll_alerts) = $self->_create_collection(\@pids, $job, $ingest_instance, $username, $password);
+		}else{
+			push $jobdata{alerts}, { type => 'danger', msg => "Job collection not created - no objects created by the last run"};	
+		}		
+	}	
+	
+	if($coll_pid){
+		$jobdata{created_collection} = $coll_pid;
+	}
+	
+	if($coll_alerts){
+		push $jobdata{alerts}, { type => 'danger', msg => "Could not create job collection"};		
+		foreach my $a (@{$coll_alerts}){			
+			push $jobdata{alerts}, $a;		
+		} 	
+	}	
 
 	# update job status
-	$self->{jobs_coll}->update({'_id' => MongoDB::OID->new(value => $jobid)},{'$set' => {"updated" => time, "finished_at" => time, "status" => 'finished'}});
+	$self->{'log'}->info('Alerts: '.Dumper($jobdata{alerts}));
+	$self->{jobs_coll}->update({'_id' => MongoDB::OID->new(value => $jobid)},{'$set' => \%jobdata});
+
+	$self->{'log'}->info("Finished job ".$jobid);
 
 	# update activity - finished
 	$self->_update_activity("finished", "ingesting job $jobid");
@@ -312,13 +355,13 @@ sub _ingest_bag {
 		# we won't send the mimetype, currently we will rely on the magic in api
 	});
 
-  if (my $res = $tx->success) {
-    $pid = $res->json->{pid};
+  	if (my $res = $tx->success) {
+    	$pid = $res->json->{pid};
 	}else{
 
 		if($tx->res->json){
 			if($tx->res->json->{alerts}){
-					return ($pid, $tx->res->json->{alerts});
+				return ($pid, $tx->res->json->{alerts});
 			}
 		}
 
@@ -332,6 +375,244 @@ sub _ingest_bag {
 	}
 
 	return ($pid, \@alerts);
+}
+
+sub _create_collection {
+	
+	my $self = shift;  			
+	my $pids = shift;
+	my $job = shift;
+	my $ingest_instance = shift;
+	my $username = shift;
+	my $password = shift;		
+	
+	my $col_pid;
+	my @alerts = ();
+	
+	my $data = { members => []};
+	foreach my $pid (@{$pids}){
+		push @{$data->{members}}, { pid => $pid };
+	}
+	
+	$data->{metadata} = $self->_get_collection_uwmetadata($job, $ingest_instance, $username, $password);
+	unless($data->{metadata}){
+		push(@alerts, { type => 'danger', msg => "Could not create collection metadata" });
+	}else{
+	
+		my $url = Mojo::URL->new;
+		$url->scheme('https');
+		$url->userinfo("$username:$password");
+		my @base = split('/',$self->{config}->{ingest_instances}->{$ingest_instance}->{apibaseurl});
+		$url->host($base[0]);
+		if(exists($base[1])){
+			$url->path($base[1]."/collection/create");
+		}else{
+			$url->path("/collection/create");
+		}
+	
+	  	my $tx = $self->{ua}->post($url => json => $data);
+	  	
+		if (my $res = $tx->success) {
+			return $res->json->{pid};		  		
+		}else {
+			if($tx->res->json){
+				if($tx->res->json->{alerts}){
+					return ($col_pid, $tx->res->json->{alerts});
+				}
+			}
+			my $err = $tx->error;
+		 	if ($err->{code}){
+				push(@alerts, { type => 'danger', msg => $err->{code}." response: ".$err->{message} });
+			}else{
+				push(@alerts, { type => 'danger', msg => "Connection error: ".$err->{message} });
+			}
+		}		
+	}
+	
+	return ($col_pid, \@alerts);
+}
+
+sub _get_collection_uwmetadata {
+	my $self = shift;
+	my $job = shift;
+	my $ingest_instance = shift;
+	my $username = shift;
+	my $password = shift;
+	
+	
+	my ($firstname, $lastname) = $self->_get_owner_data($ingest_instance, $username, $password);
+	unless($firstname && $lastname){
+		return;	
+	}
+	
+	return 
+	{
+    		"uwmetadata" => [
+      			{
+			        "xmlns" => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0",
+			        "xmlname" => "general",
+			        "children" => [
+	    			  {
+			            "xmlns" => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0",
+			            "xmlname"=> "title",
+			            "ui_value" => $job->{name},
+			            "value_lang" => "en",
+			            "datatype" => "LangString"
+			          },
+			          {
+			            "xmlns" => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0",
+			            "xmlname" => "language",
+			            "ui_value" => "xx",
+			            "datatype" => "Language"
+			          },
+			          {
+			            "xmlns" => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0",
+			            "xmlname" => "description",
+			            "ui_value" => "Collection of uploaded objects", # emmm, no better idea
+			            "value_lang" => "en",
+			            "datatype" => "LangString"
+			          }
+			        ]
+      			},
+  		        {
+		        "xmlns" => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0",
+		        "xmlname" => "lifecycle",
+		        "children" => [
+		          {
+		            "xmlns" => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0",
+		            "xmlname" => "contribute",
+		            "data_order" => "0",
+		            "ordered" => 1,
+		            "children" => [
+		              {
+		                "xmlns" => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0",
+		                "xmlname" => "role",
+		                "ui_value" => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/voc_3/46",
+		                "datatype" => "Vocabulary"
+		              },
+		              {
+		                "xmlns" => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0",
+		                "xmlname" => "entity",
+		                "data_order" => "0",
+		                "ordered" => 1,
+		                "children" => [
+		                  {
+		                    "xmlns" => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/entity",
+		                    "xmlname" => "firstname",
+		                    "ui_value" => $firstname,
+		                    "datatype" => "CharacterString"
+		                  },
+		                  {
+		                    "xmlns" => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/entity",
+		                    "xmlname" => "lastname",
+		                    "ui_value" => $lastname,
+		                    "datatype" => "CharacterString"
+		                  }
+		                ]
+		              }
+		            ]
+		          }
+		        ]
+		      },
+		      {
+		        "xmlns" => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0",
+		        "xmlname" => "rights",
+		        "children" => [
+		          {
+		            "xmlns" => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0",
+		            "xmlname" => "license",
+		            "ui_value" => "http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/voc_21/1",
+		            "datatype" => "License"
+		          }
+		        ]
+		      }
+    		]
+  		}
+	
+}
+
+sub _get_owner_data {
+	my $self = shift;
+	my $ingest_instance = shift;
+	my $username = shift;
+	my $password = shift;
+	
+	my @alerts; 
+	
+	my $url = Mojo::URL->new;
+	$url->scheme('https');
+	$url->userinfo("$username:$password");
+	my @base = split('/',$self->{config}->{ingest_instances}->{$ingest_instance}->{apibaseurl});
+	$url->host($base[0]);
+	if(exists($base[1])){
+		$url->path($base[1]."/directory/user/$username/data");
+	}else{
+		$url->path("/directory/user/$username/data");
+	}
+
+  	my $tx = $self->{ua}->get($url);
+  	if (my $res = $tx->success) {
+		return ($res->json->{user_data}->{firstname}, $res->json->{user_data}->{lastname});		  		
+	}else {
+		if($tx->res->json){
+			if($tx->res->json->{alerts}){				
+				$self->{'log'}->error(Dumper($tx->res->json->{alerts}));
+			}
+		}
+		my $err = $tx->error;
+	 	if ($err->{code}){
+			push(@alerts, { type => 'danger', msg => $err->{code}." response: ".$err->{message} });
+		}else{
+			push(@alerts, { type => 'danger', msg => "Connection error: ".$err->{message} });
+		}
+	}		
+
+	if(scalar @alerts > 0){
+		$self->{'log'}->error("Error getting owner data :".Dumper(\@alerts));
+	}
+}
+
+sub _add_to_collection {
+	
+	my $self = shift;
+	my $coll_pid = shift;  		
+	my $pid = shift;
+	my $ingest_instance = shift;
+	my $username = shift;
+	my $password = shift;		
+	
+	my @alerts = ();
+	
+	my $url = Mojo::URL->new;
+	$url->scheme('https');
+	$url->userinfo("$username:$password");
+	my @base = split('/',$self->{config}->{ingest_instances}->{$ingest_instance}->{apibaseurl});
+	$url->host($base[0]);
+	if(exists($base[1])){
+		$url->path($base[1]."/collection/$coll_pid/members");
+	}else{
+		$url->path("/collection/$coll_pid/members");
+	}
+
+  	my $tx = $self->{ua}->post($url => json => { members => [{ pid => $pid}]});
+  	
+	if (my $res = $tx->success) {
+		return;		  		
+	}else {
+		if($tx->res->json){
+			if($tx->res->json->{alerts}){
+				return $tx->res->json->{alerts};
+			}
+		}
+		my $err = $tx->error;
+	 	if ($err->{code}){
+			push(@alerts, { type => 'danger', msg => $err->{code}." response: ".$err->{message} });
+		}else{
+			push(@alerts, { type => 'danger', msg => "Connection error: ".$err->{message} });
+		}
+	}		
+
+	return \@alerts;
 }
 
 sub check_requests {
@@ -354,5 +635,7 @@ sub check_requests {
 	# update activity
 	$self->_update_activity("sleeping", "checking request", time);
 }
+
+
 
 1;

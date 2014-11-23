@@ -3,7 +3,6 @@
 %= include 'alerts'
 
 % content_for header => begin
-    <link href="<%= url_for '/css/awesome-bootstrap-checkbox.css' %>" rel="stylesheet">
     <script type="text/javascript" src="<%= url_for '/js/controllers/classification.js' %>"></script>
 % end
 

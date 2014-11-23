@@ -42,13 +42,12 @@ sub import {
 		my $folderid = $folder;
 		# clean folder id of special chars
 		$folderid =~ s/\W//g;
-	    my $owner = $projectconfig->{account};
-	    my $found = $self->mango->db->collection('folders')->find_one({folderid => $folderid, owner => $owner});
+	    my $found = $self->mango->db->collection('folders')->find_one({folderid => $folderid, project => $self->current_user->{project}});
 
 		if(defined($found->{folderid})){
 			push @{$res->{alerts}}, "Not inserting folder $folder, already exists with folderid ".$found->{folderid};
 		}else{
-			my $reply = $self->mango->db->collection('folders')->insert({ folderid => $folderid, name => $folder, owner => $owner, path => $folderpath, status => 'active', created => time, updated => time } );
+			my $reply = $self->mango->db->collection('folders')->insert({ folderid => $folderid, name => $folder, project => $self->current_user->{project}, path => $folderpath, status => 'active', created => time, updated => time } );
 			my $oid = $reply->{oid};
 			if($oid){
 				push @{$res->{alerts}}, "Importing folder $folderid [oid: $oid]";
@@ -65,12 +64,12 @@ sub import {
 			my $bagid = $folderid."_".$file;
 			# clean file id of special chars
 			$bagid =~ s/\W//g;
-			my $foundfile = $self->mango->db->collection('bags')->find_one({bagid => $bagid, owner => $owner});
+			my $foundfile = $self->mango->db->collection('bags')->find_one({bagid => $bagid, project => $self->current_user->{project}});
 
 			if(defined($foundfile->{folderid})){
 				push @{$res->{alerts}}, "Not inserting file $file, already exists with fileid ".$foundfile->{bagid};
 			}else{
-				my $reply = $self->mango->db->collection('bags')->insert({ bagid => $bagid, file => $file, label => $file, folderid => $folderid, tags => [], owner => $owner, metadata => {uwmetadata => ''}, status => 'new', assignee => $projectconfig->{default_assignee}, created => time, updated => time } );
+				my $reply = $self->mango->db->collection('bags')->insert({ bagid => $bagid, file => $file, label => $file, folderid => $folderid, tags => [], project => $self->current_user->{project}, metadata => {uwmetadata => ''}, status => 'new', assignee => $projectconfig->{default_assignee}, created => time, updated => time } );
 				my $oid = $reply->{oid};
 				if($oid){
 					push @{$res->{alerts}}, "Inserting bag $bagid [oid: $oid]";
@@ -173,12 +172,10 @@ sub get_folders {
 
     $self->render_later;
 
-    my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-
 	my $cursor = $self->mango->db->collection('folders')
-		->find({ owner => $owner, status => 'active' })
+		->find({ project => $self->current_user->{project}, status => 'active' })
 		->sort({updated => -1})
-		->fields({ folderid => 1, name => 1, path => 1, created => 1, updated => 1, owner => 1 });
+		->fields({ folderid => 1, name => 1, path => 1, created => 1, updated => 1, project => 1 });
 
 	my $coll = $cursor->all();
 	$self->render(json => { items => $coll, alerts => [] , status => 200 });
@@ -195,11 +192,9 @@ sub deactivate_folder {
 		return;
 	}
 
-	my $owner = $self->app->config->{projects}->{$self->current_user->{project}}->{account};
-
 	$self->app->log->info("[".$self->current_user->{username}."] Deactivating folder $folderid");
 
-	my $reply = $self->mango->db->collection('folders')->update({folderid => $folderid, owner => $owner},{ '$set' => {updated => time, 'status' => 'inactive' }} );
+	my $reply = $self->mango->db->collection('folders')->update({folderid => $folderid, project => $self->current_user->{project}},{ '$set' => {updated => time, 'status' => 'inactive' }} );
 
 	$self->render(json => { alerts => [{ type => 'success', msg => "$folderid deactivated" }] }, status => 200);
 

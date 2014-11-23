@@ -1,44 +1,76 @@
 
-<div class="modal" >
-	<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h4 class="modal-title"><span class="glyphicon glyphicon-pencil"></span> Edit ingest job <img class="load-spinner" ng-show="loadingTracker.active()" ng-src="{{baseurl+'/img/ajax-loader.gif'}}"></h4>
 
-				</div>
-				<div class="modal-body">
-
-					<alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert($index)">{{alert.msg}}</alert>
-
+<div class="modal modal-ingest">
+	<div class="modal-dialog modal-ingest-dialog">
+		
+		<div class="modal-content">
+			<div class="modal-header">
+				<h4 class="modal-title"><span class="glyphicon glyphicon-pencil"></span> Edit ingest job <img class="load-spinner" ng-show="loadingTracker.active()" ng-src="{{baseurl+'/img/ajax-loader.gif'}}"></h4>
+			</div>
+		
+			<div class="modal-body">
+				<div class="container-fluid">
 					<data-ng-form name="form" novalidate role="form">
 						<fieldset data-ng-disabled="form_disabled">
-							<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.start_at.$dirty && form.start_at.$invalid]">
-								<label class="control-label">Start at:</label>
-								<div class="row">
-									<div class="col-md-6">
-								    	<input type="text" name="start_at" id="start_at" class="form-control ingest-date-input" datepicker-popup="dd.MM.yyyy" ng-model="modaldata.start_at" is-open="opened" min-date="minDate" ng-required="true" close-text="Close" />
-								    </div>
-									<div class="col-md-6">
-										<timepicker data-ng-model="modaldata.start_at" show-meridian="false"></timepicker>
+						
+							<div class="row">	
+								<div class="col-md-12">	
+									<alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert($index)">{{alert.msg}}</alert>																						
+									<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.start_at.$dirty && form.start_at.$invalid]">
+										<label class="control-label">Start at:</label>
+										<div class="container-fluid start-at-container">
+											<div class="row">
+												<div class="col-md-6">
+											    	<input type="text" name="start_at" id="start_at" class="form-control ingest-date-input" datepicker-popup="dd.MM.yyyy" ng-model="modaldata.start_at" is-open="opened" min-date="minDate" ng-required="true" close-text="Close" />
+											    </div>
+												<div class="col-md-6">
+													<timepicker data-ng-model="modaldata.start_at" show-meridian="false"></timepicker>
+												</div>
+											</div>
+										</div>
+									</div>																																								
+								</div>							
+							</div>
+							
+							<div class="row">
+								<div class="col-md-6">
+									<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.name.$dirty && form.name.$invalid]">
+										<label class="control-label" for="name">Name:</label>
+										<input type="text" class="form-control" name="name" id="name" ng-required="1" ng-model="modaldata.name" ng-keyup="hitEnterSave($event)" required>
+									</div>
+									<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.instance.$dirty && form.instance.$invalid]">
+										<label class="control-label" for="name">Phaidra instance:</label>
+										<select class="form-control" name="instance" id="instance" ng-required="1" ng-model="modaldata.ingest_instance" ng-keyup="hitEnterSave($event)" required ng-options="key as value.baseurl for (key, value) in initdata.ingest_instances" ></select>
+									</div>
+								</div>
+								<div class="col-md-6">
+									<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.add_to_collection.$dirty && form.add_to_collection.$invalid]">
+										<label class="control-label" for="name">Add to existing collection:</label>
+										<input type="text" class="form-control" name="add_to_collection" id="add_to_collection" placeholder="PID" ng-model="modaldata.add_to_collection" ng-keyup="hitEnterSave($event)" >
+									</div>
+									<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.create_collection.$dirty && form.create_collection.$invalid]">
+										<div class="checkbox checkbox-primary ingest-coll-checkbox">
+											<input type="checkbox" id="coll_checkbox" name="create_collection" data-ng-model="modaldata.create_collection">
+											<label for="coll_checkbox"><strong>Create new collection</strong></label>
+										</div>
+									</div>								
+								</div>
+							</div>
+							
+						
+							<div class="row">	
+								<div class="col-md-12">					
+									<div class="modal-footer">
+										<button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
+										<button type="button" class="btn btn-primary" ng-click="saveJob()" ng-disabled="(form.$dirty && form.$invalid) || form.$pristine || form_disabled">Save</button>
 									</div>
 								</div>
 							</div>
-							<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.instance.$dirty && form.instance.$invalid]">
-								<label class="control-label" for="name">Phaidra instance:</label>
-								<select class="form-control" name="instance" id="instance" ng-required="1" ng-model="modaldata.ingest_instance" ng-keyup="hitEnterSave($event)" required ng-options="key as value.baseurl for (key, value) in initdata.ingest_instances" ></select>
-							</div>
-							<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.name.$dirty && form.name.$invalid]">
-								<label class="control-label" for="name">Name:</label>
-								<input type="text" class="form-control" name="name" id="name" ng-required="1" ng-model="modaldata.name" ng-keyup="hitEnterSave($event)" required>
-							</div>
+								
 						</fieldset>
-					</data-ng-form>
-
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
-					<button type="button" class="btn btn-primary" ng-click="saveJob()" ng-disabled="(form.$dirty && form.$invalid) || form.$pristine || form_disabled">Save</button>
+					</data-ng-form>					
 				</div>
 			</div>
 		</div>
 	</div>
+</div>

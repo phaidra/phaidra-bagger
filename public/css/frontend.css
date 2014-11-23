@@ -320,8 +320,8 @@ margin-top: 5px;
 }
 
 .job-running {
-	-moz-animation-duration: 3s;
-	-webkit-animation-duration: 3s;
+	-moz-animation-duration: 2s;
+	-webkit-animation-duration: 2s;
 	-moz-animation-name: pulsate;
 	-webkit-animation-name: pulsate;
 	-moz-animation-iteration-count: infinite;
@@ -351,5 +351,27 @@ margin-top: 5px;
 }
 
 .class-include-settings {
-		margin-left: 20px;
+	margin-left: 20px;
+}
+
+.tmplt-shared-checkbox {
+	display: inline-flex;
+	margin: 0 0 0 30px;
+}
+
+.modal-ingest-dialog {
+	width: 600px !important;
+	width: 100% !important;
+}
+
+.start-at-container {
+	margin-left: -15px;
+}
+
+.ingest-coll-checkbox {
+	margin: 40px 0 0 20px;
+}
+
+.create-coll-ok {
+	margin: 0 10px;
 }

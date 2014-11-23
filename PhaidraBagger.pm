@@ -301,8 +301,8 @@ sub startup {
     $autz->route('template') ->via('put')   ->to('template#create');
     $autz->route('template/:tid') ->via('post')   ->to('template#save');
     $autz->route('template/:tid') ->via('get')   ->to('template#load');
-    $autz->route('template/:tid') ->via('delete')   ->to('template#delete');
-    $autz->route('template/:tid/difab') ->via('get')   ->to('template#load_difab');
+    $autz->route('template/:tid') ->via('delete')   ->to('template#delete');    
+    $autz->route('template/:tid/shared/toggle') ->via('post')   ->to('template#toggle_shared');
 
     $autz->route('templates') ->via('get')   ->to('template#templates');
     $autz->route('templates/my') ->via('get')   ->to('template#my');
@@ -319,6 +319,7 @@ sub startup {
 
     $autz->route('bag/:bagid/edit') ->via('get')   ->to('bag#edit');
     $autz->route('bag/:bagid') ->via('get')   ->to('bag#load');
+    $autz->route('bag/template/:tid') ->via('get')   ->to('bag#load_template');
     $autz->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');
     $autz->route('bag/:bagid/:attribute/:value') ->via('put')   ->to('bag#set_attribute');
     $autz->route('bag/:bagid/:attribute/:value') ->via('delete')   ->to('bag#unset_attribute');

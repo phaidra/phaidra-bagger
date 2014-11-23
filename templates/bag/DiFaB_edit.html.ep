@@ -82,7 +82,7 @@
 
 							      <div class="navbar-form navbar-left">
 							        <button ng-disabled="form.$invalid || form_disabled" data-ng-click="saveTemplateAs()" class="btn btn-primary navbar-btn"><span class="glyphicon glyphicon-file"></span> Create template</button>
-							      	<select class="form-control" data-ng-model="selectedtemplate" data-ng-change="loadDifabTemplate()" ng-options="template as template.title for template in initdata.templates">
+							      	<select class="form-control" data-ng-model="selectedtemplate" data-ng-change="loadTemplateToBag()" ng-options="template as template.title for template in initdata.templates">
 							      		<option value="">Load template...</option>
 							      	</select>
 							      </div>

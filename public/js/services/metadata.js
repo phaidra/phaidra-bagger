@@ -78,17 +78,24 @@ angular.module('metadataService', [])
 			});	        
 	    },
 	    
-		loadDifabTemplate: function(tid){
+		loadTemplateToBag: function(tid){
 			return $http({
 				method  : 'GET',
-				url     : $('head base').attr('href')+'template/'+tid+'/difab'
+				url     : $('head base').attr('href')+'bag/template/'+tid
 			});	        
 		},
-	    
+
 		getMyTemplates: function(){
 			return $http({
 				method  : 'GET',
 				url     : $('head base').attr('href')+'templates/my'
+			});	        
+		},
+		
+		toggleSharedTemplate: function(tid){
+			return $http({
+				method  : 'POST',
+				url     : $('head base').attr('href')+'template/'+tid+'/shared/toggle'
 			});	        
 		}
 	}
