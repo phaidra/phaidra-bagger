@@ -17,16 +17,6 @@ app.controller('ClassificationCtrl', function($scope, $modal, $location, Directo
 
     $scope.clsns = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification';
 
-    // TODO: read from user config
-    $scope.classes_config = {
-      'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification/cls_1': 1,
-      'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification/cls_3': 2,
-      'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification/cls_8': 3,
-      'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification/cls_9': 4,
-    	'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification/cls_7': 5,
-    	'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification/cls_5': 6
-    };
-
     $scope.lastSelectedTaxons = {};
 
     $scope.selectedmyclass = {};
@@ -354,7 +344,10 @@ app.controller('ClassificationCtrl', function($scope, $modal, $location, Directo
 	      		// filter and order
 	      		$scope.searchclasses = [];
 	      		for (var i = 0; i < response.data.terms.length; ++i) {
-	      			var pos = $scope.classes_config[response.data.terms[i].uri];
+	      			var term = response.data.terms[i];
+					term.current_path = [];
+	      			/*
+	      			var pos = $scope.classes_config[response.data.terms[i].uri];	      			
 	      			if(pos > 0){
 	      				// pos goes from 1
 	      				$scope.searchclasses[pos-1] = response.data.terms[i];
@@ -362,6 +355,17 @@ app.controller('ClassificationCtrl', function($scope, $modal, $location, Directo
 		      			// init current_path array
 	      				$scope.searchclasses[pos-1].current_path = [];
 	      			}
+	      			*/
+	      			if($scope.initdata['included_classifications']){
+						for (var j = 0; j < $scope.initdata.included_classifications.length; ++j) {
+							if($scope.initdata.included_classifications[j] == response.data.terms[i].uri){
+								$scope.searchclasses.push(term);
+							}
+						}
+					}else{
+						$scope.searchclasses.push(term);
+					}
+
 	      		}
 
 	      		$scope.form_disabled = false;

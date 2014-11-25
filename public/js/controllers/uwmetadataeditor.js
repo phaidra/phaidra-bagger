@@ -24,10 +24,11 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
 	$scope.bag = [];
 	$scope.bag_info;
 
-  $scope.mode = 'bag';
+	$scope.mode = 'bag';
 
     $scope.fields = [];
     $scope.languages = [];
+	$scope.geo = [];
 
     $scope.pid = '';
     $scope.alerts = [];
@@ -390,7 +391,7 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     		function(response) {
     			$scope.alerts = response.data.alerts;
     			$scope.languages = response.data.metadata.languages;
-    			$scope.fields = response.data.metadata.uwmetadata;
+    			$scope.fields = response.data.metadata.uwmetadata;				
     			$scope.bag = response.data;
     			$scope.load_init();
     		}
@@ -695,6 +696,14 @@ $scope.saveTemplateAs = function () {
     	// get index of the current element in this array
     	return angular.element.inArray(child, arr);
     }
+    
+    // hacky bullshit to make the map refresh on geo tab select
+    // this var is watched in geo controller
+    $scope.geoTabActivated = false;
+    $scope.triggerGeoTabActivated = function (){
+    	$scope.geoTabActivated = true;
+    }
+    
 
 });
 

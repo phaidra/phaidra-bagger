@@ -375,3 +375,15 @@ margin-top: 5px;
 .create-coll-ok {
 	margin: 0 10px;
 }
+
+.placemark-name {
+	margin: 20px 0;
+}
+
+.placemark-description {
+	margin: 20px 0;
+}
+
+.angular-google-map-container { 
+	height: 400px; 
+}

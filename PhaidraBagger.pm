@@ -323,7 +323,9 @@ sub startup {
     $autz->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');
     $autz->route('bag/:bagid/:attribute/:value') ->via('put')   ->to('bag#set_attribute');
     $autz->route('bag/:bagid/:attribute/:value') ->via('delete')   ->to('bag#unset_attribute');
-
+	$autz->route('bag/:bagid/geo') ->via('get')   ->to('bag#get_geo');
+	$autz->route('bag/:bagid/geo') ->via('post')   ->to('bag#save_geo');
+	
     #$autz->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
 
 	$autz->route('job')                        ->via('put')    ->to('job#create');

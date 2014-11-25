@@ -66,6 +66,10 @@
   	<!--<script src="http://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.10.0.js"></script>-->
   	<script src="<%= url_for '/js/ui-bootstrap-tpls-0.10.0.js' %>"></script>
 
+	<!-- Maps -->
+	<script type="text/javascript" src="<%= url_for '/js/lodash-3.0.0-pre.min.js' %>"></script>
+   	<script type="text/javascript" src="<%= url_for '/js/angular-google-maps-2.0.9.min.js' %>"></script>   	
+
   	<!-- Promise tracker -->
   	<script src="<%= url_for '/js/promise-tracker.min.js' %>"></script>
 

@@ -181,12 +181,26 @@ sub import_uwmetadata_xml {
         if (my $result = $tx->success) {
            my $uwmetadata = $result->json->{uwmetadata};
 
+		   # do some fixing
            if($self->current_user->{project} eq 'DiFaB'){
              $self->fix_difab_taxon_paths($bag->{bagid}, $uwmetadata);
            }
+           
+           # move the geo info from uwmetadata to geo
+           my $geo = $self->extract_geo($bag->{bagid}, $uwmetadata);
+           
+           my $set = {
+			 updated => time,
+			 'metadata.uwmetadata' => $uwmetadata
+		   };
+           
+           if($geo){
+             $set->{'metadata.geo'} = $geo;
+           }          
+           
            #$self->app->log->debug("[Uwmetadata import] got json ".$self->app->dumper($uwmetadata));
            push @{$res->{alerts}}, "[Uwmetadata import] $cnt saving uwmetadata bag ".$bag->{bagid};
-           my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time, 'metadata.uwmetadata' => $uwmetadata} } );
+           my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => $set } );
         }else {
            my ($err, $code) = $tx->error;
            $self->app->log->error("[Uwmetadata import] got error ".$self->app->dumper($err));
@@ -210,6 +224,24 @@ sub import_uwmetadata_xml {
   $self->render(json => $res, status => $res->{status});
 }
 
+=cut
+ my @s = split('\|',$val);
+
+	  my $lat = $s[0];
+	  my $lon = $s[1];
+
+	  my $lat_char = ($lat =~ m/([-]+)/) ? 'S' : 'N';
+	  my $lon_char = ($lon =~ m/([-]+)/) ? 'W' : 'E';
+
+	  my ($deg_lat, $mm_lat, $ss_lat) = $self->_to_degrees($lat);
+	  my ($deg_lon, $mm_lon, $ss_lon) = $self->_to_degrees($lon);
+
+	  my $new = "$deg_lat°$mm_lat'$ss_lat''$lat_char|$deg_lon°$mm_lon'$ss_lon''$lon_char";
+
+	  $gps_node->{ui_value} = $new;
+	  $gps_node->{loaded_ui_value} = $new;
+	  $gps_node->{loaded_value} = $new;
+=cut
 sub _to_degrees {
 	my $self = shift;
 	my $dec = shift;
@@ -239,28 +271,6 @@ sub fix_difab_taxon_paths {
   	if($n->{xmlname} eq 'alt_title' && $n->{value_lang} eq 'gr'){
   		$n->{value_lang} = 'el';
   	}
-  }
-
-  my $gps_node = $self->get_json_node($self, $hns, 'gps', $uwmetadata);
-  my $val = $gps_node->{ui_value};
-
-  if($val){
-	  my @s = split('\|',$val);
-
-	  my $lat = $s[0];
-	  my $lon = $s[1];
-
-	  my $lat_char = ($lat =~ m/([-]+)/) ? 'S' : 'N';
-	  my $lon_char = ($lon =~ m/([-]+)/) ? 'W' : 'E';
-
-	  my ($deg_lat, $mm_lat, $ss_lat) = $self->_to_degrees($lat);
-	  my ($deg_lon, $mm_lon, $ss_lon) = $self->_to_degrees($lon);
-
-	  my $new = "$deg_lat°$mm_lat'$ss_lat''$lat_char|$deg_lon°$mm_lon'$ss_lon''$lon_char";
-
-	  $gps_node->{ui_value} = $new;
-	  $gps_node->{loaded_ui_value} = $new;
-	  $gps_node->{loaded_value} = $new;
   }
 
   # get classification node paths
@@ -373,6 +383,60 @@ sub fix_difab_taxon_paths {
   # this deletes the failed onesg
   $class_node->{children} = \@ok_children;
 
+}
+
+# hack, remove after DiFaB stops using xmls as ingest input
+sub extract_geo {
+  my $self = shift;
+  my $bagid = shift;
+  my $uwmetadata = shift;
+
+  my $basicns = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0';
+  my $hns = 'http://phaidra.univie.ac.at/XML/metadata/histkult/V1.0';
+  
+  my $name = '';
+  # get title so we can name the placemark
+  my $gen_node = $self->get_json_node($self, $basicns, 'general', $uwmetadata);
+  foreach my $n (@{$gen_node->{children}}){
+  	if($n->{xmlname} eq 'title'){
+  		 $name = $n->{ui_value};
+  	}
+  }
+
+  my $gps_node = $self->get_json_node($self, $hns, 'gps', $uwmetadata);
+  my $val = $gps_node->{ui_value};
+
+  if($val){
+  	
+	# delete it from uwmetadata
+	$gps_node->{ui_value} = "";
+	$gps_node->{loaded_ui_value} = "";
+	$gps_node->{loaded_value} = "";
+  	
+	my @s = split('\|',$val);
+
+	my $lat = $s[0];
+	my $lon = $s[1];
+
+	return {
+		kml => { 
+			document => {				
+				placemark => [
+			  		{
+			  			name => $name,
+			  			description => '',
+				  		point => {
+				  			coordinates => {
+				  				latitude => $lat,
+				  				longitude => $lon
+				  			}
+				  		}
+			  		}	
+			  	]				
+			}	
+		}
+  	}
+  }
 }
 
 # this method finds node of given namespace and xmlname
@@ -551,10 +615,31 @@ sub generate_thumbnails {
 }
 =cut
 
-sub get_languages() {
+sub get_languages {
 	my $self = shift;
 	my $rs = $self->get_uwmetadata_tree();
 	return $rs->{languages};
+}
+
+sub get_geo {
+	my $self = shift;
+	my $bagid = $self->stash('bagid');
+	$self->app->log->info("[".$self->current_user->{username}."] Loading bag (get_geo) $bagid");
+	
+	my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, project => $self->current_user->{project}}, {'metadata.geo' => 1});
+	unless($bag){
+	
+		$self->app->log->error("[".$self->current_user->{username}."] Error loading bag ".$bagid);
+		$self->render(
+			json => {
+				geo => '',
+				alerts => [{ type => 'danger', msg => "Error loading bag with id ".$bagid }]
+			},
+		status => 500);
+
+	}else{	
+		$self->render( json => { geo => $bag->{metadata}->{geo}}, status => 200);
+	}
 }
 
 sub load {
@@ -613,7 +698,7 @@ sub load {
 				metadata => '',
 				created => '',
 				updated => '',
-				alerts => [{ type => 'danger', msg => "Bag with id ".$bagid." was not found" }]
+				alerts => [{ type => 'danger', msg => "Error loading bag ".$bagid }]
 			},
 		status => 500);
 
@@ -650,9 +735,22 @@ sub save_uwmetadata {
 	my $self = shift;
 	my $bagid = $self->stash('bagid');
 
-	$self->app->log->info("[".$self->current_user->{username}."] Saving bag $bagid");
+	$self->app->log->info("[".$self->current_user->{username}."] Saving uwmetadata for bag $bagid");
 
 	my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time, 'metadata.uwmetadata' => $self->req->json->{uwmetadata}} } );
+
+	$self->render(json => { alerts => [] }, status => 200);
+
+}
+
+sub save_geo {
+
+	my $self = shift;
+	my $bagid = $self->stash('bagid');
+
+	$self->app->log->info("[".$self->current_user->{username}."] Saving geo for bag $bagid");
+
+	my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time, 'metadata.geo' => $self->req->json->{geo}} } );
 
 	$self->render(json => { alerts => [] }, status => 200);
 

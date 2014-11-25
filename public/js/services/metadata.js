@@ -24,6 +24,21 @@ angular.module('metadataService', [])
 	            url     : $('head base').attr('href')+'proxy/get_uwmetadata_tree'
 	        });	        
 	    },
+	    
+	    getGeo: function(bagid) {
+	        return $http({
+	            method  : 'GET',
+	            url     : $('head base').attr('href')+'bag/'+bagid+'/geo'
+	        });	        
+	    },
+	    
+		saveGeo: function(bagid, geo){
+			   return $http({
+				   method  : 'POST',
+				   url     : $('head base').attr('href')+'bag/'+bagid+'/geo/',
+				   data    : { geo: geo }
+			   });	        
+		},
 		
 		getLanguages: function() {
 	        return $http({
