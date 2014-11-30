@@ -131,8 +131,8 @@ sub run_job {
 		$self->{'log'}->error(Dumper(\@alerts));
 		return;
 	}
-	
-	
+
+
 	# check if we have projects's credentials
 	my $credentials = $self->{config}->{accounts}->{$job->{project}};
 	unless($credentials){
@@ -249,20 +249,13 @@ sub run_job {
 
 		# ingest bag
 		my ($pid, $alerts) = $self->_ingest_bag($filepath, $bag, $ingest_instance, $username, $password);
-		
-		# update bag-job pid, alerts and ts
-		$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.pid' => $pid, 'jobs.$.finished_at' => time}});
-		if(defined($alerts)){
-			my $alerts_size = scalar @{$alerts};
-			$self->{'log'}->info('Alerts: '.Dumper($alerts));
-			if($alerts_size > 0){
-				$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => $alerts}});
-			}
-		}
-		
-		if($pid){		
+
+		if($pid){
 			push @pids, $pid;
-			
+
+			# update bag-job pid and ts
+			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.pid' => $pid, 'jobs.$.finished_at' => time}});
+
 			# add to collection?
 			if($job->{add_to_collection}){
 				$self->{'log'}->info("Adding ".$bag->{bagid}."/$pid to collection ".$job->{add_to_collection});
@@ -270,48 +263,57 @@ sub run_job {
 				if($add_coll_alerts){
 					foreach my $a (@{$add_coll_alerts}){
 						push $alerts, $a;
-					}	
-				}			
+					}
+				}
+			}
+
+			# update alerts
+			if(defined($alerts)){
+				if(scalar @{$alerts} > 0){
+					$self->{'log'}->info('Alerts: '.Dumper($alerts));
+					$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => $alerts}});
+				}
 			}
 		}
+
 
 		# insert event
 		$self->{events_coll}->insert({ts_iso => $self->ts_iso(),event => 'bag_ingest_finished',e => time,pid => $pid});
 
 		$self->{'log'}->info("[$i/$count] Done ".$bag->{bagid});
 	}
-		
+
 	my %jobdata = (
-		"updated" => time, 
-		"finished_at" => time, 
+		"updated" => time,
+		"finished_at" => time,
 		"status" => 'finished',
 		"alerts" => []
-	);	
+	);
 
 	my $coll_pid;
 	my $coll_alerts;
 	# create collection?
 	if($job->{create_collection}){
-		if(scalar @pids > 0){				
+		if(scalar @pids > 0){
 			($coll_pid, $coll_alerts) = $self->_create_collection(\@pids, $job, $ingest_instance, $username, $password);
 		}else{
-			push $jobdata{alerts}, { type => 'danger', msg => "Job collection not created - no objects created by the last run"};	
-		}		
-	}	
-	
+			push $jobdata{alerts}, { type => 'danger', msg => "Job collection not created - no objects created by the last run"};
+		}
+	}
+
 	if($coll_pid){
 		$jobdata{created_collection} = $coll_pid;
 	}
-	
+
 	if($coll_alerts){
-		push $jobdata{alerts}, { type => 'danger', msg => "Could not create job collection"};		
-		foreach my $a (@{$coll_alerts}){			
-			push $jobdata{alerts}, $a;		
-		} 	
-	}	
+		push $jobdata{alerts}, { type => 'danger', msg => "Could not create job collection"};
+		foreach my $a (@{$coll_alerts}){
+			push $jobdata{alerts}, $a;
+		}
+	}
 
 	# update job status
-	$self->{'log'}->info('Alerts: '.Dumper($jobdata{alerts}));
+	$self->{'log'}->info('Alerts: '.Dumper($jobdata{alerts})) if scalar @{$jobdata{alerts}} > 0;
 	$self->{jobs_coll}->update({'_id' => MongoDB::OID->new(value => $jobid)},{'$set' => \%jobdata});
 
 	$self->{'log'}->info("Finished job ".$jobid);
@@ -378,27 +380,27 @@ sub _ingest_bag {
 }
 
 sub _create_collection {
-	
-	my $self = shift;  			
+
+	my $self = shift;
 	my $pids = shift;
 	my $job = shift;
 	my $ingest_instance = shift;
 	my $username = shift;
-	my $password = shift;		
-	
+	my $password = shift;
+
 	my $col_pid;
 	my @alerts = ();
-	
+
 	my $data = { members => []};
 	foreach my $pid (@{$pids}){
 		push @{$data->{members}}, { pid => $pid };
 	}
-	
+
 	$data->{metadata} = $self->_get_collection_uwmetadata($job, $ingest_instance, $username, $password);
 	unless($data->{metadata}){
 		push(@alerts, { type => 'danger', msg => "Could not create collection metadata" });
 	}else{
-	
+
 		my $url = Mojo::URL->new;
 		$url->scheme('https');
 		$url->userinfo("$username:$password");
@@ -409,11 +411,11 @@ sub _create_collection {
 		}else{
 			$url->path("/collection/create");
 		}
-	
+
 	  	my $tx = $self->{ua}->post($url => json => $data);
-	  	
+
 		if (my $res = $tx->success) {
-			return $res->json->{pid};		  		
+			return $res->json->{pid};
 		}else {
 			if($tx->res->json){
 				if($tx->res->json->{alerts}){
@@ -426,9 +428,9 @@ sub _create_collection {
 			}else{
 				push(@alerts, { type => 'danger', msg => "Connection error: ".$err->{message} });
 			}
-		}		
+		}
 	}
-	
+
 	return ($col_pid, \@alerts);
 }
 
@@ -438,14 +440,14 @@ sub _get_collection_uwmetadata {
 	my $ingest_instance = shift;
 	my $username = shift;
 	my $password = shift;
-	
-	
+
+
 	my ($firstname, $lastname) = $self->_get_owner_data($ingest_instance, $username, $password);
 	unless($firstname && $lastname){
-		return;	
+		return;
 	}
-	
-	return 
+
+	return
 	{
     		"uwmetadata" => [
       			{
@@ -528,7 +530,7 @@ sub _get_collection_uwmetadata {
 		      }
     		]
   		}
-	
+
 }
 
 sub _get_owner_data {
@@ -536,9 +538,9 @@ sub _get_owner_data {
 	my $ingest_instance = shift;
 	my $username = shift;
 	my $password = shift;
-	
-	my @alerts; 
-	
+
+	my @alerts;
+
 	my $url = Mojo::URL->new;
 	$url->scheme('https');
 	$url->userinfo("$username:$password");
@@ -552,10 +554,10 @@ sub _get_owner_data {
 
   	my $tx = $self->{ua}->get($url);
   	if (my $res = $tx->success) {
-		return ($res->json->{user_data}->{firstname}, $res->json->{user_data}->{lastname});		  		
+		return ($res->json->{user_data}->{firstname}, $res->json->{user_data}->{lastname});
 	}else {
 		if($tx->res->json){
-			if($tx->res->json->{alerts}){				
+			if($tx->res->json->{alerts}){
 				$self->{'log'}->error(Dumper($tx->res->json->{alerts}));
 			}
 		}
@@ -565,7 +567,7 @@ sub _get_owner_data {
 		}else{
 			push(@alerts, { type => 'danger', msg => "Connection error: ".$err->{message} });
 		}
-	}		
+	}
 
 	if(scalar @alerts > 0){
 		$self->{'log'}->error("Error getting owner data :".Dumper(\@alerts));
@@ -573,16 +575,16 @@ sub _get_owner_data {
 }
 
 sub _add_to_collection {
-	
+
 	my $self = shift;
-	my $coll_pid = shift;  		
+	my $coll_pid = shift;
 	my $pid = shift;
 	my $ingest_instance = shift;
 	my $username = shift;
-	my $password = shift;		
-	
+	my $password = shift;
+
 	my @alerts = ();
-	
+
 	my $url = Mojo::URL->new;
 	$url->scheme('https');
 	$url->userinfo("$username:$password");
@@ -595,9 +597,9 @@ sub _add_to_collection {
 	}
 
   	my $tx = $self->{ua}->post($url => json => { members => [{ pid => $pid}]});
-  	
+
 	if (my $res = $tx->success) {
-		return;		  		
+		return;
 	}else {
 		if($tx->res->json){
 			if($tx->res->json->{alerts}){
@@ -610,7 +612,7 @@ sub _add_to_collection {
 		}else{
 			push(@alerts, { type => 'danger', msg => "Connection error: ".$err->{message} });
 		}
-	}		
+	}
 
 	return \@alerts;
 }

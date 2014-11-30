@@ -111,7 +111,7 @@ sub import_uwmetadata_xml {
     $self->app->log->info("[Uwmetadata import] folder $folder");
 
 	$cnt++;
-    last if($cnt > 1);
+    #last if($cnt > 1);
 
     my $folderpath = $basepath;
 
@@ -130,7 +130,7 @@ sub import_uwmetadata_xml {
     foreach my $file (@{$folders->{$folder}->{'.'}}){
 
       $cntf++;
-    	last if($cntf > 1);
+    	#last if($cntf > 1);
 
       $self->app->log->info("[Uwmetadata import] $cnt Importing object ".$file);
 
@@ -185,19 +185,19 @@ sub import_uwmetadata_xml {
            if($self->current_user->{project} eq 'DiFaB'){
              $self->fix_difab_taxon_paths($bag->{bagid}, $uwmetadata);
            }
-           
+
            # move the geo info from uwmetadata to geo
            my $geo = $self->extract_geo($bag->{bagid}, $uwmetadata);
-           
+
            my $set = {
 			 updated => time,
 			 'metadata.uwmetadata' => $uwmetadata
 		   };
-           
+
            if($geo){
              $set->{'metadata.geo'} = $geo;
-           }          
-           
+           }
+
            #$self->app->log->debug("[Uwmetadata import] got json ".$self->app->dumper($uwmetadata));
            push @{$res->{alerts}}, "[Uwmetadata import] $cnt saving uwmetadata bag ".$bag->{bagid};
            my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => $set } );
@@ -393,7 +393,7 @@ sub extract_geo {
 
   my $basicns = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0';
   my $hns = 'http://phaidra.univie.ac.at/XML/metadata/histkult/V1.0';
-  
+
   my $name = '';
   # get title so we can name the placemark
   my $gen_node = $self->get_json_node($self, $basicns, 'general', $uwmetadata);
@@ -407,20 +407,20 @@ sub extract_geo {
   my $val = $gps_node->{ui_value};
 
   if($val){
-  	
+
 	# delete it from uwmetadata
 	$gps_node->{ui_value} = "";
 	$gps_node->{loaded_ui_value} = "";
 	$gps_node->{loaded_value} = "";
-  	
+
 	my @s = split('\|',$val);
 
 	my $lat = $s[0];
 	my $lon = $s[1];
 
 	return {
-		kml => { 
-			document => {				
+		kml => {
+			document => {
 				placemark => [
 			  		{
 			  			name => $name,
@@ -431,9 +431,9 @@ sub extract_geo {
 				  				longitude => $lon
 				  			}
 				  		}
-			  		}	
-			  	]				
-			}	
+			  		}
+			  	]
+			}
 		}
   	}
   }
@@ -625,10 +625,10 @@ sub get_geo {
 	my $self = shift;
 	my $bagid = $self->stash('bagid');
 	$self->app->log->info("[".$self->current_user->{username}."] Loading bag (get_geo) $bagid");
-	
+
 	my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, project => $self->current_user->{project}}, {'metadata.geo' => 1});
 	unless($bag){
-	
+
 		$self->app->log->error("[".$self->current_user->{username}."] Error loading bag ".$bagid);
 		$self->render(
 			json => {
@@ -637,7 +637,7 @@ sub get_geo {
 			},
 		status => 500);
 
-	}else{	
+	}else{
 		$self->render( json => { geo => $bag->{metadata}->{geo}}, status => 200);
 	}
 }
@@ -650,6 +650,8 @@ sub load {
 	$self->app->log->info("[".$self->current_user->{username}."] Loading bag $bagid");
 
 	my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, project => $self->current_user->{project}});
+
+  # TODO: get ingest_instance to every job, for baginfo
 
 	if(defined($bag)){
 
@@ -778,9 +780,9 @@ sub _edit_prepare_data {
 
     my $templates = $self->mango->db->collection('templates.uwmetadata')
 		->find(
-			{ '$or' => 
-				[ 
-					{ project => $self->current_user->{project}, created_by => $self->current_user->{username} }, 					 
+			{ '$or' =>
+				[
+					{ project => $self->current_user->{project}, created_by => $self->current_user->{username} },
 					{ project => $self->current_user->{project}, shared => Mojo::JSON->true }
 				]
 			}
