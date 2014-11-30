@@ -1,14 +1,13 @@
 % layout 'default', title => 'Templates';
 
-% content_for header => begin
-   
-   <script type="text/javascript" src="<%= url_for '/js/controllers/templates.js' %>"></script>   
-        
+% content_for header => begin   
+   <script type="text/javascript" src="<%= url_for '/js/controllers/templates.js' %>"></script>          
 % end
 	
 <div class="container" data-ng-controller="TemplatesCtrl"  data-ng-init="init('<%= $init_data %>')">
 
 %= include 'alerts'
+
 
 	<input type="text" ng-model="filterinput" class="search-query form-control" placeholder="Filter">
 
@@ -18,6 +17,7 @@
 	    <th>Title</th>
 	    <th>Created</th>
 	    <th>Updated</th>
+	    <th>Shared</th>
 	    <th><a href="/uwmetadata_template_editor/"><i class="glyphicon glyphicon-plus"></i></a></th>
 	    <th></th>
 	  </tr>
@@ -27,6 +27,12 @@
 	    <td><a href="/uwmetadata_template_editor/{{template._id}}" target="_blank">{{template.title}}</a></td>
 	    <td>{{template.created * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</td>
 	    <td>{{template.updated * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</td>
+	    <td>
+	    	<div class="checkbox checkbox-primary tmplt-shared-checkbox">
+				<input type="checkbox" id="shared_checkbox{{$index}}" data-ng-model="template.shared" data-ng-change="toggleShared(template._id)" data-ng-disabled="template.created_by != current_user.username">
+				<label for="shared_checkbox{{$index}}"></label>
+			</div>
+	    </td>
 	    <td>
 	      <a href="/uwmetadata_template_editor/{{template._id}}"><i class="glyphicon glyphicon-pencil"></i></a>
 	    </td>

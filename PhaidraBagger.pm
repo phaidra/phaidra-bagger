@@ -51,7 +51,7 @@ sub startup {
 
 	    		my $url = Mojo::URL->new;
 				$url->scheme('https');
-				$url->userinfo($self->app->config->{phaidra}->{directory_user}->{username}.":".$self->app->config->{phaidra}->{directory_user}->{password});
+				$url->userinfo($self->app->config->{directory_user}->{username}.":".$self->app->config->{directory_user}->{password});
 				my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
 				$url->host($base[0]);
 				$url->path($base[1]."/directory/user/$username/data") if exists($base[1]);
@@ -79,6 +79,15 @@ sub startup {
 						}
 					}
 				}
+
+        # rewrite project config with the one from db (if any is found)
+        my $project_settings = $self->mango->db->collection('project.settings')->find_one({project => $login_data->{project}});
+        if($project_settings){
+          $self->app->log->info("Loading db project config");
+          $project_settings->{name} = $login_data->{project};
+          $self->config->{projects}->{$login_data->{project}} = $project_settings->{settings};
+        }
+
 				$self->app->log->info("Loaded user: ".$self->app->dumper($login_data));
 	    		$self->app->chi->set($username, $login_data, '1 day');
 	    		# keep this here, the set method may change the structure a bit so we better read it again
@@ -292,13 +301,13 @@ sub startup {
     $autz->route('template') ->via('put')   ->to('template#create');
     $autz->route('template/:tid') ->via('post')   ->to('template#save');
     $autz->route('template/:tid') ->via('get')   ->to('template#load');
-    $autz->route('template/:tid') ->via('delete')   ->to('template#delete');
-    $autz->route('template/:tid/difab') ->via('get')   ->to('template#load_difab');
+    $autz->route('template/:tid') ->via('delete')   ->to('template#delete');    
+    $autz->route('template/:tid/shared/toggle') ->via('post')   ->to('template#toggle_shared');
 
     $autz->route('templates') ->via('get')   ->to('template#templates');
     $autz->route('templates/my') ->via('get')   ->to('template#my');
 
-    #$autz->route('bags') ->via('get')   ->to('bag#bags');
+    $autz->route('bags') ->via('get')   ->to('bag#bags');
     $autz->route('bags/folder/:folderid') ->via('get')   ->to('bag#folder_bags');
     $autz->route('bags/folder/:folderid') ->via('post')   ->to('bag#folder_bags_with_query');
     $autz->route('bags/search') ->via('post')   ->to('bag#search');
@@ -310,10 +319,13 @@ sub startup {
 
     $autz->route('bag/:bagid/edit') ->via('get')   ->to('bag#edit');
     $autz->route('bag/:bagid') ->via('get')   ->to('bag#load');
+    $autz->route('bag/template/:tid') ->via('get')   ->to('bag#load_template');
     $autz->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');
     $autz->route('bag/:bagid/:attribute/:value') ->via('put')   ->to('bag#set_attribute');
     $autz->route('bag/:bagid/:attribute/:value') ->via('delete')   ->to('bag#unset_attribute');
-
+	$autz->route('bag/:bagid/geo') ->via('get')   ->to('bag#get_geo');
+	$autz->route('bag/:bagid/geo') ->via('post')   ->to('bag#save_geo');
+	
     #$autz->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
 
 	$autz->route('job')                        ->via('put')    ->to('job#create');

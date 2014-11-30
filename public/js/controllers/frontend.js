@@ -1,4 +1,15 @@
-var app = angular.module('frontendApp', ['ngAnimate', 'ngSanitize', 'ui.bootstrap', 'ui.bootstrap.modal', 'ui.bootstrap.datepicker', 'ui.bootstrap.timepicker', 'ui.sortable', 'ui.select', 'ajoslin.promise-tracker', 'directoryService', 'vocabularyService', 'metadataService', 'frontendService', 'bagService', 'jobService', 'Url']);
+var app = angular.module('frontendApp', ['ngAnimate', 'ngSanitize', 'ui.bootstrap', 'ui.bootstrap.modal', 'ui.bootstrap.datepicker', 'ui.bootstrap.timepicker', 'ui.sortable', 'ui.select', 'ajoslin.promise-tracker', 'directoryService', 'vocabularyService', 'metadataService', 'frontendService', 'bagService', 'jobService', 'Url', 'uiGmapgoogle-maps']);
+
+
+app.config(function(uiGmapGoogleMapApiProvider) {
+    uiGmapGoogleMapApiProvider.configure({
+  //      key: <%= $config->{google_maps_api_key} %>,
+    	key:'AIzaSyBWE_bAtgkm1RuWkrW7jBrYV1JBiPUZDAs',
+        v: '3.17',
+        libraries: 'weather,geometry,visualization'
+    });
+})
+
 
 app.filter("nl2br", function($filter) {
  return function(data) {
@@ -33,6 +44,8 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
     project: {}
   };
 
+  $scope.projectclasses = [];
+
   $scope.init = function (initdata) {
     $scope.initdata = angular.fromJson(initdata);
     $scope.current_user = $scope.initdata.current_user;
@@ -54,10 +67,18 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
         function(response) {
           $scope.alerts = response.data.alerts;
           $scope.settings = response.data.settings;
+          if($scope.settings.project['included_classifications']){
+            var included_classifications = {};
+            for (var i = 0; i < $scope.settings.project.included_classifications.length; ++i) {
+              included_classifications[$scope.settings.project.included_classifications[i]] = true;
+            }
+            $scope.settings.project['included_classifications'] = included_classifications;
+          }
           $scope.settings.templates.push({title:'None',_id:''});
           if($scope.settings.user == null){
               $scope.settings.user = {};
           }
+          $scope.getProjectClasses();
           $scope.getUwmfields();
           $scope.form_disabled = false;
         }
@@ -116,6 +137,47 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
         }
     );
   };
+
+  $scope.addClassToConfig = function(uri){
+    if(typeof $scope.settings.project.classifications == 'undefined'){
+      $scope.settings.project['classifications'] = [];
+    }
+    $scope.settings.project.classifications.push(uri);
+    $scope.saveSettings('project');
+    $scope.getProjectClasses();
+  }
+
+  $scope.removeClassFromConfig = function(index){
+    if(typeof $scope.settings.project.classifications == 'undefined'){
+      $scope.settings.project['classifications'] = [];
+    }else{
+      $scope.settings['project'].classifications.splice(index, 1);
+    }
+    $scope.saveSettings('project');
+    $scope.getProjectClasses();
+  }
+
+  $scope.getProjectClasses = function(index){
+    $scope.form_disabled = true;
+    var promise = FrontendService.getClassifications();
+    $scope.loadingTracker.addPromise(promise);
+    promise.then(
+      function(response) {
+        $scope.form_disabled = false;
+        $scope.projectclasses = [];
+        for (var i = 0; i < response.data.classifications.length; ++i) {
+            if(response.data.classifications[i].type == 'project'){
+              $scope.projectclasses.push(response.data.classifications[i]);
+            }
+        }
+        $scope.alerts = response.data.alerts;
+      }
+      ,function(response) {
+        $scope.form_disabled = false;
+        $scope.alerts = response.data.alerts;
+        }
+    );
+  }
 
   $scope.saveVisibleFieldsSettingsRec = function(children, type){
     for (var i = 0; i < children.length; ++i) {

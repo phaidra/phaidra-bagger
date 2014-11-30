@@ -6,6 +6,7 @@
 
    <script type="text/javascript" src="<%= url_for '/js/controllers/uwmetadataeditor.js' %>"></script>
    <script type="text/javascript" src="<%= url_for '/js/controllers/classification.js' %>"></script>
+   <script type="text/javascript" src="<%= url_for '/js/controllers/geo.js' %>"></script>
    <script type="text/javascript" src="<%= url_for '/js/controllers/baginfo.js' %>"></script>
 
    <link href="<%= url_for '/css/uwmetadataeditor.css' %>" rel="stylesheet">
@@ -82,7 +83,7 @@
 
 							      <div class="navbar-form navbar-left">
 							        <button ng-disabled="form.$invalid || form_disabled" data-ng-click="saveTemplateAs()" class="btn btn-primary navbar-btn"><span class="glyphicon glyphicon-file"></span> Create template</button>
-							      	<select class="form-control" data-ng-model="selectedtemplate" data-ng-change="loadDifabTemplate()" ng-options="template as template.title for template in initdata.templates">
+							      	<select class="form-control" data-ng-model="selectedtemplate" data-ng-change="loadTemplateToBag()" ng-options="template as template.title for template in initdata.templates">
 							      		<option value="">Load template...</option>
 							      	</select>
 							      </div>
@@ -211,14 +212,23 @@
 						<tab-heading>
 				       		<span>Classification</span>
 				   		</tab-heading>
-				   		<div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>')" data-ng-include="'/views/partials/classification.html'"></div>
+				   		<div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>', 'bagedit')" data-ng-include="'/views/partials/classification.html'"></div>
 					</tab>
-          <tab>
-            <tab-heading>
-                   <span>Info</span>
-               </tab-heading>
-               <div data-ng-controller="BaginfoCtrl" data-ng-init="init('<%= $init_data %>')" data-ng-include="'/views/partials/baginfo.html'"></div>
-          </tab>
+          
+		          <tab select="triggerGeoTabActivated()">          
+		          	<tab-heading>
+		               <span>Geo</span>
+		            </tab-heading>
+		            <div data-ng-controller="GeoCtrl" data-ng-init="initgeo('<%= $init_data %>')" data-ng-include="'/views/partials/geo.html'"></div>
+		          </tab>
+		          
+		          <tab>
+		            <tab-heading>
+		            	<span>Info</span>
+		            </tab-heading>
+		            <div data-ng-controller="BaginfoCtrl" data-ng-include="'/views/partials/baginfo.html'"></div>
+		          </tab>
+          
 				</tabset>
 
 			</div>

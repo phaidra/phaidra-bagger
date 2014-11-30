@@ -24,7 +24,22 @@
 			</div>
 			<div id="collapseIngest" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingIngest">
 				<div class="panel-body" >
-						TODO
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Job ID</th>
+									<th>Finished at</th>
+									<th>PID</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr data-ng-repeat="job in bag.jobs">
+									<td>{{job.jobid}}</td>
+									<td>{{job.finished_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</td>
+									<td>{{job.pid}}</td>
+								</tr>
+							</tbody>
+						</table>
 				</div>
 			</div>
 	</div>

@@ -66,6 +66,13 @@
   	<!--<script src="http://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.10.0.js"></script>-->
   	<script src="<%= url_for '/js/ui-bootstrap-tpls-0.10.0.js' %>"></script>
 
+<<<<<<< HEAD
+=======
+	<!-- Maps -->
+	<script type="text/javascript" src="<%= url_for '/js/lodash-3.0.0-pre.min.js' %>"></script>
+   	<script type="text/javascript" src="<%= url_for '/js/angular-google-maps-2.0.9.min.js' %>"></script>
+
+>>>>>>> 5573014aa86d565e79d8cae31bc446460a2bb240
   	<!-- Promise tracker -->
   	<script src="<%= url_for '/js/promise-tracker.min.js' %>"></script>
 
@@ -83,6 +90,12 @@
   	<!-- Custom Phaidra CSS -->
   	<link href="<%= url_for '/css/frontend.css' %>" rel="stylesheet">
   	<link href="<%= url_for '/css/main.css' %>" rel="stylesheet">
+<<<<<<< HEAD
+=======
+
+  	<!-- Checkbox -->
+  	<link href="<%= url_for '/css/awesome-bootstrap-checkbox.css' %>" rel="stylesheet">
+>>>>>>> 5573014aa86d565e79d8cae31bc446460a2bb240
 
   	<%= content_for 'header' %>
   </head>
@@ -125,6 +138,7 @@
         	<% } %>
         <% } %>
         <li><a href="/folders/">Folders</a></li>
+        <li><a href="/bags/">Bags</a></li>
         <li><a href="/templates/">Templates</a></li>
         <li><a href="/jobs/">Jobs</a></li>
         <li><a href="/settings/">Settings</a></li>
@@ -166,7 +180,6 @@
   	<%# ######### Content ########## %>
   	<%= content %>
   	<%# ############################ %>
-
 
   	<footer class="footer" ng-cloak>
   		<div class="container-fluid">

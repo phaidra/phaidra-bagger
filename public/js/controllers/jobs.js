@@ -13,7 +13,7 @@ var ConfirmDeleteModalCtrl = function ($scope, $modalInstance, itemname) {
 	};
 };
 
-app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService, JobService, promiseTracker) {
+app.controller('JobsCtrl',  function($scope, $interval, $modal, $location, DirectoryService, JobService, promiseTracker) {
 
 	// we will use this to track running ajax requests to show spinner
 	$scope.loadingTracker = promiseTracker('loadingTrackerFrontend');
@@ -22,18 +22,22 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
 
 	$scope.jobs = [];
 
-    $scope.closeAlert = function(index) {
-    	$scope.alerts.splice(index, 1);
-    };
+  $scope.closeAlert = function(index) {
+  	$scope.alerts.splice(index, 1);
+  };
 
 	$scope.initdata = '';
 	$scope.current_user = '';
 
+	$scope.refresh_promise;
+	$scope.refresh_cnt = 0;
+
 	$scope.init = function (initdata) {
 		$scope.initdata = angular.fromJson(initdata);
 		$scope.current_user = $scope.initdata.current_user;
-    	$scope.refreshResults();
-    };
+		$scope.refreshResults();
+		$scope.refresh();
+  };
 
     $scope.deleteJob = function (jobid, jobname) {
 
@@ -70,7 +74,7 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
 	    });
     };
 
- $scope.refreshResults = function() {
+  $scope.refreshResults = function() {
 	 $scope.form_disabled = true;
      var promise = JobService.getMyJobs();
      $scope.loadingTracker.addPromise(promise);
@@ -86,7 +90,45 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
       		$scope.form_disabled = false;
       	}
      );
- };
+  };
+
+  $scope.refresh = function() {
+
+	if($scope.refresh_cnt >= 2){
+		$scope.stopRefresh();
+	}
+	
+    $scope.refresh_promise = $interval(function(){
+			$scope.refreshResults();
+			// the change in status might not be immediately visible
+			// we stop refresh first then, when we haven't saw any change in 3 refreshes
+			$scope.refresh_cnt++;
+			var running_job_found = false;
+			for( var i = 0 ; i < $scope.jobs.length ; i++ ){
+				if($scope.jobs[i].status == 'running'){
+					running_job_found = true;
+				}
+			}
+
+			if(!running_job_found && $scope.refresh_cnt >= 2){
+				$scope.stopRefresh();				
+			}
+
+		}, 5000);
+
+  };
+
+  $scope.stopRefresh = function() {
+  	if (angular.isDefined($scope.refresh_promise)) {
+      $interval.cancel($scope.refresh_promise);
+      $scope.refresh_cnt = 0;
+    }
+  };
+
+  $scope.$on('$destroy', function() {
+    // Make sure that the interval is destroyed too
+    $scope.stopRefresh();
+  });
 
   $scope.toogleRun = function(jobid) {
 	 $scope.form_disabled = true;
@@ -95,7 +137,8 @@ app.controller('JobsCtrl',  function($scope, $modal, $location, DirectoryService
      promise.then(
       	function(response) {
       		$scope.alerts = response.data.alerts;
-      		$scope.refreshResults();
+			$scope.refresh_cnt = 0;
+			$scope.refresh();
       		$scope.form_disabled = false;
       	}
       	,function(response) {
@@ -135,7 +178,13 @@ var EditIngestJobModalCtrl = function ($scope, $modalInstance, FrontendService, 
 
 	$scope.baseurl = $('head base').attr('href');
 
-	$scope.modaldata = { name: job.name, start_at: job.start_at, ingest_instance: job.ingest_instance};
+	$scope.modaldata = { 
+	  name: job.name, 
+	  start_at: job.start_at*1000, 
+	  ingest_instance: job.ingest_instance, 
+	  create_collection: job.create_collection,
+	  add_to_collection: job.add_to_collection
+	};
 
 	$scope.today = function() {
 		$scope.modaldata.start_at = new Date();

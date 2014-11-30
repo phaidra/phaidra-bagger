@@ -25,6 +25,21 @@ angular.module('metadataService', [])
 	        });
 	    },
 
+	    getGeo: function(bagid) {
+	        return $http({
+	            method  : 'GET',
+	            url     : $('head base').attr('href')+'bag/'+bagid+'/geo'
+	        });
+	    },
+
+		saveGeo: function(bagid, geo){
+			   return $http({
+				   method  : 'POST',
+				   url     : $('head base').attr('href')+'bag/'+bagid+'/geo/',
+				   data    : { geo: geo }
+			   });
+		},
+
 		getLanguages: function() {
 	        return $http({
 	            method  : 'GET',
@@ -78,11 +93,13 @@ angular.module('metadataService', [])
 			});
 	    },
 
-		loadDifabTemplate: function(tid){
+
+		loadTemplateToBag: function(tid){
 			return $http({
 				method  : 'GET',
-				url     : $('head base').attr('href')+'/template/'+tid+'/difab'
+				url     : $('head base').attr('href')+'bag/template/'+tid
 			});
+
 		},
 
 		getMyTemplates: function(){
@@ -90,6 +107,13 @@ angular.module('metadataService', [])
 				method  : 'GET',
 				url     : $('head base').attr('href')+'/templates/my'
 			});
+		},
+
+		toggleSharedTemplate: function(tid){
+			return $http({
+				method  : 'POST',
+				url     : $('head base').attr('href')+'template/'+tid+'/shared/toggle'
+			});	        
 		}
 	}
 });

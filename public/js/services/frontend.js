@@ -43,7 +43,7 @@ angular.module('frontendService', [])
 			});
 		},
 
-		getClassifications: function(terms){
+		getClassifications: function(){
 			return $http({
 				method  : 'GET',
 				url     : $('head base').attr('href')+'/classifications'

@@ -17,14 +17,14 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 	$scope.current_user = '';
 	$scope.folderid = '';
 
-    $scope.totalItems = 0;
-    $scope.currentPage = 1;
-    $scope.maxSize = 10;
-    $scope.filter = '';
-    $scope.from = 0;
-    $scope.limit = 10;
-    $scope.sortfield = 'label';
-    $scope.sortvalue = -1;
+  $scope.totalItems = 0;
+  $scope.currentPage = 1;
+  $scope.maxSize = 10;
+  $scope.filter = '';
+  $scope.from = 0;
+  $scope.limit = 10;
+  $scope.sortfield = 'label';
+  $scope.sortvalue = -1;
 
 	$scope.init = function (initdata) {
 		$scope.initdata = angular.fromJson(initdata);
@@ -32,10 +32,13 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 		$scope.folderid = $scope.initdata.folderid;
 
 		$scope.filter = {
-		    folderid: $scope.folderid,
 		    // show only bags in these statuses
 		    status: ['new','to_check','checked','to_ingest']
 		};
+
+		if($scope.folderid){
+				$scope.filter['folderid'] = $scope.folderid;
+		}
 
 		if($scope.initdata.query){
 			$scope.filter = $scope.initdata.query.filter;
@@ -47,26 +50,21 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 
 		$scope.refreshResults();
 
-    	if($scope.current_user){
-    		$scope.loadSelection();
-    	}
+  	if($scope.current_user){
+  		$scope.loadSelection();
+  	}
 
-    };
+  };
 
     $scope.closeAlert = function(index) {
     	$scope.alerts.splice(index, 1);
     };
-/*
-    $scope.qs = function(obj, prefix){
-	  var str = [];
-	  for (var p in obj) {
-	    var k = prefix ? prefix + "[" + p + "]" : p,
-	        v = obj[p];
-	    str.push(angular.isObject(v) ? $scope.qs(v, k) : (k) + "=" + encodeURIComponent(v));
-	  }
-	  return str.join("&");
-    };
-*/
+
+	$scope.setLimit = function(limit){
+			$scope.limit = limit;
+			$scope.refreshResults();
+	}
+
 	$scope.getBagUrlWithQuery = function (bagid) {
 		var url = '/bag/'+bagid+'/edit';
 		var params = {
@@ -286,20 +284,16 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
      );
  }
 
- $scope.removeTag = function () {
-
- }
-
-  $scope.editTag = function (add) {
+  $scope.tagModal = function (mode) {
 
 	  var modalInstance = $modal.open({
-            templateUrl: $('head base').attr('href')+'views/modals/define_tag.html',
-            controller: TagModalCtrl,
-            scope: $scope,
-            resolve: {
-		      add: function(){
-			    return add;
-			  }
+        templateUrl: $('head base').attr('href')+'views/modals/define_tag.html',
+        controller: TagModalCtrl,
+        scope: $scope,
+        resolve: {
+			    mode: function(){
+				   return mode;
+				  }
 		    }
 	  });
   };
@@ -328,29 +322,55 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 
 });
 
-var TagModalCtrl = function ($scope, $modalInstance, FrontendService, BagService, promiseTracker, add) {
+var TagModalCtrl = function ($scope, $modalInstance, FrontendService, BagService, promiseTracker, mode) {
 
 	$scope.modaldata = { tag: '' };
 
-	$scope.operation = add ? 'Add' : 'Remove';
+	$scope.operation = 'Ok';
+
+	switch(mode){
+		case 'add':
+			$scope.operation = 'Add';
+			break;
+
+		case 'remove':
+			$scope.operation = 'Remove';
+			break;
+
+		case 'filter':
+			$scope.operation = 'Filter';
+			break;
+	}
 
     $scope.hitEnterTagEdit = function(evt){
     	if(angular.equals(evt.keyCode,13)){
-    		$scope.editTag();
+    		$scope.applyAction();
     	}
     };
 
-	$scope.editTag = function () {
+	$scope.applyAction = function () {
 
 		$scope.form_disabled = true;
 
 		var promise;
-		if(add){
-			promise = BagService.setAttributeMass($scope.selection, 'tags', $scope.modaldata.tag);
-		}else{
-			promise = BagService.unsetAttributeMass($scope.selection, 'tags', $scope.modaldata.tag);
+
+		switch(mode){
+			case 'add':
+				promise = BagService.setAttributeMass($scope.selection, 'tags', $scope.modaldata.tag);
+				break;
+
+			case 'remove':
+				promise = BagService.unsetAttributeMass($scope.selection, 'tags', $scope.modaldata.tag);
+				break;
+
+			case 'filter':
+				$scope.addFilter('tag', $scope.modaldata.tag);
+				$modalInstance.close();
+				$scope.refreshResults();
+				break;
 		}
 
+		if(promise){
     	$scope.loadingTracker.addPromise(promise);
     	promise.then(
     		function(response) {
@@ -363,8 +383,10 @@ var TagModalCtrl = function ($scope, $modalInstance, FrontendService, BagService
     			$scope.form_disabled = false;
     			$scope.alerts = response.data.alerts;
     			$modalInstance.close();
-            }
-        );
+      	}
+      );
+		}
+
 		return;
 
 	};

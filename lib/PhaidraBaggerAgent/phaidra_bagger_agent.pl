@@ -15,6 +15,8 @@ use warnings;
 use Data::Dumper;
 use Mango::BSON ':bson';
 use Mango::BSON::ObjectID;
+use FindBin;
+use lib $FindBin::Bin;
 use PhaidraBaggerAgent;
 use Switch;
 
@@ -42,20 +44,20 @@ switch ($action) {
 	case 'run_job'	{
 		unless(defined($jobid)){
 			print "undefined jobid\n"; system ("perldoc '$0'"); exit(0);
-		}		
-		
+		}
+
 		my $agent = PhaidraBaggerAgent->new($configpath);
-		$agent->run_job($jobid); 
-	}	
+		$agent->run_job($jobid);
+	}
 	case 'check_requests' {
 		unless(defined($ingest_instance)){
 			print "undefined ingest instance\n"; system ("perldoc '$0'"); exit(0);
-		}		
-		
+		}
+
 		my $agent = PhaidraBaggerAgent->new($configpath);
-		$agent->check_requests($ingest_instance); 	
+		$agent->check_requests($ingest_instance);
 	}
 	else { print "unknown action\n"; system ("perldoc '$0'"); exit(0); }
-}	
+}
 
 exit(1);

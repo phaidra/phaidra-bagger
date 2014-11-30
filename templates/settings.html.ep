@@ -1,9 +1,9 @@
-% layout 'default', title => 'stage';
+% layout 'default', title => 'Settings';
 
 %= include 'alerts'
 
 % content_for header => begin
-    <link href="<%= url_for '/css/awesome-bootstrap-checkbox.css' %>" rel="stylesheet">
+    <script type="text/javascript" src="<%= url_for '/js/controllers/classification.js' %>"></script>
 % end
 
 	<script type="text/ng-template" id="checkbox_renderer.html">
@@ -128,8 +128,8 @@
 						   	<dl class="dl-horizontal dl-settings" data-ng-repeat="member in settings.project.members">
 
 						   	  <dt class="settings-role">Role</dt>
-							  <dd data-ng-if="member.role == 'manager'" ><img src="img/vader.png" height="30px" /></dd>
-							  <dd data-ng-if="member.role != 'manager'" ><img src="img/trooper.png" height="30px"/></dd>
+							  <dd data-ng-if="member.role == 'manager'" ><img src="img/vader.png" height="30px" title="Manager"/></dd>
+							  <dd data-ng-if="member.role != 'manager'" ><img src="img/trooper.png" height="30px" title="Member"/></dd>
 
 							  <dt>Display name</dt>
 							  <dd>{{member.displayname}}</dd>
@@ -166,6 +166,18 @@
 						</div>
 					</div>
 			   	</div>
+
+
+           <div class="panel panel-default settings-panel" >
+          <div class="panel-heading" id="headingClass">
+              <h3 class="panel-title"><a data-toggle="collapse" href="#collapseClass" aria-controls="collapseClass">Classifications</a></h3>
+          </div>
+          <div id="collapseClass" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingClass">
+            <div class="panel-body">
+              <div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>', 'settings')" data-ng-include="'/views/partials/classification_settings.html'"></div>
+            </div>
+          </div>
+           </div>
 
 			   		<div class="panel panel-default settings-panel" >
 					<div class="panel-heading" id="headingPrjMd">
