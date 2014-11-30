@@ -6,7 +6,7 @@ angular.module('frontendService', [])
 		updateSelection: function(selection){
 			return $http({
 				method  : 'POST',
-				url     : $('head base').attr('href')+'selection',
+				url     : $('head base').attr('href')+'/selection',
 				data    : { selection: selection }
 			});
 		},
@@ -14,14 +14,14 @@ angular.module('frontendService', [])
 		getSelection: function(selection){
 			return $http({
 				method  : 'GET',
-				url     : $('head base').attr('href')+'selection'
+				url     : $('head base').attr('href')+'/selection'
 			});
 		},
 
 		loadSettings: function(){
 			return $http({
 				method  : 'GET',
-				url     : $('head base').attr('href')+'settings/my'
+				url     : $('head base').attr('href')+'/settings/my'
 			});
 		},
 
@@ -30,7 +30,7 @@ angular.module('frontendService', [])
 			data[type+'_settings'] = settings;
 			return $http({
 				method  : 'POST',
-				url     : $('head base').attr('href')+'settings/',
+				url     : $('head base').attr('href')+'/settings/',
 				data    : data
 			});
 		},
@@ -38,7 +38,7 @@ angular.module('frontendService', [])
 		toggleClassification: function(uri){
 			return $http({
 				method  : 'POST',
-				url     : $('head base').attr('href')+'classifications',
+				url     : $('head base').attr('href')+'/classifications',
 				data    : { uri: uri }
 			});
 		},
@@ -46,7 +46,7 @@ angular.module('frontendService', [])
 		getClassifications: function(){
 			return $http({
 				method  : 'GET',
-				url     : $('head base').attr('href')+'classifications'
+				url     : $('head base').attr('href')+'/classifications'
 			});
 		}
 

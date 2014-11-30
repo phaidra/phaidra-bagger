@@ -82,35 +82,35 @@ angular.module('metadataService', [])
 		deleteTemplate: function(tid){
 			return $http({
 				method  : 'DELETE',
-				url     : $('head base').attr('href')+'template/'+tid
+				url     : $('head base').attr('href')+'/template/'+tid
 			});
 		},
 
 		loadTemplate: function(tid){
 			return $http({
 				method  : 'GET',
-				url     : $('head base').attr('href')+'template/'+tid
+				url     : $('head base').attr('href')+'/template/'+tid
 			});
 	    },
 
 		loadTemplateToBag: function(tid){
 			return $http({
 				method  : 'GET',
-				url     : $('head base').attr('href')+'bag/template/'+tid
+				url     : $('head base').attr('href')+'/bag/template/'+tid
 			});
 		},
 
 		getMyTemplates: function(){
 			return $http({
 				method  : 'GET',
-				url     : $('head base').attr('href')+'templates/my'
+				url     : $('head base').attr('href')+'/templates/my'
 			});
 		},
 
 		toggleSharedTemplate: function(tid){
 			return $http({
 				method  : 'POST',
-				url     : $('head base').attr('href')+'template/'+tid+'/shared/toggle'
+				url     : $('head base').attr('href')+'/template/'+tid+'/shared/toggle'
 			});
 		}
 	}
