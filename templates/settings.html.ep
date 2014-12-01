@@ -128,8 +128,8 @@
 						   	<dl class="dl-horizontal dl-settings" data-ng-repeat="member in settings.project.members">
 
 						   	  <dt class="settings-role">Role</dt>
-							  <dd data-ng-if="member.role == 'manager'" ><img src="img/vader.png" height="30px" title="Manager"/></dd>
-							  <dd data-ng-if="member.role != 'manager'" ><img src="img/trooper.png" height="30px" title="Member"/></dd>
+							  <dd data-ng-if="member.role == 'manager'" ><img src="<%= url_for '/img/vader.png' %>" height="30px" title="Manager"/></dd>
+							  <dd data-ng-if="member.role != 'manager'" ><img src="<%= url_for '/img/trooper.png' %>" height="30px" title="Member"/></dd>
 
 							  <dt>Display name</dt>
 							  <dd>{{member.displayname}}</dd>
@@ -174,7 +174,7 @@
           </div>
           <div id="collapseClass" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingClass">
             <div class="panel-body">
-              <div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>', 'settings')" data-ng-include="'/views/partials/classification_settings.html'"></div>
+              <div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>', 'settings')" data-ng-include="'<%= url_for '/views/partials/classification_settings.html' %>'"></div>
             </div>
           </div>
            </div>

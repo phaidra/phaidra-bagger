@@ -1,5 +1,5 @@
 
-<script type="text/ng-template" id="/views/partials/input_textarea_lang.html">
+<script type="text/ng-template" id="input_textarea_lang.html">
 	<div class="form-group row input-textarea-lang" ng-class="{ 'has-error': child.mandatory && !child.ui_value, 'input-textarea-lang-multi': child.cardinality === '*' || child.cardinality > '1' }">
 
 		<label class="control-label col-sm-2" for="{{child.field_id}}"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.labels.en}}</label>

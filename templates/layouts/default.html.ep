@@ -131,18 +131,18 @@
         		<li class="active" data-ng-click="forceLoadPage('<%= $navtitlelink %>')"><a ><%= $navtitle %></a></li>
         	<% } %>
         <% } %>
-        <li><a href="/folders/">Folders</a></li>
-        <li><a href="/bags/">Bags</a></li>
-        <li><a href="/templates/">Templates</a></li>
-        <li><a href="/jobs/">Jobs</a></li>
-        <li><a href="/settings/">Settings</a></li>
+        <li><a href="<%= url_for '/folders/' %>">Folders</a></li>
+        <li><a href="<%= url_for '/bags/' %>">Bags</a></li>
+        <li><a href="<%= url_for '/templates/' %>">Templates</a></li>
+        <li><a href="<%= url_for '/jobs/' %>">Jobs</a></li>
+        <li><a href="<%= url_for '/settings/' %>">Settings</a></li>
 
       </ul>
       <% } %>
 
       <ul class="nav navbar-right">
       	<% if (is_user_authenticated) { %>
-      		<a href="/signout" id="signout" class="btn btn-default navbar-btn signin-btn" ng-click="sign_out()">Sign out</a>
+      		<a href="<%= url_for '/signout' %>" id="signout" class="btn btn-default navbar-btn signin-btn" ng-click="sign_out()">Sign out</a>
       	<% }else{ %>
       		<button type="button" id="signin" data-redirect="<%= flash 'redirect_to' %>" data-open="<%= flash 'opensignin' %>" class="btn btn-default navbar-btn signin-btn" ng-click="signin_open()">Sign in</button>
       	<% } %>
@@ -156,7 +156,7 @@
       <ul class="nav navbar-right">
       <% if(current_user){ %>
 	    	<% if(current_user->{project} eq 'DiFaB') { %>
-	    		<center><img src="img/home/difab_logo_small.jpg" class="difab_logo img-rounded" title="DiFaB" alt="DiFaB"></center>
+	    		<center><img src="<%= url_for '/img/home/difab_logo_small.jpg' %>" class="difab_logo img-rounded" title="DiFaB" alt="DiFaB"></center>
 	    	<% } %>
 	   <%  } %>
       </ul>

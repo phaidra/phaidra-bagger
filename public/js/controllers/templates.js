@@ -1,10 +1,10 @@
 var ConfirmDeleteModalCtrl = function ($scope, $modalInstance, itemname) {
 
 	$scope.itemname = itemname;
-	
-	$scope.itemtype = 'template';	
 
-	$scope.ok = function () {		
+	$scope.itemtype = 'template';
+
+	$scope.ok = function () {
 		$modalInstance.close();
 	};
 
@@ -14,50 +14,50 @@ var ConfirmDeleteModalCtrl = function ($scope, $modalInstance, itemname) {
 };
 
 app.controller('TemplatesCtrl',  function($scope, $modal, $location, DirectoryService, MetadataService, promiseTracker) {
-    
+
 	// we will use this to track running ajax requests to show spinner
 	$scope.loadingTracker = promiseTracker('loadingTrackerFrontend');
-	
+
 	$scope.alerts = [];
-	
-	$scope.templates = [];        
-    
+
+	$scope.templates = [];
+
     $scope.closeAlert = function(index) {
     	$scope.alerts.splice(index, 1);
     };
-            
+
 	$scope.initdata = '';
 	$scope.current_user = '';
-			
+
 	$scope.init = function (initdata) {
 		$scope.initdata = angular.fromJson(initdata);
-		$scope.current_user = $scope.initdata.current_user;		
-    	$scope.getMyTemplates();    	
+		$scope.current_user = $scope.initdata.current_user;
+    	$scope.getMyTemplates();
     };
-    
+
     $scope.deleteTemplate = function (tid, name) {
 
     	var modalInstance = $modal.open({
-            templateUrl: $('head base').attr('href')+'views/modals/confirm_delete.html',
+            templateUrl: $('head base').attr('href')+'/views/modals/confirm_delete.html',
             controller: ConfirmDeleteModalCtrl,
             resolve: {
 	    		itemname: function(){
 			    	return name;
-			  }	 
+			  }
             }
     	});
-    	
+
     	modalInstance.result.then(function () {
     		var promise = MetadataService.deleteTemplate(tid);
             $scope.loadingTracker.addPromise(promise);
             promise.then(
-             	function(response) { 
+             	function(response) {
              		$scope.alerts = response.data.alerts;
              		for(var i = 0 ; i < $scope.templates.length; i++){
              			if($scope.templates[i]._id == tid){
              				$scope.templates.splice(i,1);
-             			}             			
-             		}             		
+             			}
+             		}
              		$scope.form_disabled = false;
              	}
              	,function(response) {
@@ -67,16 +67,16 @@ app.controller('TemplatesCtrl',  function($scope, $modal, $location, DirectorySe
              	}
             );
 	    });
-    };	
-	
-   
+    };
+
+
   $scope.toggleShared = function(tid){
    	$scope.form_disabled = true;
     var promise = MetadataService.toggleSharedTemplate(tid);
     $scope.loadingTracker.addPromise(promise);
       promise.then(
-         function(response) { 
-       		$scope.alerts = response.data.alerts;            		         		
+         function(response) {
+       		$scope.alerts = response.data.alerts;
        		$scope.form_disabled = false;
          }
          ,function(response) {
@@ -87,13 +87,13 @@ app.controller('TemplatesCtrl',  function($scope, $modal, $location, DirectorySe
       );
  };
 
-     
+
  $scope.getMyTemplates = function() {
 	 $scope.form_disabled = true;
      var promise = MetadataService.getMyTemplates();
      $scope.loadingTracker.addPromise(promise);
      promise.then(
-      	function(response) { 
+      	function(response) {
       		$scope.alerts = response.data.alerts;
       		$scope.templates = response.data.templates;
       		$scope.form_disabled = false;
@@ -103,9 +103,7 @@ app.controller('TemplatesCtrl',  function($scope, $modal, $location, DirectorySe
       		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
       		$scope.form_disabled = false;
       	}
-     );    	      
- };   
-       
+     );
+ };
+
 });
-
-

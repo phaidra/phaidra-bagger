@@ -1,0 +1,236 @@
+% layout 'default', title => 'Bag editor';
+
+%= include 'partials_cache'
+
+% content_for header => begin
+
+   <script type="text/javascript" src="<%= url_for '/js/controllers/uwmetadataeditor.js' %>"></script>
+   <script type="text/javascript" src="<%= url_for '/js/controllers/classification.js' %>"></script>
+   <script type="text/javascript" src="<%= url_for '/js/controllers/geo.js' %>"></script>
+   <script type="text/javascript" src="<%= url_for '/js/controllers/baginfo.js' %>"></script>
+
+   <link href="<%= url_for '/css/uwmetadataeditor.css' %>" rel="stylesheet">
+
+% end
+
+
+	<%# template for 'save as..' modal %>
+	<script type="text/ng-template" id="save_template_modal.html">
+        <div class="modal-header">
+            <h3>New template title</h3>
+        </div>
+        <div class="modal-body">
+	        <div class="form-group">
+			    <div class="col-sm-10">
+			    	<input class="form-control" placeholder="Untitled" type="text" data-ng-model="newtemplatetitle.value"></input>
+			    </div>
+			</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" ng-click="ok()">OK</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+        </div>
+    </script>
+
+	<div class="container uwmetadataeditor_full" role="main" data-ng-controller="UwmetadataeditorCtrl" data-ng-init="init('<%= $init_data %>')">
+
+
+
+		<div class="row">
+
+			<div class="col-md-5">
+				<div class="container-fluid">
+					<div class="row">
+						<div class="col-md-4 pull-left prev-bag">
+							<a data-ng-if="getPrevBagLink()" data-ng-href="{{getPrevBagLink()}}" title="Previous bag: {{initdata.prev_bag.label}}" class="btn btn-primary"><span class="glyphicon glyphicon-arrow-left"></span></a>
+						</div>
+						<div class="col-md-4">
+						<center>
+							<a data-ng-if="getBack2BagsLink()" data-ng-href="{{getBack2BagsLink()}}" title="Back to folder: {{initdata.folder.name}}" class="btn btn-primary"><span class="glyphicon glyphicon-list"></span></a>
+						</center>
+						</div>
+						<div class="col-md-4 pull-right next-bag">
+							<a data-ng-if="getNextBagLink()" data-ng-href="{{getNextBagLink()}}" title="Next bag: {{initdata.next_bag.label}}" class="btn btn-primary"><span class="glyphicon glyphicon-arrow-right"></span></a>
+						</div>
+					</div>
+				</div>
+				<img ng-src="{{initdata.thumb_path}}/m_{{bagid}}_1.png" class="img-thumbnail img-thumbnail-detail" title="{{bagid}}" alt="{{bagid}}">
+
+			</div>
+
+			<div class="col-md-7">
+
+			%= include 'alerts'
+
+				<tabset>
+					<tab>
+						<tab-heading>
+				       		<span>Metadata</span>
+				   		</tab-heading>
+
+						<nav ng-if="fields" id="control-panel" class="navbar navbar-default">
+							<div class="navbar-header">
+							    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+							      <span class="sr-only">Toggle navigation</span>
+							      <span class="icon-bar"></span>
+							      <span class="icon-bar"></span>
+							      <span class="icon-bar"></span>
+							    </button>
+						   	</div>
+
+							<!-- Collect the nav links, forms, and other content for toggling -->
+							<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+
+							      <div class="navbar-form navbar-left">
+							        <button ng-disabled="form.$invalid || form_disabled" data-ng-click="saveTemplateAs()" class="btn btn-primary navbar-btn"><span class="glyphicon glyphicon-file"></span> Create template</button>
+							      	<select class="form-control" data-ng-model="selectedtemplate" data-ng-change="loadTemplateToBag()" ng-options="template as template.title for template in initdata.templates">
+							      		<option value="">Load template...</option>
+							      	</select>
+							      </div>
+
+                    <div class="navbar-form navbar-left navbar-bag-status">
+                      <div ng-class="{'btn-group':canSetAttribute('status')}"  data-ng-if="baginfo.status">
+                        <button class="btn dropdown-toggle navbar-btn" ng-show="canSetAttribute('status')" data-toggle="dropdown" ng-class="{'btn-danger': (baginfo.status == 'new'), 'btn-warning': (baginfo.status == 'to_check'), 'btn-primary': (baginfo.status == 'checked'), 'btn-success': (baginfo.status == 'to_ingest') }">
+                          <span ng-repeat="status in initdata.statuses">
+                            <span ng-show="baginfo.status == status.value">{{status.label}}</span>
+                          </span>
+                          <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu" ng-show="canSetAttribute('status')">
+                          <li ng-repeat="status in initdata.statuses" ng-hide="baginfo.status == status.value"><a href="" data-ng-click="setAttribute(bag, 'status', status.value)">{{status.label}}</a></li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div class="navbar-form navbar-left navbar-bag-assignee">
+                      <div ng-class="{'btn-group':canSetAttribute('assignee')}" data-ng-if="baginfo.assignee">
+                        <button class="btn btn-default dropdown-toggle navbar-btn" data-toggle="dropdown" ng-show="canSetAttribute('assignee')">
+                        {{getMemberDisplayname(baginfo.assignee)}}
+                        <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu" ng-show="canSetAttribute('assignee')">
+                        <li ng-repeat="member in initdata.members" ng-hide="baginfo.assignee == member.username"><a href="" data-ng-click="setAttribute(bag, 'assignee', member.username)">{{member.displayname}}</a></li>
+                        </ul>
+                      </div>
+                    </div>
+
+							      <div class="navbar-form navbar-right">
+									<button ng-disabled="form.$invalid || form_disabled" data-ng-click="save()" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-save"></span> Save</button>
+								  </div>
+
+					    	</div>
+						</nav>
+
+						<div class="well" id="UwmetadataeditorCtrl" data-ng-show="fields" data-ng-cloak >
+
+							<form name="form" class="form-horizontal" novalidate role="form">
+
+								<fieldset ng-disabled="form_disabled">
+
+									<tabset>
+
+										<!-- 1.st level are tabs -->
+										<tab  data-ng-repeat="field in fields | filter:filterHidden" active="field.active" disabled="field.disabled">
+
+								      		<tab-heading>
+					        					<span phaidra-help phaidra-help-id="{{field.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>{{field.labels.en}}</span>
+					      					</tab-heading>
+
+									      		<!-- children fields of the tab -->
+									      		<ul data-ng-show="field.children.length">
+									      			<li data-ng-repeat="child in field.children" data-ng-include="'field_renderer.html'" class="form-li"></li>
+									      		</ul>
+
+									      		<script type="text/ng-template" id="field_renderer.html">
+
+													<div ng-switch="child.input_type">
+
+											          <div ng-switch-when="node">
+
+												          <div ng-if="!child.hide" class="panel panel-default">
+
+															  <div class="panel-heading" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>
+															    <h3 class="panel-title pull-left"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.labels.en}}</h3>
+															    <span class="btn-group pull-right">
+																    <button ng-if="child.cardinality === '*' || child.cardinality > '1'" class="btn btn-default" ng-click="addNewElement(child)"><span class="glyphicon glyphicon-plus"></span></button>
+																    <button ng-if="(child.cardinality === '*' || child.cardinality > '1') && canDelete(child)" class="btn btn-default" ng-click="deleteElement(child)"><span class="glyphicon glyphicon-minus"></span></button>
+																    <button class="btn btn-default" ng-click="upElement(child)" ng-if="child.ordered == 1 && canUpElement(child)"><span class="glyphicon glyphicon-chevron-up"></span></button>
+							   										<button class="btn btn-default" ng-click="downElement(child)" ng-if="child.ordered == 1 && canDownElement(child)"><span class="glyphicon glyphicon-chevron-down"></span></button>
+															    </span>
+
+															    <div class="clearfix"></div>
+															  </div>
+
+															  <div class="panel-body">
+
+																<div data-ng-hide="child.hidden" data-ng-include="'<%= url_for '/views/partials/' %>' + child.input_type + '.html'"></div>
+
+																<!-- children fields of the field -->
+																<ul data-ng-show="child.children.length">
+																    <li data-ng-repeat="child in child.children" data-ng-include="'field_renderer.html'"></li>
+																</ul>
+
+
+															  </div>
+
+															  <div class="panel-footer" data-ng-if="child.xmlname == 'curriculum' && child.study_name">{{ child.study_name.en }}</div>
+
+														</div>
+
+											          </div>
+
+											          <div ng-switch-default>
+
+											        	<div ng-if="!child.hide" data-ng-hide="child.hidden" data-ng-include="'<%= url_for '/views/partials/' %>' + child.input_type + '.html'"></div>
+
+														<!-- children fields of the field -->
+														<ul data-ng-show="child.children.length">
+														    <li data-ng-repeat="child in child.children" data-ng-include="'field_renderer.html'"></li>
+														</ul>
+
+											          </div>
+						      						</div>
+
+
+												</script>
+
+
+								    	</tab>
+
+
+
+
+									</tabset>
+								</fieldset>
+							</form>
+
+				        </div>
+
+		        	</tab>
+
+					<tab>
+						<tab-heading>
+				       		<span>Classification</span>
+				   		</tab-heading>
+				   		<div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>', 'bagedit')" data-ng-include="'<%= url_for '/views/partials/' %>classification.html'"></div>
+					</tab>
+
+		          <tab select="triggerGeoTabActivated()">
+		          	<tab-heading>
+		               <span>Geo</span>
+		            </tab-heading>
+		            <div data-ng-controller="GeoCtrl" data-ng-init="initgeo('<%= $init_data %>')" data-ng-include="'<%= url_for '/views/partials/' %>geo.html'"></div>
+		          </tab>
+
+		          <tab>
+		            <tab-heading>
+		            	<span>Info</span>
+		            </tab-heading>
+		            <div data-ng-controller="BaginfoCtrl" data-ng-include="'<%= url_for '/views/partials/' %>baginfo.html'"></div>
+		          </tab>
+
+				</tabset>
+
+			</div>
+		</div>
+	</div>

@@ -6,7 +6,7 @@ angular.module('metadataService', [])
 	         //return the promise directly.
 	         return $http({
 	             method  : 'GET',
-	             url     : $('head base').attr('href')+'proxy/get_object_uwmetadata/'+pid
+	             url     : $('head base').attr('href')+'/proxy/get_object_uwmetadata/'+pid
 	         	//headers : are by default application/json
 	         });
 	    },
@@ -14,28 +14,28 @@ angular.module('metadataService', [])
 	    loadBag: function(bagid) {
 	        return $http({
 	            method  : 'GET',
-	            url     : $('head base').attr('href')+'bag/'+bagid
+	            url     : $('head base').attr('href')+'/bag/'+bagid
 	        });
 	    },
 
 		getUwmetadataTree: function() {
 	        return $http({
 	            method  : 'GET',
-	            url     : $('head base').attr('href')+'proxy/get_uwmetadata_tree'
+	            url     : $('head base').attr('href')+'/proxy/get_uwmetadata_tree'
 	        });
 	    },
 
 	    getGeo: function(bagid) {
 	        return $http({
 	            method  : 'GET',
-	            url     : $('head base').attr('href')+'bag/'+bagid+'/geo'
+	            url     : $('head base').attr('href')+'/bag/'+bagid+'/geo'
 	        });
 	    },
 
 		saveGeo: function(bagid, geo){
 			   return $http({
 				   method  : 'POST',
-				   url     : $('head base').attr('href')+'bag/'+bagid+'/geo/',
+				   url     : $('head base').attr('href')+'/bag/'+bagid+'/geo/',
 				   data    : { geo: geo }
 			   });
 		},
@@ -43,14 +43,14 @@ angular.module('metadataService', [])
 		getLanguages: function() {
 	        return $http({
 	            method  : 'GET',
-	            url     : $('head base').attr('href')+'proxy/get_uwmetadata_languages'
+	            url     : $('head base').attr('href')+'/proxy/get_uwmetadata_languages'
 	        });
 	    },
 
 	    saveUwmetadataToObject: function(pid, uwmetadata){
 		   return $http({
 			   method  : 'POST',
-	           url     : $('head base').attr('href')+'proxy/save_object_uwmetadata/'+pid,
+	           url     : $('head base').attr('href')+'/proxy/save_object_uwmetadata/'+pid,
 	           data    : { uwmetadata: uwmetadata }
 		   });
 	    },
@@ -58,7 +58,7 @@ angular.module('metadataService', [])
 		saveUwmetadataToBag: function(bagid, uwmetadata){
 			   return $http({
 				   method  : 'POST',
-		        url     : $('head base').attr('href')+'bag/'+bagid+'/uwmetadata/',
+		        url     : $('head base').attr('href')+'/bag/'+bagid+'/uwmetadata/',
 		        data    : { uwmetadata: uwmetadata }
 			   });
 		 },
@@ -66,7 +66,7 @@ angular.module('metadataService', [])
 	    saveTemplateAs: function(title, uwmetadata){
 		   return $http({
 			   method  : 'PUT',
-	           url     : $('head base').attr('href')+'template',
+	           url     : $('head base').attr('href')+'/template',
 	           data    : { title: title, uwmetadata: uwmetadata }
 		   });
 	    },
@@ -74,7 +74,7 @@ angular.module('metadataService', [])
 	    saveTemplate: function(tid, uwmetadata){
 	    	return $http({
 	    		method  : 'POST',
-	    		url     : $('head base').attr('href')+'template/'+tid,
+	    		url     : $('head base').attr('href')+'/template/'+tid,
 	    		data    : { uwmetadata: uwmetadata }
 	    	});
 	    },

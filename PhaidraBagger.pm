@@ -26,10 +26,12 @@ sub startup {
 	# make config->{phaidra} point to default ingest instance, for quick access
 	my $have_default_instance = 0;
 	foreach my $k (%{$config->{ingest_instances}}){
-		if($config->{ingest_instances}->{$k}->{is_default} eq '1'){
-			$have_default_instance = 1;
-			$config->{phaidra} = $config->{ingest_instances}->{$k};
-			#$self->log->info("Default ingest instance: ".$self->dumper($config->{phaidra}));
+		if(exists($config->{ingest_instances}->{$k}->{is_default})){
+			if($config->{ingest_instances}->{$k}->{is_default} eq '1'){
+				$have_default_instance = 1;
+				$config->{phaidra} = $config->{ingest_instances}->{$k};
+				#$self->log->info("Default ingest instance: ".$self->dumper($config->{phaidra}));
+			}
 		}
 	}
 	unless($have_default_instance){

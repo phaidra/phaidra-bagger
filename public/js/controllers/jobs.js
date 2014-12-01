@@ -42,7 +42,7 @@ app.controller('JobsCtrl',  function($scope, $interval, $modal, $location, Direc
     $scope.deleteJob = function (jobid, jobname) {
 
     	var modalInstance = $modal.open({
-            templateUrl: $('head base').attr('href')+'views/modals/confirm_delete.html',
+            templateUrl: $('head base').attr('href')+'/views/modals/confirm_delete.html',
             controller: ConfirmDeleteModalCtrl,
             resolve: {
 	    		itemname: function(){
@@ -97,7 +97,7 @@ app.controller('JobsCtrl',  function($scope, $interval, $modal, $location, Direc
 	if($scope.refresh_cnt >= 2){
 		$scope.stopRefresh();
 	}
-	
+
     $scope.refresh_promise = $interval(function(){
 			$scope.refreshResults();
 			// the change in status might not be immediately visible
@@ -111,7 +111,7 @@ app.controller('JobsCtrl',  function($scope, $interval, $modal, $location, Direc
 			}
 
 			if(!running_job_found && $scope.refresh_cnt >= 2){
-				$scope.stopRefresh();				
+				$scope.stopRefresh();
 			}
 
 		}, 5000);
@@ -151,7 +151,7 @@ app.controller('JobsCtrl',  function($scope, $interval, $modal, $location, Direc
 
  $scope.editIngestJob = function (job) {
 	  var modalInstance = $modal.open({
-          templateUrl: $('head base').attr('href')+'views/modals/edit_ingest_job.html',
+          templateUrl: $('head base').attr('href')+'/views/modals/edit_ingest_job.html',
           controller: EditIngestJobModalCtrl,
           scope: $scope,
 		  resolve: {
@@ -178,10 +178,10 @@ var EditIngestJobModalCtrl = function ($scope, $modalInstance, FrontendService, 
 
 	$scope.baseurl = $('head base').attr('href');
 
-	$scope.modaldata = { 
-	  name: job.name, 
-	  start_at: job.start_at*1000, 
-	  ingest_instance: job.ingest_instance, 
+	$scope.modaldata = {
+	  name: job.name,
+	  start_at: job.start_at*1000,
+	  ingest_instance: job.ingest_instance,
 	  create_collection: job.create_collection,
 	  add_to_collection: job.add_to_collection
 	};

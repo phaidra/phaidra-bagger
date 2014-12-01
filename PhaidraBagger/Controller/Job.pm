@@ -24,15 +24,15 @@ sub view {
     	jobid => $jobid,
     	navtitlelink => "job/$jobid/view",
     	navtitle => $job->{name},
-    	ingest_instance => $self->config->{ingest_instances}->{$job->{ingest_instance}},  	    	
+    	ingest_instance => $self->config->{ingest_instances}->{$job->{ingest_instance}},
     	current_user => $self->current_user,
-    	thumb_path => $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path},
+    	thumb_path => $self->url_for($self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path}),
     	members => $self->config->{projects}->{$self->current_user->{project}}->{members},
     	statuses => $self->config->{projects}->{$self->current_user->{project}}->{statuses},
     };
 
     $self->stash(
-    	init_data => encode_json($init_data),        		
+    	init_data => encode_json($init_data),
     	navtitle => $job->{name},
     	navtitlelink => "job/$jobid/view",
     	alerts => $job->{alerts}
@@ -118,7 +118,7 @@ sub save {
 	my $start_at = $jobdata->{start_at};
 	if($start_at =~ /^[0-9]+$/g){
 		$start_at = int $start_at;
-		$start_at = int ($start_at/1000);	
+		$start_at = int ($start_at/1000);
 	}else{
   		$start_at = str2time($jobdata->{start_at});
 	}

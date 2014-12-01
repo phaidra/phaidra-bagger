@@ -283,13 +283,13 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
 
     $scope.hitEnterSearch = function(evt){
       if(angular.equals(evt.keyCode,13) && !(angular.equals($scope.query,null) || angular.equals($scope.query,''))){
-        window.location = $('head base').attr('href')+'search?q='+encodeURIComponent($scope.query);
+        window.location = $('head base').attr('href')+'/search?q='+encodeURIComponent($scope.query);
       }
     };
 
     $scope.search = function(){
       if(!(angular.equals($scope.query,null) || angular.equals($scope.query,''))){
-        window.location = $('head base').attr('href')+'search?q='+encodeURIComponent($scope.query);
+        window.location = $('head base').attr('href')+'/search?q='+encodeURIComponent($scope.query);
       }
     };
 
@@ -350,7 +350,7 @@ var SigninModalCtrl = function ($scope, $modalInstance, DirectoryService, Fronte
           if(red){
             window.location = red;
           }else{
-            window.location.reload();
+            window.location = $scope.baseurl;
           }
         }
         ,function(response) {

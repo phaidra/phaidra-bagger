@@ -95,7 +95,7 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     	if($scope.initdata.current_bags_query){
     		if($scope.initdata.current_bags_query.filter){
     			if($scope.initdata.current_bags_query.filter.folderid){
-    				return Url.buildUrl('/bags/folder/'+$scope.initdata.current_bags_query.filter.folderid, $scope.initdata.current_bags_query);
+    				return Url.buildUrl($('head base').attr('href')+'/bags/folder/'+$scope.initdata.current_bags_query.filter.folderid, $scope.initdata.current_bags_query);
     			}
     		}
     	}
@@ -103,13 +103,13 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
 
     $scope.getPrevBagLink = function (){
     	if($scope.initdata.prev_bag){
-    		return Url.buildUrl('/bag/'+$scope.initdata.prev_bag.bagid+'/edit', $scope.initdata.current_bags_query);
+    		return Url.buildUrl($('head base').attr('href')+'/bag/'+$scope.initdata.prev_bag.bagid+'/edit', $scope.initdata.current_bags_query);
     	}
     }
 
     $scope.getNextBagLink = function (){
     	if($scope.initdata.next_bag){
-    		return Url.buildUrl('/bag/'+$scope.initdata.next_bag.bagid+'/edit', $scope.initdata.current_bags_query);
+    		return Url.buildUrl($('head base').attr('href')+'/bag/'+$scope.initdata.next_bag.bagid+'/edit', $scope.initdata.current_bags_query);
     	}
     }
 
@@ -391,7 +391,7 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     		function(response) {
     			$scope.alerts = response.data.alerts;
     			$scope.languages = response.data.metadata.languages;
-    			$scope.fields = response.data.metadata.uwmetadata;				
+    			$scope.fields = response.data.metadata.uwmetadata;
     			$scope.bag = response.data;
     			$scope.load_init();
     		}
@@ -696,14 +696,14 @@ $scope.saveTemplateAs = function () {
     	// get index of the current element in this array
     	return angular.element.inArray(child, arr);
     }
-    
+
     // hacky bullshit to make the map refresh on geo tab select
     // this var is watched in geo controller
     $scope.geoTabActivated = false;
     $scope.triggerGeoTabActivated = function (){
     	$scope.geoTabActivated = true;
     }
-    
+
 
 });
 
@@ -767,7 +767,7 @@ app.directive('phaidraDuration', function() {
           restrict: 'E',
           link: link,
           replace: true,
-          templateUrl: $('head base').attr('href')+'views/directives/duration.html',
+          templateUrl: $('head base').attr('href')+'/views/directives/duration.html',
           scope: {
         	  duration: '=duration'
             }
@@ -823,7 +823,7 @@ app.directive('phaidraHelp', function($http, $timeout) {
 
 		          var promise = $http({
 			          method  : 'GET',
-			          url     : $('head base').attr('href')+'proxy/get_help_tooltip',
+			          url     : $('head base').attr('href')+'/proxy/get_help_tooltip',
 			          params  : { id: attr['phaidraHelpId']  }
 			      });
 			      scope.loadingTracker.addPromise(promise);

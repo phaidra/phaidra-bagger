@@ -182,7 +182,7 @@ sub import_uwmetadata_xml {
            my $uwmetadata = $result->json->{uwmetadata};
 
 		   # do some fixing
-           if($self->current_user->{project} eq 'DiFaB'){
+           if($self->current_user->{project} eq 'DiFaB' || $self->current_user->{project} eq 'TestProject'){
              $self->fix_difab_taxon_paths($bag->{bagid}, $uwmetadata);
            }
 
@@ -340,7 +340,7 @@ sub fix_difab_taxon_paths {
         if (my $result = $tx->success) {
 
           # remove taxon
-          splice($n->{children},1,1);
+          splice(@{$n->{children}},1,1);
 
            my $taxonpath = $result->json->{taxonpath};
            my $i = 0;
@@ -363,7 +363,7 @@ sub fix_difab_taxon_paths {
                }
              };
 
-             push $n->{children}, $txn;
+             push @{$n->{children}}, $txn;
            }
 
            push @ok_children, $n;
@@ -408,34 +408,34 @@ sub extract_geo {
 
   if($val){
 
-	# delete it from uwmetadata
-	$gps_node->{ui_value} = "";
-	$gps_node->{loaded_ui_value} = "";
-	$gps_node->{loaded_value} = "";
+  	# delete it from uwmetadata
+  	$gps_node->{ui_value} = "";
+  	$gps_node->{loaded_ui_value} = "";
+  	$gps_node->{loaded_value} = "";
 
-	my @s = split('\|',$val);
+  	my @s = split('\|',$val);
 
-	my $lat = $s[0];
-	my $lon = $s[1];
+  	my $lat = $s[0];
+  	my $lon = $s[1];
 
-	return {
-		kml => {
-			document => {
-				placemark => [
-			  		{
-			  			name => $name,
-			  			description => '',
-				  		point => {
-				  			coordinates => {
-				  				latitude => $lat,
-				  				longitude => $lon
-				  			}
-				  		}
-			  		}
-			  	]
-			}
-		}
-  	}
+  	return {
+  		kml => {
+  			document => {
+  				placemark => [
+  			  		{
+  			  			name => $name,
+  			  			description => '',
+  				  		point => {
+  				  			coordinates => {
+  				  				latitude => $lat,
+  				  				longitude => $lon
+  				  			}
+  				  		}
+  			  		}
+  			  	]
+  			}
+  		}
+    }
   }
 }
 
@@ -774,7 +774,7 @@ sub _edit_prepare_data {
 	my $self = shift;
 
 	my $project_config = $self->config->{projects}->{$self->current_user->{project}};
-	my $thumb_path = $project_config->{thumbnails}->{url_path};
+	my $thumb_path = $self->url_for($project_config->{thumbnails}->{url_path});
 	my $redmine_baseurl = $project_config->{redmine_baseurl};
   my $included_classifications = $project_config->{included_classifications};
 
@@ -889,7 +889,7 @@ sub bags {
 
   my $init_data = {
     current_user => $self->current_user,
-    thumb_path => $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path},
+    thumb_path => $self->url_for($self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path}),
     redmine_baseurl => $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl},
     members => $self->config->{projects}->{$self->current_user->{project}}->{members},
     statuses => $self->config->{projects}->{$self->current_user->{project}}->{statuses},
@@ -920,7 +920,7 @@ sub _folder_bags_prepare_data {
     	navtitlelink => 'bags/folder/'.$folderid,
     	navtitle => $folder->{name},
     	current_user => $self->current_user,
-    	thumb_path => $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path},
+    	thumb_path => $self->url_for($self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path}),
     	redmine_baseurl => $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl},
     	members => $self->config->{projects}->{$self->current_user->{project}}->{members},
     	statuses => $self->config->{projects}->{$self->current_user->{project}}->{statuses},
@@ -1253,8 +1253,10 @@ sub apply_hide_filter_rec {
 
   foreach my $child (@{$children}){
     my $childuri = $child->{xmlns}."#".$child->{xmlname};
-    if($child->{help_id} eq "helpmeta_37"){
-      $childuri = $child->{xmlns}."/rights#".$child->{xmlname};
+    if($child->{help_id}){
+	    if($child->{help_id} eq "helpmeta_37"){
+	      $childuri = $child->{xmlns}."/rights#".$child->{xmlname};
+	    }
     }
 
     unless($filter->{$childuri}){

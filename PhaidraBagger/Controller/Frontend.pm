@@ -18,7 +18,7 @@ sub home {
 
     unless($self->flash('redirect_to')){
     	# if no redirect was set, reload the current url
-    	$self->flash({redirect_to => $self->req->url});
+			$self->flash({redirect_to => $self->url_for('/')});
     }
 
     if($self->stash('opensignin')){
@@ -117,7 +117,7 @@ sub get_classifications {
 	}
 
 	# user defined classification
-	my $r = $self->mango->db->collection('user.classifications')->find_one({username => $username});
+	$r = $self->mango->db->collection('user.classifications')->find_one({username => $username});
 	foreach my $uri (@{$r->{classifications}}){
 		my $class = $self->_resolve_class_uri($uri);
 		$class->{type} = 'user';

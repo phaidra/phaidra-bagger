@@ -159,7 +159,7 @@ sub generate_thumbnail {
 
 sub folders {
     my $self = shift;
-	my $thumb_path = $self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path};
+	my $thumb_path = $self->url_for($self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path});
 	my $redmine_baseurl = $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl};
     my $init_data = { current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl};
     $self->stash(init_data => encode_json($init_data));
