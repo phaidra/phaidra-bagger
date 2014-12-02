@@ -38,8 +38,8 @@ sub import {
 
 		$self->app->log->info("Importing folder, folderpath $folderpath");
 
-		# folder name is the folder id
-		my $folderid = $folder;
+		# folder name + project name is the folder id
+		my $folderid = $self->current_user->{project}.$folder;
 		# clean folder id of special chars
 		$folderid =~ s/\W//g;
 	    my $found = $self->mango->db->collection('folders')->find_one({folderid => $folderid, project => $self->current_user->{project}});

@@ -7,6 +7,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 use File::Find;
+use FileHandle; #https://groups.google.com/forum/#!msg/mojolicious/y9J88fboW50/Qu-LEpCjtWwJ
 use Mojo::Util qw(slurp);
 use Mojo::JSON qw(encode_json decode_json);
 use Mojo::Log;
@@ -162,7 +163,7 @@ sub run_job {
 
 	# get job bags
 	my $bags = $self->{bags_coll}->find(
-		{'jobs.jobid' => $jobid},
+		{'jobs.jobid' => $jobid, project => $job->{project}},
 		{
 			bagid => 1,
 			status => 1,
@@ -180,12 +181,13 @@ sub run_job {
 		$self->{'log'}->info("[$i/$count] Processing ".$bag->{bagid});
 
 		# check if we were not suspended
-		my $stat = $self->{bags_coll}->find_one({'jobs.jobid' => $jobid},{status => 1});
+		my $stat = $self->{jobs_coll}->find_one({'_id' => MongoDB::OID->new(value => $jobid)},{status => 1});
+		#my $stat = $self->{bags_coll}->find_one({'jobs.jobid' => $jobid},{status => 1});
 		if($stat->{'status'} eq 'suspended'){
 				my @alerts = [{ type => 'danger', msg => "Job found suspended at bag ".$bag->{bagid}." [$i/$count]"}];
 				$self->{'log'}->error(Dumper(\@alerts));
 				# save error to bag
-				$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => \@alerts}});
+				$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => \@alerts}});
 				last;
 		}
 
@@ -209,7 +211,7 @@ sub run_job {
 			my @alerts = [{ type => 'danger', msg => "Bag ".$bag->{bagid}.":File $filepath does not exist"}];
 			$self->{'log'}->error(Dumper(\@alerts));
 			# save error to bag
-			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => \@alerts}});
+			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => \@alerts}});
 			next;
 		}
 
@@ -218,7 +220,7 @@ sub run_job {
 			my @alerts = [{ type => 'danger', msg => "Bag ".$bag->{bagid}.": File $filepath is not readable"}];
 			$self->{'log'}->error(Dumper(\@alerts));
 			# save error to bag
-			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => \@alerts}});
+			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => \@alerts}});
 			next;
 		}
 
@@ -227,7 +229,7 @@ sub run_job {
 			my @alerts = [{ type => 'danger', msg => "Bag ".$bag->{bagid}." has no bibliographical metadata"}];
 			$self->{'log'}->error(Dumper(\@alerts));
 			# save error to bag
-			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => \@alerts}});
+			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => \@alerts}});
 			next;
 		}
 
@@ -235,15 +237,15 @@ sub run_job {
 		$self->_update_activity("running", "ingesting job $jobid bag ".$bag->{bagid});
 		# update bag-job start_at and clean alerst
 		my @alerts = ();
-		$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid },{'$set' => {'jobs.$.started_at' => time, 'jobs.$.alerts' => \@alerts}});
+		$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project} },{'$set' => {'jobs.$.started_at' => time, 'jobs.$.alerts' => \@alerts}});
 
-		my $b = $self->{bags_coll}->find_one({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid}, {'jobs.$.pid' => 1});
+		my $b = $self->{bags_coll}->find_one({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}}, {'jobs.$.pid' => 1});
 		my $current_job = @{$b->{jobs}}[0];
 		if($current_job->{pid}){
 			my @alerts = [{ type => 'info', msg => "Bag ".$bag->{bagid}." already imported in this job, skipping"}];
 			$self->{'log'}->info(Dumper(\@alerts));
 			# save error to bag
-			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => \@alerts}});
+			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => \@alerts}});
 			next;
 		}
 
@@ -254,7 +256,7 @@ sub run_job {
 			push @pids, $pid;
 
 			# update bag-job pid and ts
-			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.pid' => $pid, 'jobs.$.finished_at' => time}});
+			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.pid' => $pid, 'jobs.$.finished_at' => time}});
 
 			# add to collection?
 			if($job->{add_to_collection}){
@@ -262,7 +264,7 @@ sub run_job {
 				my $add_coll_alerts = $self->_add_to_collection($job->{add_to_collection}, $pid,  $ingest_instance, $username, $password);
 				if($add_coll_alerts){
 					foreach my $a (@{$add_coll_alerts}){
-						push $alerts, $a;
+						push @{$alerts}, $a;
 					}
 				}
 			}
@@ -271,7 +273,7 @@ sub run_job {
 			if(defined($alerts)){
 				if(scalar @{$alerts} > 0){
 					$self->{'log'}->info('Alerts: '.Dumper($alerts));
-					$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid},{'$set' => {'jobs.$.alerts' => $alerts}});
+					$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => $alerts}});
 				}
 			}
 		}
@@ -297,7 +299,7 @@ sub run_job {
 		if(scalar @pids > 0){
 			($coll_pid, $coll_alerts) = $self->_create_collection(\@pids, $job, $ingest_instance, $username, $password);
 		}else{
-			push $jobdata{alerts}, { type => 'danger', msg => "Job collection not created - no objects created by the last run"};
+			push @{$jobdata{alerts}}, { type => 'danger', msg => "Job collection not created - no objects created by the last run"};
 		}
 	}
 
@@ -306,9 +308,9 @@ sub run_job {
 	}
 
 	if($coll_alerts){
-		push $jobdata{alerts}, { type => 'danger', msg => "Could not create job collection"};
+		push @{$jobdata{alerts}}, { type => 'danger', msg => "Could not create job collection"};
 		foreach my $a (@{$coll_alerts}){
-			push $jobdata{alerts}, $a;
+			push @{$jobdata{alerts}}, $a;
 		}
 	}
 

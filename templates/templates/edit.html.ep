@@ -130,7 +130,7 @@
 
 															  <div class="panel-body">
 
-																<div data-ng-if="filterHidden(child)" data-ng-include="'/views/partials/' + child.input_type + '.html'"></div>
+																<div data-ng-if="filterHidden(child)" data-ng-include="'<%= url_for '/views/partials/' %>' + child.input_type + '.html'"></div>
 
 																<!-- children fields of the field -->
 																<ul data-ng-show="child.children.length">
@@ -148,7 +148,7 @@
 
 											          <div ng-switch-default>
 
-											        	<div data-ng-if="filterHidden(child)" data-ng-include="'/views/partials/' + child.input_type + '.html'"></div>
+											        	<div data-ng-if="filterHidden(child)" data-ng-include="'<%= url_for '/views/partials/' %>' + child.input_type + '.html'"></div>
 
 														<!-- children fields of the field -->
 														<ul data-ng-show="child.children.length">
@@ -179,7 +179,7 @@
 						<tab-heading>
 				       		<span>Classification</span>
 				   		</tab-heading>
-				   		<div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>')" data-ng-include="'/views/partials/classification.html'"></div>
+				   		<div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>')" data-ng-include="'<%= url_for '/views/partials/classification.html' %>'"></div>
 					</tab>
 				</tabset>
 

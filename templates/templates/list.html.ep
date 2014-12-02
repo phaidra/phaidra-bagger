@@ -1,9 +1,9 @@
 % layout 'default', title => 'Templates';
 
-% content_for header => begin   
-   <script type="text/javascript" src="<%= url_for '/js/controllers/templates.js' %>"></script>          
+% content_for header => begin
+   <script type="text/javascript" src="<%= url_for '/js/controllers/templates.js' %>"></script>
 % end
-	
+
 <div class="container" data-ng-controller="TemplatesCtrl"  data-ng-init="init('<%= $init_data %>')">
 
 %= include 'alerts'
@@ -18,13 +18,13 @@
 	    <th>Created</th>
 	    <th>Updated</th>
 	    <th>Shared</th>
-	    <th><a href="/uwmetadata_template_editor/"><i class="glyphicon glyphicon-plus"></i></a></th>
+	    <th><a href="<%= url_for '/uwmetadata_template_editor/' %>"><i class="glyphicon glyphicon-plus"></i></a></th>
 	    <th></th>
 	  </tr>
 	  </thead>
 	  <tbody>
 	  <tr ng-repeat="template in templates| filter:filterinput | orderBy:'updated':true">
-	    <td><a href="/uwmetadata_template_editor/{{template._id}}" target="_blank">{{template.title}}</a></td>
+	    <td><a href="<%= url_for '/uwmetadata_template_editor/' %>{{template._id}}" target="_blank">{{template.title}}</a></td>
 	    <td>{{template.created * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</td>
 	    <td>{{template.updated * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</td>
 	    <td>
@@ -34,7 +34,7 @@
 			</div>
 	    </td>
 	    <td>
-	      <a href="/uwmetadata_template_editor/{{template._id}}"><i class="glyphicon glyphicon-pencil"></i></a>
+	      <a href="<%= url_for '/uwmetadata_template_editor/' %>{{template._id}}"><i class="glyphicon glyphicon-pencil"></i></a>
 	    </td>
 	    <td>
 	      <a href="" ng-click="deleteTemplate(template._id, template.title)"><i class="glyphicon glyphicon-remove"></i></a>
@@ -44,4 +44,3 @@
 	</table>
 
 </div>
-
