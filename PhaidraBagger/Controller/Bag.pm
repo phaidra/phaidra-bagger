@@ -121,7 +121,7 @@ sub import_uwmetadata_xml {
     $self->app->log->info("[Uwmetadata import] folderpath $folderpath");
 
     # folder name is the folder id
-    my $folderid = $folder;
+    my $folderid = $self->current_user->{project}.$folder;
     # clean folder id of special chars
     $folderid =~ s/\W//g;
 
