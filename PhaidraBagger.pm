@@ -82,13 +82,13 @@ sub startup {
 					}
 				}
 
-        # rewrite project config with the one from db (if any is found)
-        my $project_settings = $self->mango->db->collection('project.settings')->find_one({project => $login_data->{project}});
-        if($project_settings){
-          $self->app->log->info("Loading db project config");
-          $project_settings->{name} = $login_data->{project};
-          $self->config->{projects}->{$login_data->{project}} = $project_settings->{settings};
-        }
+		        # rewrite project config with the one from db (if any is found)
+		        my $project_settings = $self->mango->db->collection('project.settings')->find_one({project => $login_data->{project}});
+		        if($project_settings){
+		          $self->app->log->info("Loading db project config");
+		          $project_settings->{name} = $login_data->{project};
+		          $self->config->{projects}->{$login_data->{project}} = $project_settings->{settings};
+		        }
 
 				$self->app->log->info("Loaded user: ".$self->app->dumper($login_data));
 	    		$self->app->chi->set($username, $login_data, '1 day');
@@ -103,6 +103,23 @@ sub startup {
 		validate_user => sub {
 			my ($self, $username, $password, $extradata) = @_;
 			$self->app->log->info("Validating user: ".$username);
+
+			# delete from cache
+			$self->app->chi->remove($username);	
+			
+			# if the user is not in configuration -> wiederschauen
+			my $is_in_config = 0;
+			foreach my $p (keys %{$self->app->config->{projects}}){
+				foreach my $u (@{$self->app->config->{projects}->{$p}->{members}}){
+					if($u->{username} eq $username){
+						$is_in_config = 1; last;
+					}
+				}
+			}			
+			unless ($is_in_config){
+				$self->app->log->error("User $username not found in any project");
+				return undef;	
+			}
 
 			my $url = Mojo::URL->new;
 			$url->scheme('https');
@@ -174,7 +191,7 @@ sub startup {
 			}else{
 				# this will set expire on cookie as well as in store
 				$session->expire;
-	      		$session->flush;
+	      		$session->flush;	      	
 			}
 		}else{
 			if($self->signature_exists){

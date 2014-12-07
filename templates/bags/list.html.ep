@@ -85,7 +85,7 @@
             </ul>
           </div>
 
-            <div class="btn-group" ng-if="totalItems > limit" >
+            <div class="btn-group" ng-if="totalItems > 10" >
               <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
               Page size <span class="caret"></span>
               </button>

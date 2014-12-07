@@ -116,7 +116,7 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href=""><img src="<%= url_for '/img/phaidra_shadow_small.png' %>" height="25"></a>
+      <a class="navbar-brand" href=""><img src="<%= url_for '/img/phaidra_bagger_red.png' %>" height="35"></a>
 
     </div>
 
@@ -152,11 +152,11 @@
       	<span class="navbar-text">Signed in as <%= current_user->{firstname} %> <%= current_user->{lastname} %></span>
       </ul>
       <% } %>
-
+      
       <ul class="nav navbar-right">
       <% if(current_user){ %>
-	    	<% if(current_user->{project} eq 'DiFaB') { %>
-	    		<center><img src="<%= url_for '/img/home/difab_logo_small.jpg' %>" class="difab_logo img-rounded" title="DiFaB" alt="DiFaB"></center>
+	    	<% if(current_user->{project}) { %>
+  	  			%= include 'customization/'.current_user->{project}.'_logo'  		
 	    	<% } %>
 	   <%  } %>
       </ul>

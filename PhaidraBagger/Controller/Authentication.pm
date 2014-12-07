@@ -58,6 +58,11 @@ sub signin {
 sub signout {
 	my $self = shift;
 
+	my $current_user = $self->current_user;
+
+	# delete from cache
+	$self->app->chi->remove($current_user->{username});
+
 	my $url = Mojo::URL->new;
 	$url->scheme('https');
 	my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
@@ -68,8 +73,7 @@ sub signout {
 		$url->path("/signout") ;
 	}
 
-	my $token = $self->load_token;
-	my $current_user = $self->current_user;
+	my $token = $self->load_token;	
 	my $tx = $self->ua->get($url => {$self->app->config->{authentication}->{token_header} => $token});
 
 	if (my $res = $tx->success) {

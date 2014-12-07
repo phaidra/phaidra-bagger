@@ -1,0 +1,1 @@
+<center><img src="<%= url_for '/img/home/difab_logo_small.jpg' %>" class="difab_logo img-rounded" title="DiFaB" alt="DiFaB"></center>
