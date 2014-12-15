@@ -5,7 +5,7 @@ angular.module('vocabularyService', [])
 		searchClassifications: function(query){
 	    	return $http({
 	    		method  : 'GET',
-	    		url     : $('head base').attr('href')+'/proxy/terms/search/',
+	    		url     : $('head base').attr('href')+'proxy/terms/search/',
 	    		params: { q: query }
 	    	});
 	    },
@@ -13,7 +13,7 @@ angular.module('vocabularyService', [])
 	    getClassifications: function(){
 	    	return $http({
 	    		method  : 'GET',
-	    		url     : $('head base').attr('href')+'/proxy/terms/children',
+	    		url     : $('head base').attr('href')+'proxy/terms/children',
 	    		params: { uri: 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification'}
 	    	});
 	    },
@@ -21,7 +21,7 @@ angular.module('vocabularyService', [])
 		getChildren: function(uri){
 			return $http({
 				method  : 'GET',
-				url     : $('head base').attr('href')+'/proxy/terms/children',
+				url     : $('head base').attr('href')+'proxy/terms/children',
 				params: { uri: uri }
 			});
 		},
@@ -29,7 +29,7 @@ angular.module('vocabularyService', [])
 		getTaxonPath: function(uri){
 			return $http({
 				method  : 'GET',
-				url     : $('head base').attr('href')+'/proxy/terms/taxonpath',
+				url     : $('head base').attr('href')+'proxy/terms/taxonpath',
 				params: { uri: uri }
 			});
 		}
