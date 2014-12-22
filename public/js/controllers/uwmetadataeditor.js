@@ -521,8 +521,8 @@ $scope.saveTemplateAs = function () {
     };
 
 
-    $scope.canDelete = function(child){
-    	var a = $scope.getContainingArray(this);
+    $scope.canDelete = function(child, parent){
+    	var a = parent.children;
     	var cnt = 0;
     	for (i = 0; i < a.length; ++i) {
     		if(a[i].xmlns == child.xmlns && a[i].xmlname == child.xmlname){
@@ -532,9 +532,9 @@ $scope.saveTemplateAs = function () {
     	return cnt > 1;
     }
 
-    $scope.addNewElement = function(child){
+    $scope.addNewElement = function(child, parent){
     	// array of elements to which we are going to insert
-    	var arr = $scope.getContainingArray(this);
+    	var arr = parent.children;
     	// copy the element
     	var tobesistr = angular.copy(child);
     	// get index of the current element in this array
@@ -581,9 +581,9 @@ $scope.saveTemplateAs = function () {
     	}
     }
 
-    $scope.deleteElement = function(child){
+    $scope.deleteElement = function(child, parent){
     	// array of elements where we are going to delete
-    	var arr = $scope.getContainingArray(this);
+    	var arr = parent.children;
     	// get index of the current element in this array
     	var idx = angular.element.inArray(child, arr); // we loaded jQuery before angular so angular.element should equal jQuery
     	// decrement data_order of remaining elements
@@ -600,32 +600,13 @@ $scope.saveTemplateAs = function () {
     	arr.splice(idx, 1);
     }
 
-    // black magic here...
-    $scope.getContainingArray = function(scope){
-    	// this works for normal fields
-    	var arr = scope.$parent.$parent.$parent.field.children;
-    	// this for blocks
-    	if(scope.$parent.$parent.$parent.$parent.$parent.child){
-    		if(scope.$parent.$parent.$parent.$parent.$parent.child.children){
-    			arr = scope.$parent.$parent.$parent.$parent.$parent.child.children;
-    		}
-    	}
-    	// and this for fields in blocks
-    	if(scope.$parent.$parent.$parent.$parent.$parent.$parent.child){
-    		if(scope.$parent.$parent.$parent.$parent.$parent.$parent.child.children){
-    			arr = scope.$parent.$parent.$parent.$parent.$parent.$parent.child.children;
-    		}
-    	}
-    	return arr;
-    }
-
     Array.prototype.move = function(from, to) {
         this.splice(to, 0, this.splice(from, 1)[0]);
     };
 
-    $scope.upElement = function(child){
+    $scope.upElement = function(child, parent){
     	// array of elements which we are going to rearrange
-    	var arr = $scope.getContainingArray(this);
+    	var arr = parent.children;
     	// get index of the current element in this array
     	var idx = angular.element.inArray(child, arr);
 
@@ -645,9 +626,9 @@ $scope.saveTemplateAs = function () {
     	}
     }
 
-    $scope.downElement = function(child){
+    $scope.downElement = function(child, parent){
     	// array of elements which we are going to rearrange
-    	var arr = $scope.getContainingArray(this);
+    	var arr = parent.children;
     	// get index of the current element in this array
     	var idx = angular.element.inArray(child, arr);
 
@@ -665,19 +646,18 @@ $scope.saveTemplateAs = function () {
     	arr.move(idx, idx+1);
     }
 
-    $scope.canUpElement = function(child){
+    $scope.canUpElement = function(child, parent){
     	return child.ordered && (child.data_order > 0);
     }
 
-    $scope.canDownElement = function(child){
+    $scope.canDownElement = function(child, parent){
 
     	if(!child.ordered){ return false; }
 
     	// this array can contain also another type of elements
     	// but we only order the same type, so find if there is
     	// an element of the same type with higher data_ordered
-    	var arr = $scope.getContainingArray(this);
-
+    	var arr = parent.children;
 	    var i;
 	    for (i = 0; i < arr.length; ++i) {
 	        if(arr[i].data_order > child.data_order){
@@ -687,14 +667,6 @@ $scope.saveTemplateAs = function () {
 
 	    return false;
 
-    }
-
-    // just for debug
-    $scope.getIndex = function(child){
-    	// array of elements which we are going to rearrange
-    	var arr = $scope.getContainingArray(this);
-    	// get index of the current element in this array
-    	return angular.element.inArray(child, arr);
     }
 
     // hacky bullshit to make the map refresh on geo tab select

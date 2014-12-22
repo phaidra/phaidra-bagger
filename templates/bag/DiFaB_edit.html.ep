@@ -127,82 +127,82 @@
 
                 <fieldset ng-disabled="form_disabled">
 
-                  <tabset>
-
-                    <!-- 1.st level are tabs -->
-                    <tab  data-ng-repeat="field in fields | filter:filterHidden" active="field.active" disabled="field.disabled">
-
-                          <tab-heading>
-                            <span phaidra-help phaidra-help-id="{{field.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>{{field.labels.en}}</span>
-                          </tab-heading>
-
-                            <!-- children fields of the tab -->
-                            <ul data-ng-show="field.children.length">
-                              <li data-ng-repeat="child in field.children" data-ng-include="'field_renderer.html'" class="form-li"></li>
-                            </ul>
-
-                            <script type="text/ng-template" id="field_renderer.html">
-
-                          <div ng-switch="child.input_type">
-
-                                <div ng-switch-when="node">
-
-                                  <div ng-if="!child.hide" class="panel panel-default">
-
-                                <div class="panel-heading" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>
-                                  <h3 class="panel-title pull-left"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.labels.en}}</h3>
-                                  <span class="btn-group pull-right">
-                                    <button ng-if="child.cardinality === '*' || child.cardinality > '1'" class="btn btn-default" ng-click="addNewElement(child)"><span class="glyphicon glyphicon-plus"></span></button>
-                                    <button ng-if="(child.cardinality === '*' || child.cardinality > '1') && canDelete(child)" class="btn btn-default" ng-click="deleteElement(child)"><span class="glyphicon glyphicon-minus"></span></button>
-                                    <button class="btn btn-default" ng-click="upElement(child)" ng-if="child.ordered == 1 && canUpElement(child)"><span class="glyphicon glyphicon-chevron-up"></span></button>
-                                     <button class="btn btn-default" ng-click="downElement(child)" ng-if="child.ordered == 1 && canDownElement(child)"><span class="glyphicon glyphicon-chevron-down"></span></button>
-                                  </span>
-
-                                  <div class="clearfix"></div>
-                                </div>
-
-                                <div class="panel-body">
-
-                                <div data-ng-hide="child.hidden" data-ng-include="'<%= url_for '/views/partials/' %>' + child.input_type + '.html'"></div>
-
-                                <!-- children fields of the field -->
-                                <ul data-ng-show="child.children.length">
-                                    <li data-ng-repeat="child in child.children" data-ng-include="'field_renderer.html'"></li>
-                                </ul>
-
-
-                                </div>
-
-                                <div class="panel-footer" data-ng-if="child.xmlname == 'curriculum' && child.study_name">{{ child.study_name.en }}</div>
-
-                            </div>
-
-                                </div>
-
-                                <div ng-switch-default>
-
-                                <div ng-if="!child.hide" data-ng-hide="child.hidden" data-ng-include="'<%= url_for '/views/partials/' %>' + child.input_type + '.html'"></div>
-
-                            <!-- children fields of the field -->
-                            <ul data-ng-show="child.children.length">
-                                <li data-ng-repeat="child in child.children" data-ng-include="'field_renderer.html'"></li>
-                            </ul>
-
-                                </div>
-                              </div>
-
-
-                        </script>
-
-
-                      </tab>
-
-
-
-
-                  </tabset>
-                </fieldset>
-              </form>
+						 <tabset>
+	
+		                    <!-- 1.st level are tabs -->
+		                    <tab  data-ng-repeat="child_lvl_1 in fields | filter:filterHidden" active="child_lvl_1.active" disabled="child_lvl_1.disabled">
+		
+		                          <tab-heading>
+		                            <span phaidra-help phaidra-help-id="{{child_lvl_1.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>{{child_lvl_1.labels.en}}</span>
+		                          </tab-heading>
+		
+		                            <!-- children fields of the tab -->
+		                            <ul data-ng-show="child_lvl_1.children.length">
+		                              <li data-ng-repeat="child_lvl_2 in child_lvl_1.children" data-ng-init="child1 = child_lvl_2; parent1 = child_lvl_1" data-ng-include="'field_renderer.html'" class="form-li"></li>
+		                            </ul>
+		
+		
+											<%# ############# field renderer ########### %>
+				                            <script type="text/ng-template" id="field_renderer.html">
+				
+						                          <div ng-switch="child1.input_type">													
+																											
+						                                <div ng-switch-when="node">
+															
+															  <div ng-if="!child1.hide" class="panel panel-default">
+																				
+								                                <div class="panel-heading" phaidra-help phaidra-help-id="{{child1.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>
+								                                  <h3 class="panel-title pull-left"><span class="grey" ng-show="child1.ordered">{{child1.data_order}}. </span>{{child1.labels.en}}</h3>
+								                                  <span class="btn-group pull-right">
+								                                    <button ng-if="child1.cardinality === '*' || child1.cardinality > '1'" class="btn btn-default" ng-click="addNewElement(child1, parent1)"><span class="glyphicon glyphicon-plus"></span></button>
+								                                    <button ng-if="(child1.cardinality === '*' || child1.cardinality > '1') && canDelete(child1, parent1)" class="btn btn-default" ng-click="deleteElement(child1, parent1)"><span class="glyphicon glyphicon-minus"></span></button>
+								                                    <button class="btn btn-default" ng-click="upElement(child1, parent1)" ng-if="child1.ordered == 1 && canUpElement(child1, parent1)"><span class="glyphicon glyphicon-chevron-up"></span></button>
+								                                    <button class="btn btn-default" ng-click="downElement(child1, parent1)" ng-if="child1.ordered == 1 && canDownElement(child1, parent1)"><span class="glyphicon glyphicon-chevron-down"></span></button>
+								                                  </span>
+								
+								                                  <div class="clearfix"></div>
+								                                </div>
+								
+								                                <div class="panel-body">
+								
+									                                <!-- children fields of the field -->
+									                                <ul data-ng-show="child1.children.length">
+									                                   <li data-ng-repeat="ch in child1.children" data-ng-init="parent1 = child1; child1 = ch" data-ng-include="'field_renderer.html'"></li>
+									                                </ul>
+									
+									                            </div>
+								
+									                            <div class="panel-footer" data-ng-if="child1.xmlname == 'curriculum' && child1.study_name">{{ child1.study_name.en }}</div>
+							
+							                            	</div><!-- panel -->
+						
+						                                </div><!-- switch node -->
+																			
+														
+						                                <div ng-switch-default>
+															
+							                                <div ng-if="!child1.hide" data-ng-hide="child1.hidden" data-ng-init="child = child1; parent = parent1" data-ng-include="'<%= url_for '/views/partials/' %>' + child1.input_type + '.html'"></div>
+							
+									                        <!-- children fields of the field -->
+									                        <ul data-ng-show="child.children.length">																                        
+									                           <li data-ng-repeat="ch in child1.children" data-ng-init="parent1 = child1; child1 = ch" data-ng-include="'field_renderer.html'"></li>
+									                        </ul>
+							
+							                            </div><!-- switch default -->
+							                            
+							                            
+						                           </div><!-- switch -->
+						
+				
+				                        </script>
+		
+		
+		                      </tab>									
+		
+		                  </tabset>                
+	                  
+	                  </fieldset>
+              		</form>
 
                 </div>
 
