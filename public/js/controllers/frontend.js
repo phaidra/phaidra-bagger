@@ -283,13 +283,13 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
 
     $scope.hitEnterSearch = function(evt){
       if(angular.equals(evt.keyCode,13) && !(angular.equals($scope.query,null) || angular.equals($scope.query,''))){
-        window.location = $('head base').attr('href')+'/search?q='+encodeURIComponent($scope.query);
+        window.location = $('head base').attr('href')+'search?q='+encodeURIComponent($scope.query);
       }
     };
 
     $scope.search = function(){
       if(!(angular.equals($scope.query,null) || angular.equals($scope.query,''))){
-        window.location = $('head base').attr('href')+'/search?q='+encodeURIComponent($scope.query);
+        window.location = $('head base').attr('href')+'search?q='+encodeURIComponent($scope.query);
       }
     };
 
@@ -300,7 +300,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
     $scope.signin_open = function () {
 
       var modalInstance = $modal.open({
-            templateUrl: $('head base').attr('href')+'/views/modals/loginform.html',
+            templateUrl: $('head base').attr('href')+'views/modals/loginform.html',
             controller: SigninModalCtrl
       });
     };

@@ -46,7 +46,7 @@ sub startup {
 
 	 		my $login_data = $self->app->chi->get($username);
 
-	    	unless($login_data->{username} eq $username){
+	    	unless($login_data){
 	    		$self->app->log->debug("[cache miss] $username");
 
 	    		my $login_data;
@@ -105,8 +105,8 @@ sub startup {
 			$self->app->log->info("Validating user: ".$username);
 
 			# delete from cache
-			$self->app->chi->remove($username);	
-			
+			$self->app->chi->remove($username);
+
 			# if the user is not in configuration -> wiederschauen
 			my $is_in_config = 0;
 			foreach my $p (keys %{$self->app->config->{projects}}){
@@ -115,10 +115,10 @@ sub startup {
 						$is_in_config = 1; last;
 					}
 				}
-			}			
+			}
 			unless ($is_in_config){
 				$self->app->log->error("User $username not found in any project");
-				return undef;	
+				return undef;
 			}
 
 			my $url = Mojo::URL->new;
@@ -191,7 +191,7 @@ sub startup {
 			}else{
 				# this will set expire on cookie as well as in store
 				$session->expire;
-	      		$session->flush;	      	
+	      		$session->flush;
 			}
 		}else{
 			if($self->signature_exists){
@@ -320,7 +320,7 @@ sub startup {
     $autz->route('template') ->via('put')   ->to('template#create');
     $autz->route('template/:tid') ->via('post')   ->to('template#save');
     $autz->route('template/:tid') ->via('get')   ->to('template#load');
-    $autz->route('template/:tid') ->via('delete')   ->to('template#delete');    
+    $autz->route('template/:tid') ->via('delete')   ->to('template#delete');
     $autz->route('template/:tid/shared/toggle') ->via('post')   ->to('template#toggle_shared');
 
     $autz->route('templates') ->via('get')   ->to('template#templates');
@@ -344,7 +344,7 @@ sub startup {
     $autz->route('bag/:bagid/:attribute/:value') ->via('delete')   ->to('bag#unset_attribute');
 	$autz->route('bag/:bagid/geo') ->via('get')   ->to('bag#get_geo');
 	$autz->route('bag/:bagid/geo') ->via('post')   ->to('bag#save_geo');
-	
+
     #$autz->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
 
 	$autz->route('job')                        ->via('put')    ->to('job#create');

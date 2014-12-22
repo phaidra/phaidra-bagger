@@ -25,7 +25,7 @@ app.controller('FoldersCtrl',  function($scope, $http, $modal, $location, promis
      $scope.runImport = function() {
     	 var promise = $http({
  	        method  : 'GET',
- 		    url     : $('head base').attr('href')+'/folders/import'
+ 		    url     : $('head base').attr('href')+'folders/import'
  		 });
  	     $scope.loadingTracker.addPromise(promise);
  	     promise.then(
@@ -43,7 +43,7 @@ app.controller('FoldersCtrl',  function($scope, $http, $modal, $location, promis
      $scope.getFolderList = function() {
 	     var promise = $http({
 	        method  : 'GET',
-		    url     : $('head base').attr('href')+'/folders/list'
+		    url     : $('head base').attr('href')+'folders/list'
 		 });
 	     $scope.loadingTracker.addPromise(promise);
 	     promise.then(
@@ -66,7 +66,7 @@ app.controller('FoldersCtrl',  function($scope, $http, $modal, $location, promis
 
   var promise = $http({
 	method  : 'PUT',
-    url     : $('head base').attr('href')+'/folder/'+folderid+'/deactivate'
+    url     : $('head base').attr('href')+'folder/'+folderid+'/deactivate'
   });
   $scope.loadingTracker.addPromise(promise);
   promise.then(
@@ -76,7 +76,7 @@ app.controller('FoldersCtrl',  function($scope, $http, $modal, $location, promis
    		// if it was ok, refresh list
    		var promise1 = $http({
 	       method  : 'GET',
-		   url     : $('head base').attr('href')+'/folders/list'
+		   url     : $('head base').attr('href')+'folders/list'
 		});
 	    $scope.loadingTracker.addPromise(promise);
 	    promise1.then(

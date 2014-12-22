@@ -13,7 +13,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 
     <% if($config->{proxy_path}){ %>
-    <base href="<%= url_for->path('/'.$config->{proxy_path})->to_abs %>">
+    <base href="<%= url_for->path('/'.$config->{proxy_path})->to_abs.'/' %>">
     <% }else{ %>
     <base href="<%= url_for->path('/')->to_abs %>">
     <% } %>
@@ -152,11 +152,11 @@
       	<span class="navbar-text">Signed in as <%= current_user->{firstname} %> <%= current_user->{lastname} %></span>
       </ul>
       <% } %>
-      
+
       <ul class="nav navbar-right">
       <% if(current_user){ %>
 	    	<% if(current_user->{project}) { %>
-  	  			%= include 'customization/'.current_user->{project}.'_logo'  		
+  	  			%= include 'customization/'.current_user->{project}.'_logo'
 	    	<% } %>
 	   <%  } %>
       </ul>

@@ -66,7 +66,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 	}
 
 	$scope.getBagUrlWithQuery = function (bagid) {
-		var url = $('head base').attr('href')+'/bag/'+bagid+'/edit';
+		var url = $('head base').attr('href')+'bag/'+bagid+'/edit';
 		var params = {
 			filter: $scope.filter,
 			from: $scope.from,
@@ -287,7 +287,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
   $scope.tagModal = function (mode) {
 
 	  var modalInstance = $modal.open({
-        templateUrl: $('head base').attr('href')+'/views/modals/define_tag.html',
+        templateUrl: $('head base').attr('href')+'views/modals/define_tag.html',
         controller: TagModalCtrl,
         scope: $scope,
         resolve: {
@@ -300,7 +300,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 
   $scope.createIngestJob = function () {
 	  var modalInstance = $modal.open({
-          templateUrl: $('head base').attr('href')+'/views/modals/create_ingest_job.html',
+          templateUrl: $('head base').attr('href')+'views/modals/create_ingest_job.html',
           controller: CreateIngestJobModalCtrl,
           scope: $scope
 	  });
@@ -447,7 +447,7 @@ var CreateIngestJobModalCtrl = function ($scope, $modalInstance, FrontendService
 				$scope.form_disabled = false;
 				$scope.alerts = response.data.alerts;
 				$modalInstance.close();
-				window.location = $('head base').attr('href')+'/jobs';
+				window.location = $('head base').attr('href')+'jobs';
 			}
 			,function(response) {
 				$scope.form_disabled = false;

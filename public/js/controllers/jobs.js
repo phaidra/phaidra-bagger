@@ -42,7 +42,7 @@ app.controller('JobsCtrl',  function($scope, $interval, $modal, $location, Direc
     $scope.deleteJob = function (jobid, jobname) {
 
     	var modalInstance = $modal.open({
-            templateUrl: $('head base').attr('href')+'/views/modals/confirm_delete.html',
+            templateUrl: $('head base').attr('href')+'views/modals/confirm_delete.html',
             controller: ConfirmDeleteModalCtrl,
             resolve: {
 	    		itemname: function(){
@@ -151,7 +151,7 @@ app.controller('JobsCtrl',  function($scope, $interval, $modal, $location, Direc
 
  $scope.editIngestJob = function (job) {
 	  var modalInstance = $modal.open({
-          templateUrl: $('head base').attr('href')+'/views/modals/edit_ingest_job.html',
+          templateUrl: $('head base').attr('href')+'views/modals/edit_ingest_job.html',
           controller: EditIngestJobModalCtrl,
           scope: $scope,
 		  resolve: {
