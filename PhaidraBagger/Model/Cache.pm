@@ -16,7 +16,7 @@ sub get_terms_label {
 	my $cacheval = $c->app->chi->get($cachekey);
 	  		
 	if($cacheval){   			  	
-		$c->app->log->debug("[cache hit] $cachekey");
+		#$c->app->log->debug("[cache hit] $cachekey");
 		$res->{labels} = $cacheval;
 		return $res;			
 	}else{
