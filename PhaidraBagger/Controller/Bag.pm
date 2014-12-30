@@ -1224,7 +1224,7 @@ sub apply_hide_filter {
       }
     }
 
-    # if there is not user filter, fetch project settings
+    # if there is no user filter, fetch project settings
     if($length == 0){
       $res = $self->mango->db->collection('project.settings')->find_one({project => $self->current_user->{project}});
     }
@@ -1259,7 +1259,9 @@ sub apply_hide_filter_rec {
 	    }
     }
 
-    unless($filter->{$childuri}){
+    if($filter->{$childuri}){
+      $child->{hide} = 0;
+    }else{
       $child->{hide} = 1;
     }
 

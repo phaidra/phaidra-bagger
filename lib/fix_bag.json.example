@@ -1,0 +1,14 @@
+{	
+    "project": "project_id",
+    "log": {
+        "path": "/var/log/bagger/fix_bag.log",
+        "level": "debug"
+    },
+    "bagger_mongodb": {
+        "host": "mongodb_host",
+        "port": "27017",
+        "username": "mongodb_username",
+        "password": "mongodb_password",
+        "database": "mongodb_db"
+    }
+}

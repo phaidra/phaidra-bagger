@@ -39,6 +39,8 @@ sub load {
 		return;
 	}
 
+	$self->reset_hide_rec($doc->{uwmetadata});
+
 	$self->app->log->info("[".$self->current_user->{username}."] Loaded template ".$doc->{title}." [$tid]");
 	$self->render(
 		json => {
@@ -48,6 +50,22 @@ sub load {
 		status => 200
 	);
 
+}
+
+# everything in a template should be visible
+sub reset_hide_rec {
+	my $self = shift;
+	my $children = shift;
+	
+	foreach my $n (@{$children}){		
+		if($n->{hide}){
+			$n->{hide} = 0;
+		}				
+		my $children_size = defined($n->{children}) ? scalar (@{$n->{children}}) : 0;
+		if($children_size > 0){		
+			$self->reset_hide_rec($n->{children});						
+		}		
+	}	
 }
 
 sub toggle_shared {	
