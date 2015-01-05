@@ -18,7 +18,8 @@
 	    <th>Created</th>
 	    <th>Updated</th>
 	    <th>Shared</th>
-	    <th><a href="<%= url_for '/uwmetadata_template_editor/' %>"><i class="glyphicon glyphicon-plus"></i></a></th>
+	    <th><a href="" ng-click="newTemplate()"><i class="glyphicon glyphicon-plus"></i></a></th>
+	    <!--<th><a href="<%= url_for '/uwmetadata_template_editor/' %>"><i class="glyphicon glyphicon-plus"></i></a></th>-->
 	    <th></th>
 	  </tr>
 	  </thead>

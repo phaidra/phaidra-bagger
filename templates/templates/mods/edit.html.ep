@@ -1,29 +1,13 @@
-% layout 'default', title => 'Template editor';
+% layout 'default', title => 'MODS template editor';
 
-%= include 'partials_cache'
+%= include 'mods_partials_cache'
 
 % content_for header => begin
 
-   <script type="text/javascript" src="<%= url_for '/js/controllers/uwmetadataeditor.js' %>"></script>
+   <script type="text/javascript" src="<%= url_for '/js/controllers/modseditor.js' %>"></script>
    <script type="text/javascript" src="<%= url_for '/js/controllers/classification.js' %>"></script>
 
-   <link href="<%= url_for '/css/uwmetadataeditor.css' %>" rel="stylesheet">
-
-    <script type="text/javascript">
-            $(document).ready(function(){
-
-        				$('#resetEditor').click(function(){
-        					var app = document.getElementById('UwmetadataeditorCtrl');
-        					var scope = angular.element(app).scope();
-        					scope.$apply(function() {
-        						scope.resetEditor();
-        					});
-        				});
-
-        				$('.datepicker').datepicker();
-
-            });
-    </script>
+   <link href="<%= url_for '/css/modseditor.css' %>" rel="stylesheet">
 
 % end
 
@@ -39,6 +23,7 @@
 			    	<input class="form-control" placeholder="Untitled" type="text" data-ng-model="newtemplatetitle.value"></input>
 			    </div>
 			</div>
+			<div class="clearfix"></div>
         </div>
         <div class="modal-footer">
             <button class="btn btn-primary" ng-click="ok()">OK</button>
@@ -46,9 +31,7 @@
         </div>
     </script>
 
-	<div class="container uwmetadataeditor_full" role="main" data-ng-controller="UwmetadataeditorCtrl" data-ng-init="init('<%= $init_data %>')">
-
-
+	<div class="container modseditor_full" role="main" data-ng-controller="ModseditorCtrl" data-ng-init="init('<%= $init_data %>')">
 
 		<div class="row">
 
@@ -100,12 +83,11 @@
 		                    <tab  data-ng-repeat="child_lvl_1 in fields | filter:filterHidden" active="child_lvl_1.active" disabled="child_lvl_1.disabled">
 		
 		                          <tab-heading>
-		                            <span phaidra-help phaidra-help-id="{{child_lvl_1.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>{{child_lvl_1.labels.en}}</span>
+		                            <span phaidra-help phaidra-help-id="{{child_lvl_1.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>{{child_lvl_1.label}}</span>
 		                          </tab-heading>
-		
-		                            <!-- children fields of the tab -->
-		                            <ul data-ng-show="child_lvl_1.children.length">
-		                              <li data-ng-repeat="child_lvl_2 in child_lvl_1.children" data-ng-init="child1 = child_lvl_2; parent1 = child_lvl_1" data-ng-include="'field_renderer.html'" class="form-li"></li>
+				                            
+		                            <ul>
+		                              <li data-ng-init="child1 = child_lvl_1; parent1 = null" data-ng-include="'field_renderer.html'" class="form-li"></li>
 		                            </ul>
 		
 		
@@ -119,12 +101,12 @@
 															  <div ng-if="!child1.hide" class="panel panel-default">
 																				
 								                                <div class="panel-heading" phaidra-help phaidra-help-id="{{child1.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>
-								                                  <h3 class="panel-title pull-left"><span class="grey" ng-show="child1.ordered">{{child1.data_order}}. </span>{{child1.labels.en}}</h3>
+								                                  <h3 class="panel-title pull-left"><span class="grey" ng-show="child1.ordered">{{child1.data_order}}. </span>{{child1.label}}</h3>
 								                                  <span class="btn-group pull-right">
-								                                    <button ng-if="child1.cardinality === '*' || child1.cardinality > '1'" class="btn btn-default" ng-click="addNewElement(child1, parent1)"><span class="glyphicon glyphicon-plus"></span></button>
-								                                    <button ng-if="(child1.cardinality === '*' || child1.cardinality > '1') && canDelete(child1, parent1)" class="btn btn-default" ng-click="deleteElement(child1, parent1)"><span class="glyphicon glyphicon-minus"></span></button>
-								                                    <button class="btn btn-default" ng-click="upElement(child1, parent1)" ng-if="child1.ordered == 1 && canUpElement(child1, parent1)"><span class="glyphicon glyphicon-chevron-up"></span></button>
-								                                    <button class="btn btn-default" ng-click="downElement(child1, parent1)" ng-if="child1.ordered == 1 && canDownElement(child1, parent1)"><span class="glyphicon glyphicon-chevron-down"></span></button>
+								                                    <button ng-if="!(child1.repeatable == 0)" class="btn btn-default" ng-click="addNewElement(child1, parent1)"><span class="glyphicon glyphicon-plus"></span></button>
+								                                    <button ng-if="!(child1.repeatable == 0) && canDelete(child1, parent1)" class="btn btn-default" ng-click="deleteElement(child1, parent1)"><span class="glyphicon glyphicon-minus"></span></button>
+								                                    <button ng-if="!(child1.sequence == 1) && canUpElement(child1, parent1)" class="btn btn-default" ng-click="upElement(child1, parent1)"><span class="glyphicon glyphicon-chevron-up"></span></button>
+								                                    <button ng-if="!(child1.sequence == 1) && canDownElement(child1, parent1)" class="btn btn-default" ng-click="downElement(child1, parent1)" ><span class="glyphicon glyphicon-chevron-down"></span></button>
 								                                  </span>
 								
 								                                  <div class="clearfix"></div>
@@ -138,8 +120,6 @@
 									                                </ul>
 									
 									                            </div>
-								
-									                            <div class="panel-footer" data-ng-if="child1.xmlname == 'curriculum' && child1.study_name">{{ child1.study_name.en }}</div>
 							
 							                            	</div><!-- panel -->
 						
@@ -148,7 +128,7 @@
 														
 						                                <div ng-switch-default>
 															
-							                                <div ng-if="!child1.hide" data-ng-hide="child1.hidden" data-ng-init="child = child1; parent = parent1" data-ng-include="'<%= url_for '/views/partials/' %>' + child1.input_type + '.html'"></div>
+							                                <div ng-if="!child1.hide" data-ng-hide="child1.hidden" data-ng-init="child = child1; parent = parent1" data-ng-include="'<%= url_for '/views/partials/mods/' %>' + child1.input_type + '.html'"></div>
 							
 									                        <!-- children fields of the field -->
 									                        <ul data-ng-show="child.children.length">																                        
@@ -161,8 +141,8 @@
 						                           </div><!-- switch -->
 						
 				
-				                        </script>
-		
+					                        </script>
+											<%# ############# field renderer ########### %>
 		
 		                      </tab>									
 		
@@ -178,7 +158,7 @@
 						<tab-heading>
 				       		<span>Classification</span>
 				   		</tab-heading>
-				   		<div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>')" data-ng-include="'<%= url_for '/views/partials/classification.html' %>'"></div>
+				   		<!--<div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>')" data-ng-include="'<%= url_for '/views/partials/classification.html' %>'"></div>-->
 					</tab>
 				</tabset>
 

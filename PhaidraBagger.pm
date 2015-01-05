@@ -309,6 +309,9 @@ sub startup {
 
     $autz->route('uwmetadata_template_editor') ->via('get')  ->to('template#uwmetadata_template_editor');
     $autz->route('uwmetadata_template_editor/:tid') ->via('get')  ->to('template#uwmetadata_template_editor');
+    
+    $autz->route('mods_template_editor') ->via('get')  ->to('template#mods_template_editor');
+    $autz->route('mods_template_editor/:tid') ->via('get')  ->to('template#mods_template_editor');
 
     $autz->route('proxy/get_object_uwmetadata/:pid') ->via('get')   ->to('proxy#get_object_uwmetadata');
     $autz->route('proxy/save_object_uwmetadata/:pid') ->via('post')   ->to('proxy#save_object_uwmetadata');
@@ -340,10 +343,14 @@ sub startup {
     $autz->route('bag/:bagid') ->via('get')   ->to('bag#load');
     $autz->route('bag/template/:tid') ->via('get')   ->to('bag#load_template');
     $autz->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');
+    $autz->route('bag/:bagid/mods') ->via('post')   ->to('bag#save_mods');
     $autz->route('bag/:bagid/:attribute/:value') ->via('put')   ->to('bag#set_attribute');
     $autz->route('bag/:bagid/:attribute/:value') ->via('delete')   ->to('bag#unset_attribute');
 	$autz->route('bag/:bagid/geo') ->via('get')   ->to('bag#get_geo');
 	$autz->route('bag/:bagid/geo') ->via('post')   ->to('bag#save_geo');
+	
+	$autz->route('bag/uwmetadata/tree') ->via('get') ->to('bag#get_uwmetadata_tree');
+	$autz->route('bag/mods/tree') ->via('get') ->to('bag#get_mods_tree');
 
     #$autz->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
 

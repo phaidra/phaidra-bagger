@@ -111,6 +111,7 @@
             "apibaseurl": "services.phaidra-instance.univie.ac.at/api",
             "metadata_format_version": "1",
             "local_uwmetadata_tree": "/var/www/bagger/public/uwmetadata/tree.json",
+            "local_mods_tree": "/var/www/bagger/public/mods/tree.json",
             "is_default": "1"
         },
         "phaidra-instance2": {

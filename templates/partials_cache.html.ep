@@ -32,10 +32,10 @@
 	</div>
 </script>
 
-<script type="text/ng-template" id="/views/partials/node.html">
+<script type="text/ng-template" id="/views/partials/uwmetadata/node.html">
 </script>
 
-<script type="text/ng-template" id="/views/partials/select.html">
+<script type="text/ng-template" id="/views/partials/uwmetadata/select.html">
 	<div class="form-group input-select row" ng-class="{ 'has-error': child.mandatory && !child.ui_value, 'input-select-multi': child.cardinality === '*' || child.cardinality > '1' }">
 
 		<label class="control-label col-sm-2" for="{{child.field_id}}"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.labels.en}}</label>
@@ -59,7 +59,7 @@
 	</div>
 </script>
 
-<script type="text/ng-template" id="/views/partials/input_text.html">
+<script type="text/ng-template" id="/views/partials/uwmetadata/input_text.html">
 	<div class="form-group row input-text" ng-class="{ 'has-error': child.mandatory && !child.ui_value, 'input-text-multi': child.cardinality === '*' || child.cardinality > '1' }" >
 
 			<label class="control-label col-sm-2"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.labels.en}}</label>
@@ -83,7 +83,7 @@
 	</div>
 </script>
 
-<script type="text/ng-template" id="/views/partials/input_text_lang.html">
+<script type="text/ng-template" id="/views/partials/uwmetadata/input_text_lang.html">
 	<div class="form-group row input-text-lang" ng-class="{ 'has-error': child.mandatory && !child.ui_value, 'input-text-lang-multi': child.cardinality === '*' || child.cardinality > '1' }" >
 
 		<label class="control-label col-sm-2"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.labels.en}}</label>
@@ -113,7 +113,7 @@
 </script>
 
 
-<script type="text/ng-template" id="/views/partials/input_datetime.html">
+<script type="text/ng-template" id="/views/partials/uwmetadata/input_datetime.html">
 	<div class="form-group input-datetime row" ng-class="{ 'has-error': child.mandatory && !child.ui_value, 'input-datetime-multi': child.cardinality === '*' || child.cardinality > '1' }">
 			<label class="control-label col-sm-2" for="{{child.field_id}}"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.labels.en}}</label>
 
@@ -121,7 +121,7 @@
 
 	    	<div class="input-group" >
 
-					<input class="form-control" type="text" ng-model="child.ui_value" value="{{child.ui_value}}" ng-required="{{child.mandatory}}" placeholder="-- please choose --" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}' />
+					<input class="form-control" type="text" ng-model="child.ui_value" value="{{child.ui_value}}" ng-required="{{child.mandatory}}" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}' />
 		    	<!--<input class="form-control" type="text" datepicker-popup="dd MMMM yyyy" ng-model="child.ui_value" value="{{child.ui_value}}" show-weeks="false" is-open="opened" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="{{child.mandatory}}" placeholder="-- please choose --" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}' />-->
 
 		    	<span class="input-group-btn" ng-if="child.cardinality === '*' || child.cardinality > '1'">

@@ -1,0 +1,4 @@
+<button ng-if="!(child.repeatable == 0)" class="btn btn-default" ng-click="addNewElement(child, parent)"><span class="glyphicon glyphicon-plus"></span></button>
+<button ng-if="!(child.repeatable == 0) && canDelete(child, parent)" class="btn btn-default" ng-click="deleteElement(child, parent)"><span class="glyphicon glyphicon-minus"></span></button>
+<button ng-if="!(child.sequence == 1) && canUpElement(child, parent)" class="btn btn-default" ng-click="upElement(child, parent)"><span class="glyphicon glyphicon-chevron-up"></span></button>
+<button ng-if="!(child.sequence == 1) && canDownElement(child, parent)" class="btn btn-default" ng-click="downElement(child, parent)" ><span class="glyphicon glyphicon-chevron-down"></span></button>

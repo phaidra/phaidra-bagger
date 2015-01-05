@@ -21,7 +21,14 @@ angular.module('metadataService', [])
 		getUwmetadataTree: function() {
 	        return $http({
 	            method  : 'GET',
-	            url     : $('head base').attr('href')+'proxy/get_uwmetadata_tree'
+	            url     : $('head base').attr('href')+'bag/uwmetadata/tree'
+	        });
+	    },
+	    
+	    getModsTree: function() {
+	        return $http({
+	            method  : 'GET',
+	            url     : $('head base').attr('href')+'bag/mods/tree'
 	        });
 	    },
 
@@ -62,6 +69,14 @@ angular.module('metadataService', [])
 		        data    : { uwmetadata: uwmetadata }
 			   });
 		 },
+		 
+		saveModsToBag: function(bagid, mods){
+			   return $http({
+				   method  : 'POST',
+		     url     : $('head base').attr('href')+'bag/'+bagid+'/mods/',
+		     data    : { mods: mods }
+			   });
+		},
 
 	    saveTemplateAs: function(title, uwmetadata){
 		   return $http({

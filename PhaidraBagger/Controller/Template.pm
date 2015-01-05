@@ -13,7 +13,14 @@ sub uwmetadata_template_editor {
     my $self = shift;
     my $init_data = { tid => $self->stash('tid'), current_user => $self->current_user };
     $self->stash(init_data => encode_json($init_data));
-    $self->render('templates/edit');
+    $self->render('templates/uwmetadata/edit');
+}
+
+sub mods_template_editor {
+    my $self = shift;
+    my $init_data = { tid => $self->stash('tid'), current_user => $self->current_user };
+    $self->stash(init_data => encode_json($init_data));
+    $self->render('templates/mods/edit');
 }
 
 sub load {

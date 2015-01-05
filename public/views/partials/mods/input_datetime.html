@@ -1,0 +1,18 @@
+<div class="form-group row input-datetime" ng-class="{ 'has-error': child.mandatory && !child.ui_value, 'input-datetime-multi': !(child1.repeatable == 0) }">
+
+	<label class="control-label col-sm-2"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.label}}</label>
+
+    <div class="col-sm-10">
+
+    	<div class="input-group">
+
+			<input class="form-control" type="text" ng-model="child.ui_value" value="{{child.ui_value}}" ng-required="{{child.mandatory}}" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}' />
+	    	<!--<input class="form-control" type="text" datepicker-popup="dd MMMM yyyy" ng-model="child.ui_value" value="{{child.ui_value}}" show-weeks="false" is-open="opened" min="minDate" max="'2055-01-01'" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="{{child.mandatory}}" placeholder="-- please choose --" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}' /> -->
+
+	    	<div class="input-group-btn" data-ng-include="$('head base').attr('href')+'views/partials/mods/add_remove_order_btn_group.html'"></div>
+
+    	</div>
+    	
+    </div>
+    
+</div>
