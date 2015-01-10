@@ -1,0 +1,44 @@
+	<div ng-switch="child1.input_type">													
+																
+	        <div ng-switch-when="node">
+				
+				  <div ng-if="!child1.hide" class="panel panel-default">
+									
+	                <div class="panel-heading" phaidra-help phaidra-help-id="{{child1.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>
+	                  <h3 class="panel-title pull-left"><span class="grey" ng-show="child1.ordered">{{child1.data_order}}. </span>{{child1.label}}</h3>
+	                  <span class="btn-group pull-right">
+	                  
+	                    <div class="input-group-btn" data-ng-init="parent = parent1; child = child1" data-ng-include="$('head base').attr('href')+'views/partials/mods/btn_group.html'"></div>
+	                  
+	                  </span>
+	
+	                  <div class="clearfix"></div>
+	                </div>
+	
+	                <div class="panel-body">
+	                
+	                	<!-- attributes of 'node' type element -->
+	                	<ul data-ng-if="child1.attributes.length">
+			            	<!--<li data-ng-repeat="att in child1.attributes" data-ng-init="parent1 = child1; child1 = att" data-ng-include="$('head base').attr('href')+'views/partials/mods/field_renderer.html'"></li>-->
+			            </ul>
+	
+	                    <!-- children fields of the field -->
+	                    <ul data-ng-if="child1.children.length">
+	                       <li data-ng-repeat="ch in child1.children" data-ng-init="parent1 = child1; child1 = ch" data-ng-include="$('head base').attr('href')+'views/partials/mods/field_renderer.html'"></li>
+	                    </ul>
+	
+	                </div>
+	
+	        	</div><!-- panel -->
+	
+	        </div><!-- switch node -->
+								
+			
+	        <div ng-switch-default>
+				
+	            <div ng-if="!child1.hide" data-ng-hide="child1.hidden" data-ng-init="child = child1; parent = parent1; collapse_id = $id" data-ng-include="$('head base').attr('href') + 'views/partials/mods/' + child1.input_type + '.html'"></div>
+	
+	        </div><!-- switch default -->
+	        
+	        
+	</div><!-- switch -->	

@@ -43,7 +43,7 @@
 					<tab>
 						<tab-heading>
 				       		<span>Metadata</span>
-				   	</tab-heading>
+				   		</tab-heading>
 
 						<nav ng-if="fields" id="control-panel" class="navbar navbar-default">
         			<div class="navbar-header">
@@ -62,98 +62,65 @@
 
         			      <div class="navbar-form navbar-right">
 
-        			      	<button ng-if="fields && tid" ng-disabled="form_disabled" data-ng-click="saveTemplate()" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-floppy-save"></span> Save</button>
+        			      		<button ng-if="fields && tid" ng-disabled="form_disabled" data-ng-click="saveTemplate()" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-floppy-save"></span> Save</button>
         					    <button ng-if="fields" ng-disabled="form_disabled" data-ng-click="saveTemplateAs()" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-floppy-save"></span> Save as...</button>
 
-        				    </div>
+        				  </div>
 
         	    	</div>
 
         		</nav>
 
-						<div class="well" id="UwmetadataeditorCtrl" data-ng-show="fields" data-ng-cloak >
+						<div class="well" id="ModseditorCtrl" data-ng-show="fields" data-ng-cloak >
 
 							<form name="form" class="form-horizontal" novalidate role="form">
 
 								<fieldset ng-disabled="form_disabled">
 
 									<tabset>
-	
-		                    <!-- 1.st level are tabs -->
-		                    <tab  data-ng-repeat="child_lvl_1 in fields | filter:filterHidden" active="child_lvl_1.active" disabled="child_lvl_1.disabled">
-		
-		                          <tab-heading>
-		                            <span phaidra-help phaidra-help-id="{{child_lvl_1.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>{{child_lvl_1.label}}</span>
-		                          </tab-heading>
-				                            
-		                            <ul>
-		                              <li data-ng-init="child1 = child_lvl_1; parent1 = null" data-ng-include="'field_renderer.html'" class="form-li"></li>
-		                            </ul>
-		
-		
-											<%# ############# field renderer ########### %>
-				                            <script type="text/ng-template" id="field_renderer.html">
-				
-						                          <div ng-switch="child1.input_type">													
-																											
-						                                <div ng-switch-when="node">
-															
-															  <div ng-if="!child1.hide" class="panel panel-default">
-																				
-								                                <div class="panel-heading" phaidra-help phaidra-help-id="{{child1.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>
-								                                  <h3 class="panel-title pull-left"><span class="grey" ng-show="child1.ordered">{{child1.data_order}}. </span>{{child1.label}}</h3>
-								                                  <span class="btn-group pull-right">
-								                                    <button ng-if="!(child1.repeatable == 0)" class="btn btn-default" ng-click="addNewElement(child1, parent1)"><span class="glyphicon glyphicon-plus"></span></button>
-								                                    <button ng-if="!(child1.repeatable == 0) && canDelete(child1, parent1)" class="btn btn-default" ng-click="deleteElement(child1, parent1)"><span class="glyphicon glyphicon-minus"></span></button>
-								                                    <button ng-if="!(child1.sequence == 1) && canUpElement(child1, parent1)" class="btn btn-default" ng-click="upElement(child1, parent1)"><span class="glyphicon glyphicon-chevron-up"></span></button>
-								                                    <button ng-if="!(child1.sequence == 1) && canDownElement(child1, parent1)" class="btn btn-default" ng-click="downElement(child1, parent1)" ><span class="glyphicon glyphicon-chevron-down"></span></button>
-								                                  </span>
-								
-								                                  <div class="clearfix"></div>
-								                                </div>
-								
-								                                <div class="panel-body">
-								
-									                                <!-- children fields of the field -->
-									                                <ul data-ng-show="child1.children.length">
-									                                   <li data-ng-repeat="ch in child1.children" data-ng-init="parent1 = child1; child1 = ch" data-ng-include="'field_renderer.html'"></li>
-									                                </ul>
 									
-									                            </div>
-							
-							                            	</div><!-- panel -->
-						
-						                                </div><!-- switch node -->
-																			
-														
-						                                <div ng-switch-default>
-															
-							                                <div ng-if="!child1.hide" data-ng-hide="child1.hidden" data-ng-init="child = child1; parent = parent1" data-ng-include="'<%= url_for '/views/partials/mods/' %>' + child1.input_type + '.html'"></div>
-							
-									                        <!-- children fields of the field -->
-									                        <ul data-ng-show="child.children.length">																                        
-									                           <li data-ng-repeat="ch in child1.children" data-ng-init="parent1 = child1; child1 = ch" data-ng-include="'field_renderer.html'"></li>
-									                        </ul>
-							
-							                            </div><!-- switch default -->
-							                            
-							                            
-						                           </div><!-- switch -->
-						
-				
-					                        </script>
-											<%# ############# field renderer ########### %>
-		
-		                      </tab>									
-		
-		                  </tabset>                
+										<!-- All nodes except those which have separate tabs -->
+										<tab>
+							                <tab-heading>
+							                	<span>General</span>
+							                </tab-heading>							                
+											
+											<span  data-ng-repeat="child_lvl_1 in fields | filter:filterHidden" active="child_lvl_1.active" disabled="child_lvl_1.disabled">
+										
+												<span data-ng-if="separateTabs.indexOf(child_lvl_1.xmlname) == -1">							                								                		
+									                  	<ul>
+									                      	<li  data-ng-init="child1 = child_lvl_1; parent1 = null" data-ng-include="'<%= url_for '/views/partials/mods/' %>field_renderer.html'" class="form-li"></li>
+									                    </ul>								                    
+												</span>
+										
+											</span>
+										
+										</tab>
+										
+										<!-- Nodes on separate tabs -->						                
+						                <tab  data-ng-if="separateTabs.indexOf(child_lvl_1.xmlname) != -1" data-ng-repeat="child_lvl_1 in fields | filter:filterHidden" active="child_lvl_1.active" disabled="child_lvl_1.disabled">
+						                	<tab-heading>
+						                		<span phaidra-help phaidra-help-id="{{child_lvl_1.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>{{child_lvl_1.label}}</span>
+						                	</tab-heading>
+						                			
+						                	<ul>
+								        		<li  data-ng-init="child1 = child_lvl_1; parent1 = null" data-ng-include="'<%= url_for '/views/partials/mods/' %>field_renderer.html'" class="form-li"></li>
+								        	</ul>
+						                			
+						                </tab>
+						                
+									</tabset>
+									
 								</fieldset>
+								
 							</form>
 
 				        </div>
 
-		        	</tab>
-
+		        	</tab>			
+		                    
+		
+		
 					<tab>
 						<tab-heading>
 				       		<span>Classification</span>

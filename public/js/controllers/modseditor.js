@@ -24,6 +24,7 @@ app.controller('ModseditorCtrl',  function($scope, $modal, $location, DirectoryS
 	$scope.mode = 'bag';
 
     $scope.fields = [];
+    $scope.separateTabs = ["originInfo", "physicalDescription", "subject", "part", "recordInfo"];
     $scope.languages = [];
 	$scope.geo = [];
 

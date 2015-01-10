@@ -247,3 +247,8 @@ reenable disabled radius
 #control-panel .navbar-text{
 	margin-top: 23px;
 }
+
+/* mods addons */
+.attr-group {
+	margin-top: 20px;
+}
