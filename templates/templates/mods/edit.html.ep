@@ -71,7 +71,7 @@
 
         		</nav>
 
-						<div class="well" id="ModseditorCtrl" data-ng-show="fields" data-ng-cloak >
+						<div class="well modseditor" id="ModseditorCtrl" data-ng-show="fields" data-ng-cloak >
 
 							<form name="form" class="form-horizontal" novalidate role="form">
 
@@ -89,7 +89,7 @@
 										
 												<span data-ng-if="separateTabs.indexOf(child_lvl_1.xmlname) == -1">							                								                		
 									                  	<ul>
-									                      	<li  data-ng-init="child1 = child_lvl_1; parent1 = null" data-ng-include="'<%= url_for '/views/partials/mods/' %>field_renderer.html'" class="form-li"></li>
+									                      	<li  data-ng-init="child1 = child_lvl_1; parent1 = null; collapse_id = $id; fieldid = ''" data-ng-include="'<%= url_for '/views/partials/mods/' %>field_renderer.html'" class="form-li"></li>
 									                    </ul>								                    
 												</span>
 										
@@ -104,7 +104,7 @@
 						                	</tab-heading>
 						                			
 						                	<ul>
-								        		<li  data-ng-init="child1 = child_lvl_1; parent1 = null" data-ng-include="'<%= url_for '/views/partials/mods/' %>field_renderer.html'" class="form-li"></li>
+								        		<li  data-ng-init="child1 = child_lvl_1; parent1 = null; collapse_id = $id; fieldid = ''" data-ng-include="'<%= url_for '/views/partials/mods/' %>field_renderer.html'" class="form-li"></li>
 								        	</ul>
 						                			
 						                </tab>
@@ -114,12 +114,12 @@
 								</fieldset>
 								
 							</form>
-
+							<pre>
+					   			{{fields}}
+					   		</pre>
 				        </div>
 
 		        	</tab>			
-		                    
-		
 		
 					<tab>
 						<tab-heading>

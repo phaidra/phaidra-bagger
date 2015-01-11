@@ -138,6 +138,8 @@ sub _get_mods_tree {
 
 		my $metadata = decode_json($bytes);
  		$res->{tree} = $metadata->{tree};
+ 		$res->{vocabularies} = $metadata->{vocabularies};
+ 		$res->{vocabularies_mapping} = $metadata->{vocabularies_mapping};
  		$res->{languages} = $metadata->{languages};
 
  		$cacheval = $res;

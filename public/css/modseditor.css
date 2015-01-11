@@ -249,6 +249,41 @@ reenable disabled radius
 }
 
 /* mods addons */
+
+.modseditor .btn, .modseditor input, .modseditor .well {
+  -webkit-border-radius: 0 !important;
+     -moz-border-radius: 0 !important;
+          border-radius: 0 !important;
+}
+
 .attr-group {
-	margin-top: 20px;
+	/* max-width: 70%; */
+}
+
+.attr-view {
+	margin: 0 10px 0 0;
+}
+
+.attr-view-div {
+	margin: 3px 0 0 0;
+}
+
+.panel-btn-group {
+	max-width: 500px;
+	text-align: right;
+}
+
+.input-text-lang {
+	max-width: 80%;
+}
+
+.input-text-multi {	
+	max-width: 80%;
+}
+
+.input-datetime {
+	max-width: 80%;
+}
+.input-select-multi {
+	max-width: 80%;
 }

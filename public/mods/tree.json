@@ -2,6 +2,48 @@
     "alerts":[
         
     ],
+    "vocabularies":{
+        "type_1":[
+            "abbreviated",
+            "translated",
+            "alternative",
+            "uniform"
+        ],
+        "authority_name_title":[
+            "abne",
+            "banqa",
+            "bibalex",
+            "conorsi",
+            "gkd",
+            "gnd",
+            "hapi",
+            "hkcan",
+            "lacnaf",
+            "naf",
+            "nalnaf",
+            "nlmnaf",
+            "nznb",
+            "sanb",
+            "viaf",
+            "ulan",
+            "unbisn"
+        ],
+        "yes":[
+            "yes"
+        ],
+        "primary":[
+            "primary"
+        ],
+        "type_2":[
+            "personal",
+            "corporate",
+            "conference",
+            "family"
+        ]
+    },
+    "vocabularies_mapping":{
+        "titleInfo_type":"type_1"
+    },
     "tree":[
         {
             "xmlname":"titleInfo",

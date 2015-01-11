@@ -24,6 +24,8 @@ app.controller('ModseditorCtrl',  function($scope, $modal, $location, DirectoryS
 	$scope.mode = 'bag';
 
     $scope.fields = [];
+    $scope.vocs = [];
+    $scope.vocsmap = [];
     $scope.separateTabs = ["originInfo", "physicalDescription", "subject", "part", "recordInfo"];
     $scope.languages = [];
 	$scope.geo = [];
@@ -158,6 +160,8 @@ app.controller('ModseditorCtrl',  function($scope, $modal, $location, DirectoryS
     			$scope.alerts = response.data.alerts;
     			$scope.languages = response.data.languages;
     			$scope.fields = response.data.tree;
+    			$scope.vocs = response.data.vocabularies;
+    			$scope.vocsmap = response.data.vocabularies_mapping;
     			$scope.load_init();
     		}
     		,function(response) {
@@ -467,7 +471,24 @@ $scope.saveTemplateAs = function () {
     	$scope.geoTabActivated = true;
     }
 
-
+    $scope.hasLangAttr = function(child){
+    	return $scope.getLangAttrNodeIdx == -1 ? false : true;
+    }
+    
+    $scope.getLangAttrNodeIdx = function(child){
+    	if(child.attributes){
+    		for (var i = 0; i < child.attributes.length; ++i) {
+    			if(child.attributes[i].xmlname == 'lang'){
+    				return i;
+    			}
+    		}
+    	}
+    	return -1;
+    }
+    
+    $scope.getVocLabel = function(value){
+    	return value.charAt(0).toUpperCase() + value.slice(1);
+    }
 });
 
 var TemplateModalInstanceCtrl = function ($scope, $modalInstance, currenttitle) {
