@@ -3,11 +3,11 @@
 	<label class="control-label col-sm-2" ng-class="{ 'text-muted': is_attribute }"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.label}}</label>
 
 	<div class="col-sm-5">
-    	<textarea class="form-control" type="text" ng-model="child.attributes[getLangAttrNodeIdx(child)].ui_value" value="{{child.ui_value}}" ng-required="{{child.mandatory}}" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'></textarea>
+    	<textarea class="form-control" type="text" ng-model="child.ui_value" value="{{child.ui_value}}" ng-required="{{child.mandatory}}" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'></textarea>
     	
     	<ul data-ng-if="child.attributes.length" id="attr_collapse_{{collapse_id}}" class="collapse attr-group well">
 			<li data-ng-if="att.xmlname != 'lang'" data-ng-repeat="att in child.attributes" data-ng-init="parent1 = child; child1 = att; is_attribute = true" data-ng-include="$('head base').attr('href')+'views/partials/mods/field_renderer.html'"></li>
-		</ul>
+		</ul>		
 	   	
 	   	<div data-ng-if="child.attributes.length">
 		   	<div class="attr-view-div">
@@ -19,6 +19,11 @@
 		
 	    <div class="input-group" ng-class="{ 'has-error': child.mandatory && !child.ui_value }">		    
 			<div ng-if="!is_attribute" class="input-group-btn">
+			
+					<select ng-if="!is_attribute && hasLangAttr(child)" class="form-control" ng-model="child.attributes[getLangAttrNodeIdx(child)].ui_value" ng-options="k as v.en for (k,v) in languages" placeholder="in language">
+						<option value="">-- choose --</option>
+					</select>
+			
 					<button ng-if="!(child.repeatable == 0)" class="btn btn-default" ng-click="addNewElement(child, parent)"><span class="glyphicon glyphicon-plus"></span></button>
 					<button ng-if="!(child.repeatable == 0) && canDelete(child, parent)" class="btn btn-default" ng-click="deleteElement(child, parent)"><span class="glyphicon glyphicon-minus"></span></button>
 					<button ng-if="!(child.sequence == 1) && canUpElement(child, parent)" class="btn btn-default" ng-click="upElement(child, parent)"><span class="glyphicon glyphicon-chevron-up"></span></button>

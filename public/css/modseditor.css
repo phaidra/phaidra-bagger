@@ -269,7 +269,7 @@ reenable disabled radius
 }
 
 .panel-btn-group {
-	max-width: 500px;
+	
 	text-align: right;
 }
 
@@ -284,6 +284,11 @@ reenable disabled radius
 .input-datetime {
 	max-width: 80%;
 }
+
 .input-select-multi {
 	max-width: 80%;
+}
+
+.panel-input-group {
+	max-width: 300px;
 }

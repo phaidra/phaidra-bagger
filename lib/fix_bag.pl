@@ -101,7 +101,7 @@ sub fix_5638 {
 	if($type eq 'template'){
 		
 		my $bsonid = Mango::BSON::ObjectID->new($oid);	
-		my $templ = $mango->db->collection('templates.uwmetadata')->find_one({_id => $bsonid});
+		my $templ = $mango->db->collection('templates')->find_one({_id => $bsonid});
 
 		if(defined($templ)){
 			if($templ->{uwmetadata}){	
@@ -186,7 +186,7 @@ sub fix_5638 {
 		
 		if($type eq 'template'){		
 			my $bsonid = Mango::BSON::ObjectID->new($oid);	
-			$mango->db->collection('templates.uwmetadata')->update({_id => $bsonid},{'$set' => {updated => time, uwmetadata => $uwm}});	
+			$mango->db->collection('templates')->update({_id => $bsonid},{'$set' => {updated => time, uwmetadata => $uwm}});	
 		}	
 	#}else{
 	#	$log->info("[$oid] [$cnt] done, no changes to save");

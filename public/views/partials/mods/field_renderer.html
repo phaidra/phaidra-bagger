@@ -8,12 +8,17 @@
 	                  <h3 class="panel-title pull-left"><span class="grey" ng-show="child1.ordered">{{child1.data_order}}. </span>{{child1.label}}</h3>
 	                  <span class="btn-group pull-right panel-btn-group">
 	                  
-	                    <div class="input-group-btn">
-							<button ng-if="!(child1.repeatable == 0)" class="btn btn-default" ng-click="addNewElement(child1, parent1)"><span class="glyphicon glyphicon-plus"></span></button>
-							<button ng-if="!(child1.repeatable == 0) && canDelete(child1, parent1)" class="btn btn-default" ng-click="deleteElement(child1, parent1)"><span class="glyphicon glyphicon-minus"></span></button>
-							<button ng-if="!(child1.sequence == 1) && canUpElement(child1, parent1)" class="btn btn-default" ng-click="upElement(child1, parent1)"><span class="glyphicon glyphicon-chevron-up"></span></button>
-							<button ng-if="!(child1.sequence == 1) && canDownElement(child1, parent1)" class="btn btn-default" ng-click="downElement(child1, parent1)" ><span class="glyphicon glyphicon-chevron-down"></span></button>
-							<button ng-if="child1.attributes" data-toggle="collapse" class="btn btn-default" data-target="#attr_collapse_{{collapse_id}}"><span class="glyphicon glyphicon-wrench"></span></button>
+	                  	<div class="input-group panel-input-group">
+		                  	<select ng-if="!is_attribute && hasLangAttr(child1)" class="form-control" ng-model="child1.attributes[getLangAttrNodeIdx(child1)].ui_value" ng-options="k as v.en for (k,v) in languages" placeholder="in language">
+								<option value="">-- choose --</option>
+							</select>
+		                    <div class="input-group-btn">
+								<button ng-if="!(child1.repeatable == 0)" class="btn btn-default" ng-click="addNewElement(child1, parent1)"><span class="glyphicon glyphicon-plus"></span></button>
+								<button ng-if="!(child1.repeatable == 0) && canDelete(child1, parent1)" class="btn btn-default" ng-click="deleteElement(child1, parent1)"><span class="glyphicon glyphicon-minus"></span></button>
+								<button ng-if="!(child1.sequence == 1) && canUpElement(child1, parent1)" class="btn btn-default" ng-click="upElement(child1, parent1)"><span class="glyphicon glyphicon-chevron-up"></span></button>
+								<button ng-if="!(child1.sequence == 1) && canDownElement(child1, parent1)" class="btn btn-default" ng-click="downElement(child1, parent1)" ><span class="glyphicon glyphicon-chevron-down"></span></button>
+								<button ng-if="child1.attributes" data-toggle="collapse" class="btn btn-default" data-target="#attr_collapse_{{collapse_id}}"><span class="glyphicon glyphicon-wrench"></span></button>
+							</div>
 						</div>
 	                  
 	                  </span>
@@ -22,12 +27,12 @@
 	                  
 	                  <!-- attributes of 'node' type element -->
 	                  <ul data-ng-if="child1.attributes.length" id="attr_collapse_{{collapse_id}}" class="collapse attr-group">
-					  	<li data-ng-repeat="att in child1.attributes" data-ng-init="fieldid = fieldid+(fieldid ? '_' : '')+child1.xmlname; parent1 = child; child1 = att; is_attribute = true; collapse_id = $id" data-ng-include="$('head base').attr('href')+'views/partials/mods/field_renderer.html'"></li>
+					  	<li data-ng-if="att.xmlname != 'lang'" data-ng-repeat="att in child1.attributes" data-ng-init="fieldid = fieldid+(fieldid ? '_' : '')+child1.xmlname; parent1 = child; child1 = att; is_attribute = true; collapse_id = $id" data-ng-include="$('head base').attr('href')+'views/partials/mods/field_renderer.html'"></li>
 					  </ul>
 						
 						<div data-ng-if="child1.attributes.length">
 						   	<div>
-						   		<span class="attr-view" data-ng-repeat="att in child1.attributes" data-ng-if="att.ui_value">{{att.ui_value}}</span>
+						   		<span class="attr-view" data-ng-repeat="att in child1.attributes" data-ng-if="att.ui_value && (att.xmlname != 'lang')">{{att.ui_value}}</span>
 						   	</div>
 					   	</div>
 	                </div>
@@ -48,7 +53,7 @@
 			
 	        <div ng-switch-default>
 				
-	            <div ng-if="!child1.hide" data-ng-hide="child1.hidden" data-ng-init="fieldid = fieldid+'_'+child1.xmlname; child = child1; parent = parent1; collapse_id = $id" data-ng-include="$('head base').attr('href') + 'views/partials/mods/' + child1.input_type + '.html'"></div>
+	            <div title="{{fieldid}}" ng-if="!child1.hide" data-ng-hide="child1.hidden" data-ng-init="fieldid = fieldid+(fieldid ? '_' : '')+child1.xmlname; child = child1; parent = parent1; collapse_id = $id" data-ng-include="$('head base').attr('href') + 'views/partials/mods/' + child1.input_type + '.html'"></div>
 	
 	        </div><!-- switch default -->
 	        

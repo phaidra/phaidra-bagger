@@ -1,9 +1,6 @@
-var ConfirmDeleteModalCtrl = function ($scope, $modalInstance, items) {
+var ConfirmDeleteModalCtrl = function ($scope, $modalInstance, itemname) {
 
-	$scope.items = items;
-    $scope.selected = {
-    	item: $scope.items[0]
-    };
+	$scope.itemname = itemname;
 
 	$scope.itemtype = 'template';
 

@@ -1,0 +1,233 @@
+<script type="text/ng-template" id="<%= url_for '/views/partials/mods/field_renderer.html' %>">
+	<div ng-switch="child1.input_type">													
+																
+	        <div ng-switch-when="node">
+				
+				  <div ng-if="!child1.hide" class="panel panel-default">
+									
+	                <div class="panel-heading" phaidra-help phaidra-help-id="{{child1.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>
+	                  <h3 class="panel-title pull-left"><span class="grey" ng-show="child1.ordered">{{child1.data_order}}. </span>{{child1.label}}</h3>
+	                  <span class="btn-group pull-right panel-btn-group">
+	                  
+	                  	<div class="input-group panel-input-group">
+		                  	<select ng-if="!is_attribute && hasLangAttr(child1)" class="form-control" ng-model="child1.attributes[getLangAttrNodeIdx(child1)].ui_value" ng-options="k as v.en for (k,v) in languages" placeholder="in language">
+								<option value="">-- choose --</option>
+							</select>
+		                    <div class="input-group-btn">
+								<button ng-if="!(child1.repeatable == 0)" class="btn btn-default" ng-click="addNewElement(child1, parent1)"><span class="glyphicon glyphicon-plus"></span></button>
+								<button ng-if="!(child1.repeatable == 0) && canDelete(child1, parent1)" class="btn btn-default" ng-click="deleteElement(child1, parent1)"><span class="glyphicon glyphicon-minus"></span></button>
+								<button ng-if="!(child1.sequence == 1) && canUpElement(child1, parent1)" class="btn btn-default" ng-click="upElement(child1, parent1)"><span class="glyphicon glyphicon-chevron-up"></span></button>
+								<button ng-if="!(child1.sequence == 1) && canDownElement(child1, parent1)" class="btn btn-default" ng-click="downElement(child1, parent1)" ><span class="glyphicon glyphicon-chevron-down"></span></button>
+								<button ng-if="child1.attributes" data-toggle="collapse" class="btn btn-default" data-target="#attr_collapse_{{collapse_id}}"><span class="glyphicon glyphicon-wrench"></span></button>
+							</div>
+						</div>
+	                  
+	                  </span>
+	
+	                  <div class="clearfix"></div>
+	                  
+	                  <!-- attributes of 'node' type element -->
+	                  <ul data-ng-if="child1.attributes.length" id="attr_collapse_{{collapse_id}}" class="collapse attr-group">
+					  	<li data-ng-if="att.xmlname != 'lang'" data-ng-repeat="att in child1.attributes" data-ng-init="fieldid = fieldid+(fieldid ? '_' : '')+child1.xmlname; parent1 = child; child1 = att; is_attribute = true; collapse_id = $id" data-ng-include="'<%= url_for '/views/partials/mods/field_renderer.html' %>'"></li>
+					  </ul>
+						
+						<div data-ng-if="child1.attributes.length">
+						   	<div>
+						   		<span class="attr-view" data-ng-repeat="att in child1.attributes" data-ng-if="att.ui_value && (att.xmlname != 'lang')">{{att.ui_value}}</span>
+						   	</div>
+					   	</div>
+	                </div>
+	
+	                <div class="panel-body">
+	
+	                    <!-- children fields of the field -->
+	                    <ul data-ng-if="child1.children.length">
+	                       <li data-ng-repeat="ch in child1.children" data-ng-init="fieldid = fieldid+(fieldid ? '_' : '')+child1.xmlname; parent1 = child1; child1 = ch; collapse_id = $id" data-ng-include="'<%= url_for '/views/partials/mods/field_renderer.html' %>'"></li>
+	                    </ul>
+	
+	                </div>
+	
+	        	</div><!-- panel -->
+	
+	        </div><!-- switch node -->
+								
+			
+	        <div ng-switch-default>
+				
+	            <div title="{{fieldid}}" ng-if="!child1.hide" data-ng-hide="child1.hidden" data-ng-init="fieldid = fieldid+(fieldid ? '_' : '')+child1.xmlname; child = child1; parent = parent1; collapse_id = $id" data-ng-include="'<%= url_for '/views/partials/mods/' %>' + child1.input_type + '.html'"></div>
+	
+	        </div><!-- switch default -->
+	        
+	        
+	</div><!-- switch -->	
+</script>
+
+<script type="text/ng-template" id="<%= url_for '/views/partials/mods/input_text.html' %>">
+	<div class="form-group row" ng-class="{ 'input-text-multi': (!is_attribute && !hasLangAttr(child) && !(child1.repeatable == 0)), 'input-text-lang-multi': (hasLangAttr(child) && !(child1.repeatable == 0)), 'input-text-lang': !is_attribute && hasLangAttr(child), 'input-text': (is_attribute) }" >
+	
+	<label class="control-label col-sm-2" ng-class="{ 'text-muted': is_attribute }"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.label}}</label>
+
+	<div class="col-sm-10">
+		
+	    <div class="input-group" ng-class="{ 'has-error': child.mandatory && !child.ui_value }">
+		    
+	    	<input class="form-control" type="text" ng-model="child.ui_value" value="{{child.ui_value}}" ng-required="{{child.mandatory}}" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>
+									
+			<select ng-if="!is_attribute && hasLangAttr(child)" class="form-control" ng-model="child.attributes[getLangAttrNodeIdx(child)].ui_value" ng-options="k as v.en for (k,v) in languages" placeholder="in language">
+				<option value="">-- choose --</option>
+			</select>
+						
+			<div ng-if="!is_attribute" class="input-group-btn">
+				<button ng-if="!(child.repeatable == 0)" class="btn btn-default" ng-click="addNewElement(child, parent)"><span class="glyphicon glyphicon-plus"></span></button>
+				<button ng-if="!(child.repeatable == 0) && canDelete(child, parent)" class="btn btn-default" ng-click="deleteElement(child, parent)"><span class="glyphicon glyphicon-minus"></span></button>
+				<button ng-if="!(child.sequence == 1) && canUpElement(child, parent)" class="btn btn-default" ng-click="upElement(child, parent)"><span class="glyphicon glyphicon-chevron-up"></span></button>
+				<button ng-if="!(child.sequence == 1) && canDownElement(child, parent)" class="btn btn-default" ng-click="downElement(child, parent)" ><span class="glyphicon glyphicon-chevron-down"></span></button>
+				<button ng-if="child.attributes" data-toggle="collapse" class="btn btn-default" data-target="#attr_collapse_{{collapse_id}}"><span class="glyphicon glyphicon-wrench"></span></button>
+			</div>
+	   	</div>
+	   	
+	   	<ul data-ng-if="child.attributes.length" id="attr_collapse_{{collapse_id}}" class="collapse attr-group well">
+			<li data-ng-if="att.xmlname != 'lang'" data-ng-repeat="att in child.attributes" data-ng-init="parent1 = child; child1 = att; is_attribute = true" data-ng-include="'<%= url_for '/views/partials/mods/field_renderer.html' %>'"></li>
+		</ul>
+	   	
+	   	<div data-ng-if="child.attributes.length">
+		   	<div class="attr-view-div">
+		   		<span class="attr-view" data-ng-repeat="att in child.attributes" data-ng-if="att.ui_value && (att.xmlname != 'lang')">{{att.ui_value}}</span>
+		   	</div>
+	   	</div>
+   	</div>
+   	
+</div>        
+   
+</script>
+
+<script type="text/ng-template" id="<%= url_for '/views/partials/mods/input_textarea.html' %>">
+<div class="form-group row input-text" ng-class="{ 'input-text-multi': !(child1.repeatable == 0) }" >
+
+	<label class="control-label col-sm-2" ng-class="{ 'text-muted': is_attribute }"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.label}}</label>
+
+	<div class="col-sm-5">
+    	<textarea class="form-control" type="text" ng-model="child.ui_value" value="{{child.ui_value}}" ng-required="{{child.mandatory}}" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'></textarea>
+    	
+    	<ul data-ng-if="child.attributes.length" id="attr_collapse_{{collapse_id}}" class="collapse attr-group well">
+			<li data-ng-if="att.xmlname != 'lang'" data-ng-repeat="att in child.attributes" data-ng-init="parent1 = child; child1 = att; is_attribute = true" data-ng-include="'<%= url_for '/views/partials/mods/field_renderer.html' %>'"></li>
+		</ul>		
+	   	
+	   	<div data-ng-if="child.attributes.length">
+		   	<div class="attr-view-div">
+		   		<span class="attr-view" data-ng-repeat="att in child.attributes" data-ng-if="att.ui_value && (att.xmlname != 'lang')">{{att.ui_value}}</span>
+		   	</div>
+	   	</div>
+    </div>
+    <div class="col-sm-3">
+		
+	    <div class="input-group" ng-class="{ 'has-error': child.mandatory && !child.ui_value }">		    
+			<div ng-if="!is_attribute" class="input-group-btn">
+			
+					<select ng-if="!is_attribute && hasLangAttr(child)" class="form-control" ng-model="child.attributes[getLangAttrNodeIdx(child)].ui_value" ng-options="k as v.en for (k,v) in languages" placeholder="in language">
+						<option value="">-- choose --</option>
+					</select>
+			
+					<button ng-if="!(child.repeatable == 0)" class="btn btn-default" ng-click="addNewElement(child, parent)"><span class="glyphicon glyphicon-plus"></span></button>
+					<button ng-if="!(child.repeatable == 0) && canDelete(child, parent)" class="btn btn-default" ng-click="deleteElement(child, parent)"><span class="glyphicon glyphicon-minus"></span></button>
+					<button ng-if="!(child.sequence == 1) && canUpElement(child, parent)" class="btn btn-default" ng-click="upElement(child, parent)"><span class="glyphicon glyphicon-chevron-up"></span></button>
+					<button ng-if="!(child.sequence == 1) && canDownElement(child, parent)" class="btn btn-default" ng-click="downElement(child, parent)" ><span class="glyphicon glyphicon-chevron-down"></span></button>
+					<button ng-if="child.attributes" data-toggle="collapse" class="btn btn-default" data-target="#attr_collapse_{{collapse_id}}"><span class="glyphicon glyphicon-wrench"></span></button>
+			</div>
+	   	</div>
+		
+   	</div>
+   	<div class="col-sm-2">
+
+    </div>
+   	
+</div>        
+
+</script>
+
+<script type="text/ng-template" id="<%= url_for '/views/partials/mods/input_datetime.html' %>">
+<div class="form-group row" ng-class="{ 'input-datetime': !is_attribute ,'input-datetime-multi': (!is_attribute && !(child1.repeatable == 0)) }">
+
+	<label class="control-label col-sm-2" ng-class="{ 'text-muted': is_attribute }"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.label}}</label>
+
+    <div class="col-sm-10">
+
+    	<div class="input-group" ng-class="{ 'has-error': child.mandatory && !child.ui_value }">
+
+			<input class="form-control" type="text" ng-model="child.ui_value" value="{{child.ui_value}}" ng-required="{{child.mandatory}}" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}' />
+	    	<!--<input class="form-control" type="text" datepicker-popup="dd MMMM yyyy" ng-model="child.ui_value" value="{{child.ui_value}}" show-weeks="false" is-open="opened" min="minDate" max="'2055-01-01'" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="{{child.mandatory}}" placeholder="-- please choose --" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}' /> -->
+
+			<div ng-if="!is_attribute" class="input-group-btn">
+				<button ng-if="!(child.repeatable == 0)" class="btn btn-default" ng-click="addNewElement(child, parent)"><span class="glyphicon glyphicon-plus"></span></button>
+				<button ng-if="!(child.repeatable == 0) && canDelete(child, parent)" class="btn btn-default" ng-click="deleteElement(child, parent)"><span class="glyphicon glyphicon-minus"></span></button>
+				<button ng-if="!(child.sequence == 1) && canUpElement(child, parent)" class="btn btn-default" ng-click="upElement(child, parent)"><span class="glyphicon glyphicon-chevron-up"></span></button>
+				<button ng-if="!(child.sequence == 1) && canDownElement(child, parent)" class="btn btn-default" ng-click="downElement(child, parent)" ><span class="glyphicon glyphicon-chevron-down"></span></button>
+				<button ng-if="child.attributes" data-toggle="collapse" class="btn btn-default" data-target="#attr_collapse_{{collapse_id}}"><span class="glyphicon glyphicon-wrench"></span></button>
+			</div>
+	   	</div>
+		   	
+   		<ul data-ng-if="child.attributes.length" id="attr_collapse_{{collapse_id}}" class="collapse attr-group well">
+			<li data-ng-repeat="att in child.attributes" data-ng-init="parent1 = child; child1 = att; is_attribute = true" data-ng-include="'<%= url_for '/views/partials/mods/field_renderer.html' %>'"></li>
+		</ul>
+	   	
+	   	<div data-ng-if="child.attributes.length">
+		   	<div class="attr-view-div">
+		   		<span class="attr-view" data-ng-repeat="att in child.attributes" data-ng-if="att.ui_value">{{att.ui_value}}</span>
+		   	</div>
+	   	</div>
+
+    </div>
+    
+</div>
+
+</script>
+
+<script type="text/ng-template" id="<%= url_for '/views/partials/mods/input_checkbox.html' %>">
+<div class="form-group" ng-class="{ 'has-error': child.mandatory && !child.ui_value }">
+    <div class="col-sm-offset-2 col-sm-10">
+      <div class="checkbox">
+        <label>
+          <input phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}' ng-model="child.ui_value" type="checkbox" ng-true-value="1" ng-false-value="0" ng-required="{{child.mandatory}}">{{child.label}}
+        </label>
+      </div>
+    </div>
+</div>
+</script>
+
+<script type="text/ng-template" id="<%= url_for '/views/partials/mods/' %>select.html">
+<div class="form-group row input-select" ng-class="{ 'input-text-multi': (!is_attribute && !(child1.repeatable == 0)) }" >
+
+	<label class="control-label col-sm-2" ng-class="{ 'text-muted': is_attribute }"><span class="grey" ng-show="child.ordered">{{child.data_order}}. </span>{{child.label}}</label>
+
+    <div class="col-sm-10">
+
+    	<div class="input-group" ng-class="{ 'has-error': child.mandatory && !child.ui_value }">
+
+	    	<select class="form-control" ng-model="child.ui_value" ng-options="option as getVocLabel(option) for option in vocs[vocsmap[fieldid]]" ng-required="{{child.mandatory}}" placeholder="-- please choose --" phaidra-help phaidra-help-id="{{child.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>
+	        	<option value="">-- please choose --</option>
+	        </select>
+
+   			<div ng-if="!is_attribute" class="input-group-btn">
+				<button ng-if="!(child.repeatable == 0)" class="btn btn-default" ng-click="addNewElement(child, parent)"><span class="glyphicon glyphicon-plus"></span></button>
+				<button ng-if="!(child.repeatable == 0) && canDelete(child, parent)" class="btn btn-default" ng-click="deleteElement(child, parent)"><span class="glyphicon glyphicon-minus"></span></button>
+				<button ng-if="!(child.sequence == 1) && canUpElement(child, parent)" class="btn btn-default" ng-click="upElement(child, parent)"><span class="glyphicon glyphicon-chevron-up"></span></button>
+				<button ng-if="!(child.sequence == 1) && canDownElement(child, parent)" class="btn btn-default" ng-click="downElement(child, parent)" ><span class="glyphicon glyphicon-chevron-down"></span></button>
+				<button ng-if="child.attributes" data-toggle="collapse" class="btn btn-default" data-target="#attr_collapse_{{collapse_id}}"><span class="glyphicon glyphicon-wrench"></span></button>
+			</div>
+	   	</div>
+		   	
+   		<ul data-ng-if="child.attributes.length" id="attr_collapse_{{collapse_id}}" class="collapse attr-group well">
+			<li data-ng-repeat="att in child.attributes" data-ng-init="parent1 = child; child1 = att; is_attribute = true" data-ng-include="'<%= url_for '/views/partials/mods/field_renderer.html' %>'"></li>
+		</ul>
+	   	
+	   	<div data-ng-if="child.attributes.length">
+		   	<div class="attr-view-div">
+		   		<span class="attr-view" data-ng-repeat="att in child.attributes" data-ng-if="att.ui_value">{{att.ui_value}}</span>
+		   	</div>
+	   	</div>
+
+    </div>
+    
+</div>
+
+</script>

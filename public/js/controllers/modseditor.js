@@ -122,23 +122,6 @@ app.controller('ModseditorCtrl',  function($scope, $modal, $location, DirectoryS
     	node.value = default_value;
     	node.loaded_value = default_value;
     }
-
-    $scope.loadLanguages = function (){
-    	var promise = MetadataService.getLanguages();
-        $scope.loadingTracker.addPromise(promise);
-        promise.then(
-    		function(response) {
-    			$scope.alerts = response.data.alerts;
-    			$scope.languages = response.data.languages;
-    		}
-    		,function(response) {
-           		$scope.alerts = response.data.alerts;
-           		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
-           	}
-    	);
-    }
-
-   
    
     $scope.load_init = function(){
 
@@ -210,7 +193,7 @@ app.controller('ModseditorCtrl',  function($scope, $modal, $location, DirectoryS
 
  $scope.saveTemplate = function() {
 	 $scope.form_disabled = true;
-     var promise = MetadataService.saveTemplate($scope.tid, $scope.fields);
+     var promise = MetadataService.saveModsTemplate($scope.tid, $scope.fields);
      $scope.loadingTracker.addPromise(promise);
      promise.then(
       	function(response) {
@@ -233,8 +216,10 @@ app.controller('ModseditorCtrl',  function($scope, $modal, $location, DirectoryS
       	function(response) {
       		$scope.alerts = response.data.alerts;
       		$scope.fields = response.data.mods;
-      		$scope.templatetitle = response.data.title;
-      		$scope.loadLanguages();
+      		$scope.templatetitle = response.data.title;      		
+      		$scope.languages = response.data.languages;
+			$scope.vocs = response.data.vocabularies;
+			$scope.vocsmap = response.data.vocabularies_mapping;
       		$scope.form_disabled = false;
       	}
       	,function(response) {
@@ -254,7 +239,9 @@ app.controller('ModseditorCtrl',  function($scope, $modal, $location, DirectoryS
       		$scope.alerts = response.data.alerts;
       		$scope.fields = response.data.mods;
       		$scope.templatetitle = response.data.title;
-      		$scope.loadLanguages();
+      		$scope.languages = response.data.languages;
+			$scope.vocs = response.data.vocabularies;
+			$scope.vocsmap = response.data.vocabularies_mapping;
       		$scope.form_disabled = false;
       	}
       	,function(response) {
@@ -283,7 +270,7 @@ $scope.saveTemplateAs = function () {
 
       // save template
       $scope.form_disabled = true;
-      var promise = MetadataService.saveTemplateAs($scope.templatetitle, $scope.fields);
+      var promise = MetadataService.saveModsTemplateAs($scope.templatetitle, $scope.fields);
       $scope.loadingTracker.addPromise(promise);
       promise.then(
        	function(response) {
@@ -487,7 +474,8 @@ $scope.saveTemplateAs = function () {
     }
     
     $scope.getVocLabel = function(value){
-    	return value.charAt(0).toUpperCase() + value.slice(1);
+    	return value;
+    	//return value.charAt(0).toUpperCase() + value.slice(1);
     }
 });
 

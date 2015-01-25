@@ -21,8 +21,14 @@
     </script>
     
     <div class="home-div">
-	    
+	<!--    
+	   		<h1>{{'Load static files' | translate }}</h1>
 	   		
-	   
+	   		<p>
+    <a href="#" ng-click="setLang('en_US')">English</a>
+    |
+    <a href="#" ng-click="setLang('de_DE')">Русский</a>
+  </p>
+	   -->
    </div>
    

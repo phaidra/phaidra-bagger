@@ -10,13 +10,15 @@ use File::Find;
 use Mojo::Util qw(slurp);
 use lib "lib";
 use PhaidraBagMan qw(list_bags print_bags);
+use PhaidraBagger::Model::Cache;
 use base 'Mojolicious::Controller';
 use utf8;
 
 sub get_uwmetadata_tree {
 	my $self = shift;
-	
-	my $res = $self->_get_uwmetadata_tree();
+		
+	my $cache_model = PhaidraBagger::Model::Cache->new;
+	my $res = $cache_model->get_uwmetadata_tree($self);
 	
 	$self->render( json => $res, status => $res->{status});
 }
@@ -24,175 +26,10 @@ sub get_uwmetadata_tree {
 sub get_mods_tree {
 	my $self = shift;
 	
-	my $res = $self->_get_mods_tree();
+	my $cache_model = PhaidraBagger::Model::Cache->new;
+	my $res = $cache_model->get_mods_tree($self);		 
 	
 	$self->render( json => $res, status => $res->{status});
-}
-
-sub _get_uwmetadata_tree {
-    my $self = shift;
-
-	my $res = { alerts => [], status => 200 };
-
-	my $cachekey = 'uwmetadata_tree';
-	my $cacheval = $self->app->chi->get($cachekey);
-	if($cacheval){
-		$self->app->log->debug("[cache hit] $cachekey");
-		return $cacheval;
-	}
-
-	if($self->app->config->{phaidra}->{local_uwmetadata_tree}){
-
-		$self->app->log->debug("Reading uwmetadata tree from file");
-
-		# read metadata tree	    
-	    my $bytes = slurp $self->app->config->{phaidra}->{local_uwmetadata_tree};
-		unless(defined($bytes)){
-		   	push @{$res->{alerts}}, "Error reading local_uwmetadata_tree";
-		   	$res->{status} = 500;
-	    	return $res;
-		}	    
-
-		my $metadata = decode_json($bytes);
- 		$res->{tree} = $metadata->{tree};
- 		$res->{languages} = $metadata->{languages};
-
- 		$cacheval = $res;
- 		$self->app->chi->set($cachekey, $cacheval, '1 day');
-	    # serialization check
-	    $cacheval = $self->app->chi->get($cachekey);
-
- 		return $res;
-	}
-
-	$self->app->log->debug("Reading uwmetadata tree from api");
-
-	my $url = Mojo::URL->new;
-	$url->scheme('https');
-	my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
-	$url->host($base[0]);
-	if(exists($base[1])){
-		$url->path($base[1]."/uwmetadata/tree");
-	}else{
-		$url->path("/uwmetadata/tree");
-	}
-	$url->query({mfv => $self->app->config->{phaidra}->{metadata_format_version}});
-
-	 my $tx = $self->ua->get($url);
-
-		  	if (my $rs = $tx->success) {
-
-				$res->{languages} = $rs->json->{languages};
-				$res->{tree} = $rs->json->{tree};
-				foreach my $a (@{$rs->json->{alerts}}){
-					push @{$res->{alerts}}, $a;	
-				}
-
-
-				$cacheval = $res;
-		 		$self->app->chi->set($cachekey, $cacheval, '1 day');
-			    # serialization check
-			    $cacheval = $self->app->chi->get($cachekey);
-		  		return $res;
-
-		  	}else {
-			 	my ($err, $code) = $tx->error;
-			  	if(exists($tx->res->json->{alerts})) {
-			  		foreach my $a (@{$tx->res->json->{alerts}}){
-						push @{$res->{alerts}}, $a;	
-					}
-			  		$res->{status} = $code ? $code : 500;
-			  		return $res;
-
-				 }else{
-				 	push @{$res->{alerts}}, $err;
-				  	$res->{status} = $code ? $code : 500;
-			  		return $res;
-				 }
-			}
-}
-
-sub _get_mods_tree {
-    my $self = shift;
-
-	my $res = { alerts => [], status => 200 };
-
-	my $cachekey = 'mods_tree';
-	my $cacheval = $self->app->chi->get($cachekey);
-	if($cacheval){
-		$self->app->log->debug("[cache hit] $cachekey");
-		return $cacheval;
-	}
-
-	if($self->app->config->{phaidra}->{local_mods_tree}){
-
-		$self->app->log->debug("Reading mods tree from file");
-
-		# read metadata tree	    
-	    my $bytes = slurp $self->app->config->{phaidra}->{local_mods_tree};
-		unless(defined($bytes)){
-		   	push @{$res->{alerts}}, "Error reading local_mods_tree";
-		   	$res->{status} = 500;
-	    	return $res;
-		}	    
-
-		my $metadata = decode_json($bytes);
- 		$res->{tree} = $metadata->{tree};
- 		$res->{vocabularies} = $metadata->{vocabularies};
- 		$res->{vocabularies_mapping} = $metadata->{vocabularies_mapping};
- 		$res->{languages} = $metadata->{languages};
-
- 		$cacheval = $res;
- 		$self->app->chi->set($cachekey, $cacheval, '1 day');
-	    # serialization check
-	    $cacheval = $self->app->chi->get($cachekey);
-
- 		return $res;
-	}
-
-	$self->app->log->debug("Reading mods tree from api");
-
-	my $url = Mojo::URL->new;
-	$url->scheme('https');
-	my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
-	$url->host($base[0]);
-	if(exists($base[1])){
-		$url->path($base[1]."/mods/tree");
-	}else{
-		$url->path("/mods/tree");
-	}
-
-	 my $tx = $self->ua->get($url);
-
-		  	if (my $rs = $tx->success) {
-
-				$res->{languages} = $rs->json->{languages};
-				$res->{tree} = $rs->json->{tree};
-				foreach my $a (@{$rs->json->{alerts}}){
-					push @{$res->{alerts}}, $a;	
-				}
-
-				$cacheval = $res;
-		 		$self->app->chi->set($cachekey, $cacheval, '1 day');
-			    # serialization check
-			    $cacheval = $self->app->chi->get($cachekey);
-		  		return $res;
-
-		  	}else {
-			 	my ($err, $code) = $tx->error;
-			  	if(exists($tx->res->json->{alerts})) {
-			  		foreach my $a (@{$tx->res->json->{alerts}}){
-						push @{$res->{alerts}}, $a;	
-					}
-			  		$res->{status} = $code ? $code : 500;
-			  		return $res;
-
-				 }else{
-				 	push @{$res->{alerts}}, $err;
-				  	$res->{status} = $code ? $code : 500;
-			  		return $res;
-				 }
-			}
 }
 
 sub import_uwmetadata_xml {
@@ -769,7 +606,7 @@ sub load {
           my $tid = $self->get_default_template_id();
           if($tid){
             my $oid = Mango::BSON::ObjectID->new($tid);
-            my $tmplt = $self->mango->db->collection('templates.uwmetadata')->find_one({_id => $oid});
+            my $tmplt = $self->mango->db->collection('templates')->find_one({_id => $oid});
             $self->app->log->info("[".$self->current_user->{username}."] Loaded default template '".$tmplt->{title}."' [$tid]");
             # init
             $bag->{metadata} = undef unless($bag->{metadata});
@@ -891,7 +728,7 @@ sub _edit_prepare_data {
 	my $redmine_baseurl = $project_config->{redmine_baseurl};
   my $included_classifications = $project_config->{included_classifications};
 
-    my $templates = $self->mango->db->collection('templates.uwmetadata')
+    my $templates = $self->mango->db->collection('templates')
 		->find(
 			{ '$or' =>
 				[
@@ -1395,7 +1232,7 @@ sub load_template {
   my $oid = Mango::BSON::ObjectID->new($tid);
 
   $self->render_later;
-  my $reply = $self->mango->db->collection('templates.uwmetadata')->find_one(
+  my $reply = $self->mango->db->collection('templates')->find_one(
     {_id => $oid} =>
       sub {
             my ($reply, $error, $doc) = @_;
@@ -1504,7 +1341,7 @@ sub load_difab_template {
 	my $oid = Mango::BSON::ObjectID->new($tid);
 
 	$self->render_later;
-	my $reply = $self->mango->db->collection('templates.uwmetadata')->find_one(
+	my $reply = $self->mango->db->collection('templates')->find_one(
 		{_id => $oid} =>
 			sub {
 				    my ($reply, $error, $doc) = @_;

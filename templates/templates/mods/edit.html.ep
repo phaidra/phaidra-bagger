@@ -114,9 +114,7 @@
 								</fieldset>
 								
 							</form>
-							<pre>
-					   			{{fields}}
-					   		</pre>
+							
 				        </div>
 
 		        	</tab>			

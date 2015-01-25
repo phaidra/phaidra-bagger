@@ -93,6 +93,23 @@ angular.module('metadataService', [])
 	    		data    : { uwmetadata: uwmetadata }
 	    	});
 	    },
+	    
+		saveModsTemplateAs: function(title, mods){
+			   return $http({
+				   method  : 'PUT',
+		        url     : $('head base').attr('href')+'template',
+		        data    : { title: title, mods: mods }
+			   });
+		 },
+		
+		 saveModsTemplate: function(tid, mods){
+		 	return $http({
+		 		method  : 'POST',
+		 		url     : $('head base').attr('href')+'template/'+tid,
+		 		data    : { mods: mods }
+		 	});
+		 },
+
 
 		deleteTemplate: function(tid){
 			return $http({
