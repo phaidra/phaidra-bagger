@@ -85,7 +85,7 @@
 							                	<span>General</span>
 							                </tab-heading>							                
 											
-											<span  data-ng-repeat="child_lvl_1 in fields | filter:filterHidden" active="child_lvl_1.active" disabled="child_lvl_1.disabled">
+											<span data-ng-repeat="child_lvl_1 in fields | filter:filterHidden" active="child_lvl_1.active" disabled="child_lvl_1.disabled">
 										
 												<span data-ng-if="separateTabs.indexOf(child_lvl_1.xmlname) == -1">							                								                		
 									                  	<ul>

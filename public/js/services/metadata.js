@@ -144,6 +144,13 @@ angular.module('metadataService', [])
 				method  : 'POST',
 				url     : $('head base').attr('href')+'template/'+tid+'/shared/toggle'
 			});
+		},
+
+		getModsBagClassifications: function(bagid) {
+		    return $http({
+		        method  : 'GET',
+		        url     : $('head base').attr('href')+'bag/'+bagid+'/mods/classifications'
+		    });
 		}
 	}
 });

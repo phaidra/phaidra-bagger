@@ -231,5 +231,35 @@ sub get_uwmetadata_tree {
 			}
 }
 
+sub resolve_class_uri {
+		my $self = shift;
+		my $c = shift;
+		my $uri = shift;
+
+		my $class;
+
+		# get taxon labels
+		my $res = $self->get_terms_label($c, $uri);
+		if($res->{status} eq 200){
+			$class = $res->{labels};
+		}else{
+			$c->app->log->error("Cannot get taxon labels: ".$self->app->dumper($res));
+		}
+
+		# get classification labels
+		my $ns = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification';
+		$uri =~ m/($ns\/cls_\d+)\//;
+		$res = $self->get_terms_label($c, $1);
+		if($res->{status} eq 200){
+			$class->{classification} = $res->{labels};
+		}else{
+			$c->app->log->error("Cannot get classification labels: ".$c->app->dumper($res));
+		}
+		$class->{uri} = $uri;
+
+		return $class;
+}
+
+
 1;
 __END__

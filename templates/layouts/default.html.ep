@@ -94,6 +94,9 @@
 
   	<!-- Checkbox -->
   	<link href="<%= url_for '/css/awesome-bootstrap-checkbox.css' %>" rel="stylesheet">
+  	
+  	<!-- Bindonce -->
+  	<script src="<%= url_for '/js/bindonce.min.js' %>"></script>
 
   	<%= content_for 'header' %>
   </head>

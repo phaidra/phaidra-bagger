@@ -46,7 +46,6 @@ app.controller('ModseditorCtrl',  function($scope, $modal, $location, DirectoryS
     	if($scope.initdata.bagid){
         $scope.mode = 'bag';
     		$scope.bagid = $scope.initdata.bagid;
-			$scope.bagid = $scope.initdata.bagid;
     		$scope.loadBag();
     	}else{
     		if($scope.initdata.tid){
@@ -163,7 +162,9 @@ app.controller('ModseditorCtrl',  function($scope, $modal, $location, DirectoryS
     			$scope.alerts = response.data.alerts;
     			$scope.languages = response.data.metadata.languages;
     			$scope.fields = response.data.metadata.mods;
-    			$scope.bag = response.data;
+    			$scope.vocs = response.data.metadata.vocabularies;
+    			$scope.vocsmap = response.data.metadata.vocabularies_mapping;
+    			$scope.bag = response.data;    			
     			$scope.load_init();
     		}
     		,function(response) {
@@ -477,7 +478,41 @@ $scope.saveTemplateAs = function () {
     	return value;
     	//return value.charAt(0).toUpperCase() + value.slice(1);
     }
+    
+    $scope.editAttributes = function(child, fieldid){
+
+	    var attrsModalInstance = $modal.open({
+	      templateUrl: $('head base').attr('href')+'views/modals/mods_edit_attributes.html',
+	      controller: EditAttributesModalInstanceCtrl,
+	      scope: $scope,
+	      resolve: {
+	        params: function () {
+	          return { 
+	        	  attributes: child.attributes,
+	        	  xmlname: child.xmlname,
+	        	  label: child.label,
+	        	  fieldid: fieldid
+	          }
+	        }
+	      }
+	    });	
+	    
+	}
+
+
 });
+
+var EditAttributesModalInstanceCtrl = function ($scope, $modalInstance, params) {
+
+  $scope.child_attributes = params.attributes;
+  $scope.child_xmlname = params.xmlname;
+  $scope.child_label = params.label;
+  $scope.child_fieldid = params.fieldid;
+
+  $scope.cancel = function () {
+	  $modalInstance.dismiss('cancel');
+  };
+};
 
 var TemplateModalInstanceCtrl = function ($scope, $modalInstance, currenttitle) {
 

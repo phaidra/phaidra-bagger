@@ -292,3 +292,11 @@ reenable disabled radius
 .panel-input-group {
 	max-width: 300px;
 }
+
+.attr-view {
+	margin-right: 10px;
+}
+
+.edit-attrs-modal {
+	width: 75%;
+}

@@ -348,6 +348,7 @@ sub startup {
     $autz->route('bag/:bagid/:attribute/:value') ->via('delete')   ->to('bag#unset_attribute');
 	$autz->route('bag/:bagid/geo') ->via('get')   ->to('bag#get_geo');
 	$autz->route('bag/:bagid/geo') ->via('post')   ->to('bag#save_geo');
+	$autz->route('bag/:bagid/mods/classifications') ->via('get')   ->to('bag#get_mods_classifications');
 	
 	$autz->route('bag/uwmetadata/tree') ->via('get') ->to('bag#get_uwmetadata_tree');
 	$autz->route('bag/mods/tree') ->via('get') ->to('bag#get_mods_tree');

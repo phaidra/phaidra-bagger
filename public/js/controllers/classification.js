@@ -1,4 +1,4 @@
-app.controller('ClassificationCtrl', function($scope, $modal, $location, DirectoryService, FrontendService, VocabularyService, JobService, promiseTracker) {
+app.controller('ClassificationCtrl', function($scope, $modal, $location, DirectoryService, FrontendService, VocabularyService, MetadataService, JobService, promiseTracker) {
 
 	// we will use this to track running ajax requests to show spinner
 	$scope.loadingTracker = promiseTracker('loadingTrackerFrontend');
@@ -7,12 +7,18 @@ app.controller('ClassificationCtrl', function($scope, $modal, $location, Directo
 
 	$scope.initdata = '';
 	$scope.current_user = '';
+	
+	$scope.mode = 'bagedit_uwmetadata';
 
 	$scope.init = function (initdata, mode) {
+		$scope.mode = mode;
 		$scope.initdata = angular.fromJson(initdata);
 		$scope.current_user = $scope.initdata.current_user;
 		$scope.getClassifications();
-  	$scope.getMyClassifications();
+		$scope.getMyClassifications();
+		if(mode == 'bagedit_mods'){
+			$scope.getModsBagClassifications();
+		}
   };
 
     $scope.clsns = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification';
@@ -27,7 +33,29 @@ app.controller('ClassificationCtrl', function($scope, $modal, $location, Directo
     $scope.class_search = {query: ''};
 
     $scope.class_roots = [];
-		$scope.class_roots_all = [];
+	$scope.class_roots_all = [];
+	
+	$scope.mods_bag_classes = [];
+
+	$scope.getModsBagClassifications = function() {
+		$scope.form_disabled = true;
+	     var promise = MetadataService.getModsBagClassifications($scope.initdata.bagid);
+	     $scope.loadingTracker.addPromise(promise);
+	     promise.then(
+	      function(response) {
+	        $scope.form_disabled = false;
+	        $scope.mods_bag_classes = [];
+	        for (var i = 0; i < response.data.bag_classifications.length; ++i) {
+	        	$scope.mods_bag_classes.push(response.data.bag_classifications[i]);	           
+	        }
+	        $scope.alerts = response.data.alerts;
+	      }
+	      ,function(response) {
+	        $scope.form_disabled = false;
+	        $scope.alerts = response.data.alerts;
+	       }
+	    );
+	}
 
     $scope.getClassifications = function() {
 		 $scope.form_disabled = true;
@@ -42,16 +70,6 @@ app.controller('ClassificationCtrl', function($scope, $modal, $location, Directo
 	      		for (var i = 0; i < response.data.terms.length; ++i) {
 							var term = response.data.terms[i];
 							term.current_path = [];
-
-							/*
-							var pos = $scope.classes_config[response.data.terms[i].uri];
-	      			if(pos > 0){
-	      				// pos goes from 1
-	      				$scope.class_roots[pos-1] = response.data.terms[i];
-		      			// init current_path array
-	      				$scope.class_roots[pos-1].current_path = [];
-	      			}
-							*/
 
 							if($scope.initdata['included_classifications']){
 								for (var j = 0; j < $scope.initdata.included_classifications.length; ++j) {
@@ -143,8 +161,41 @@ app.controller('ClassificationCtrl', function($scope, $modal, $location, Directo
 	 };
 
 	 $scope.removeClassFromObject = function(index){
-		 $scope.selectBagClassificationNode().children.splice(index,1);
-		 $scope.save();
+		 
+		 if($scope.mode == 'bagedit_mods'){
+			 var uri = $scope.mods_bag_classes[index].uri;
+			 var node2remove_idx = -1;
+			 for (var i = 0; i < $scope.$parent.fields.length; ++i) {			 
+				 if($scope.$parent.fields[i].xmlname == 'classification'){
+					 var cls = $scope.$parent.fields[i]; 
+					 var authuri;
+					 var valueuri;
+					 for (var j = 0; j < cls.attributes.length; ++j) {
+						 if(cls.attributes[j].xmlname == 'authorityURI'){
+							 authuri = cls.attributes[j].ui_value; 
+						 }
+						 if(cls.attributes[j].xmlname == 'valueURI'){
+							 valueuri = cls.attributes[j].ui_value; 
+						 }
+					 }
+					 if(authuri == 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification' && valueuri == uri){
+						 node2remove_idx = i;
+						 break;
+					 }
+				 }
+			 }
+			 if(node2remove_idx >= 0){
+				 $scope.$parent.fields.splice(node2remove_idx, 1);
+			 }
+			 $scope.save();
+			 $scope.getModsBagClassifications();
+			 return
+		 }
+		 
+		 if($scope.mode == 'bagedit_uwmetadata'){
+			 $scope.selectBagClassificationNode().children.splice(index,1);
+			 $scope.save();
+		 }
 	 };
 
 	 $scope.save = function(){
@@ -179,130 +230,225 @@ app.controller('ClassificationCtrl', function($scope, $modal, $location, Directo
 	     );
 	 };
 
+	 $scope.selectLastModsClassNodeIdx = function(){
+		 
+		 var last_idx = 0;
+		 for (var i = 0; i < $scope.$parent.fields.length; ++i) {			 
+			 if($scope.$parent.fields[i].xmlname == 'classification'){
+				 last_idx = i;
+			 }else{
+				 if(last_idx > 0){
+					return last_idx;
+				 }
+			 }
+		 }
+		 return last_idx;
+	 }
+
 	 $scope.addClassToObjectFromTaxon = function(uri){
-
-		 $scope.form_disabled = true;
-	     var promise = VocabularyService.getTaxonPath(uri);
-	     $scope.loadingTracker.addPromise(promise);
-	     promise.then(
-	      	function(response) {
-	      		$scope.alerts = response.data.alerts;
-
-	      		var taxonpath = {
-	      			 xmlns: $scope.clsns,
-			   	     xmlname: "taxonpath",
-			   	     datatype: "Node",
-			   	     children: [
-			           {
-			   	             xmlns: $scope.clsns,
-			   	             xmlname: "source",
-			   	             datatype: "ClassificationSource",
-			   	             ui_value: response.data.taxonpath[0].uri,
-			   	             value_labels: response.data.taxonpath[0].labels
-			   	       }
-			   	    ]
-			   	};
-
-	      		for (var i = 1; i < response.data.taxonpath.length; ++i) {
-
-	      			 var taxondata = response.data.taxonpath[i];
-
-	      			 var t = {
-					     xmlns: $scope.clsns,
-					     xmlname: "taxon",
-					     datatype: "Taxon",
-					     ordered: 1,
-	      				 data_order: i-1,
-					 	 ui_value: taxondata.uri,
-					 	 value_labels: {
-						 	labels: taxondata.labels,
-						 	upstream_identifier: taxondata.upstream_identifier,
-						 	term_id: taxondata.term_id
-						 }
-
-					 };
-
-	      			 // copy nonpreferred array
-					 if(typeof taxondata.nonpreferred != 'undefined'){
-						 if(taxondata.nonpreferred.length > 0){
-							 t.value_labels['nonpreferred'] = [];
-							 for (var j = 0; j < taxondata.nonpreferred.length; ++j) {
-								 t.value_labels['nonpreferred'].push(taxondata.nonpreferred[j]);
+		 
+		 if($scope.mode == 'bagedit_mods'){
+			 var idx = $scope.selectLastModsClassNodeIdx();
+			 				 
+			 var newnode = {
+		            "xmlname":"classification",
+		            "input_type":"input_text",
+		            "label":"Classification",
+		            "attributes":[
+		                {
+		                    "xmlname":"lang",
+		                    "input_type":"input_text",
+		                    "label":"Language"
+		                },
+		                {
+		                    "xmlname":"script",
+		                    "input_type":"input_text",
+		                    "label":"Script"
+		                },
+		                {
+		                    "xmlname":"transliteration",
+		                    "input_type":"input_text",
+		                    "label":"Transliteration"
+		                },
+		                {
+		                    "xmlname":"authority",
+		                    "input_type":"select",
+		                    "label":"Authority"
+		                },
+		                {
+		                    "xmlname":"authorityURI",
+		                    "input_type":"input_text",
+		                    "label":"Authority URI",
+		                    "ui_value": 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification'
+		                },
+		                {
+		                    "xmlname":"valueURI",
+		                    "input_type":"input_text",
+		                    "label":"Value URI",
+		                    "ui_value": uri
+		                },
+		                {
+		                    "xmlname":"edition",
+		                    "input_type":"input_text",
+		                    "label":"Edition"
+		                },
+		                {
+		                    "xmlname":"displayLabel",
+		                    "input_type":"input_text",
+		                    "label":"Display label"
+		                },
+		                {
+		                    "xmlname":"usage",
+		                    "input_type":"select",
+		                    "label":"Usage"
+		                },
+		                {
+		                    "xmlname":"generator",
+		                    "input_type":"input_text",
+		                    "label":"Generator"
+		                }
+		            ]
+		     }; 			 
+				 
+			 $scope.$parent.fields.splice(idx,0,newnode);
+			 $scope.save();
+			 $scope.getModsBagClassifications();
+			 return;
+		 }
+		 
+		 if($scope.mode == 'bagedit_uwmetadata'){
+			 $scope.form_disabled = true;
+		     var promise = VocabularyService.getTaxonPath(uri);
+		     $scope.loadingTracker.addPromise(promise);
+		     promise.then(
+		      	function(response) {
+		      		$scope.alerts = response.data.alerts;
+	
+		      		var taxonpath = {
+		      			 xmlns: $scope.clsns,
+				   	     xmlname: "taxonpath",
+				   	     datatype: "Node",
+				   	     children: [
+				           {
+				   	             xmlns: $scope.clsns,
+				   	             xmlname: "source",
+				   	             datatype: "ClassificationSource",
+				   	             ui_value: response.data.taxonpath[0].uri,
+				   	             value_labels: response.data.taxonpath[0].labels
+				   	       }
+				   	    ]
+				   	};
+	
+		      		for (var i = 1; i < response.data.taxonpath.length; ++i) {
+	
+		      			 var taxondata = response.data.taxonpath[i];
+	
+		      			 var t = {
+						     xmlns: $scope.clsns,
+						     xmlname: "taxon",
+						     datatype: "Taxon",
+						     ordered: 1,
+		      				 data_order: i-1,
+						 	 ui_value: taxondata.uri,
+						 	 value_labels: {
+							 	labels: taxondata.labels,
+							 	upstream_identifier: taxondata.upstream_identifier,
+							 	term_id: taxondata.term_id
+							 }
+	
+						 };
+	
+		      			 // copy nonpreferred array
+						 if(typeof taxondata.nonpreferred != 'undefined'){
+							 if(taxondata.nonpreferred.length > 0){
+								 t.value_labels['nonpreferred'] = [];
+								 for (var j = 0; j < taxondata.nonpreferred.length; ++j) {
+									 t.value_labels['nonpreferred'].push(taxondata.nonpreferred[j]);
+								 }
 							 }
 						 }
-					 }
-
-					 taxonpath.children.push(t);
-	      		}
-
-	      		var ch = $scope.selectBagClassificationNode().children;
-				// -2 because the last two are not taxonpaths but description and keywords
-				ch.splice(ch.length-2,0,taxonpath);
-				$scope.save();
-
-	      		$scope.form_disabled = false;
-	      	}
-	      	,function(response) {
-	      		$scope.alerts = response.data.alerts;
-	      		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
-	      		$scope.form_disabled = false;
-	      	}
-	     );
+	
+						 taxonpath.children.push(t);
+		      		}
+	
+		      		var ch = $scope.selectBagClassificationNode().children;
+					// -2 because the last two are not taxonpaths but description and keywords
+					ch.splice(ch.length-2,0,taxonpath);
+					$scope.save();
+	
+		      		$scope.form_disabled = false;
+		      	}
+		      	,function(response) {
+		      		$scope.alerts = response.data.alerts;
+		      		$scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
+		      		$scope.form_disabled = false;
+		      	}
+		     );
+		 }
 	 };
 
 	 $scope.addClassToObject = function(classif){
 
-		 var taxonpath = {
-             xmlns: $scope.clsns,
-		     xmlname: "taxonpath",
-		     datatype: "Node",
-		     children: [
-    	       {
-		             xmlns: $scope.clsns,
-		             xmlname: "source",
-		             datatype: "ClassificationSource",
-		             ui_value: classif.uri,
-		             value_labels: classif.labels
-		       }
-		    ]
-		 };
-
-		 for (var i = 0; i < classif.current_path.length; ++i) {
-			 var taxons = classif.current_path[i];
-			 if(typeof taxons.selected != 'undefined'){
-				 var t = {
-				     xmlns: $scope.clsns,
-				     xmlname: "taxon",
-				     datatype: "Taxon",
-				     ordered: 1,
-				     data_order: i,
-				 	 ui_value: taxons.selected.uri,
-				 	 value_labels: {
-					 	labels: taxons.selected.labels,
-					 	upstream_identifier: taxons.selected.upstream_identifier,
-					 	term_id: taxons.selected.term_id
-					 }
-
-				 };
-
-				 // copy nonpreferred array
-				 if(typeof taxons.selected.nonpreferred != 'undefined'){
-					 if(taxons.selected.nonpreferred.length > 0){
-						 t.value_labels['nonpreferred'] = [];
-						 for (var j = 0; j < taxons.selected.nonpreferred.length; ++j) {
-							 t.value_labels['nonpreferred'].push(taxons.selected.nonpreferred[j]);
+		 if($scope.mode == 'bagedit_mods'){
+			 $scope.addClassToObjectFromTaxon($scope.lastSelectedTaxons[classif.uri].uri);
+			 $scope.save();
+			 $scope.getModsBagClassifications();
+			 return;
+		 }
+		 
+		 if($scope.mode == 'bagedit_uwmetadata'){
+			 var taxonpath = {
+	             xmlns: $scope.clsns,
+			     xmlname: "taxonpath",
+			     datatype: "Node",
+			     children: [
+	    	       {
+			             xmlns: $scope.clsns,
+			             xmlname: "source",
+			             datatype: "ClassificationSource",
+			             ui_value: classif.uri,
+			             value_labels: classif.labels
+			       }
+			    ]
+			 };
+	
+			 for (var i = 0; i < classif.current_path.length; ++i) {
+				 var taxons = classif.current_path[i];
+				 if(typeof taxons.selected != 'undefined'){
+					 var t = {
+					     xmlns: $scope.clsns,
+					     xmlname: "taxon",
+					     datatype: "Taxon",
+					     ordered: 1,
+					     data_order: i,
+					 	 ui_value: taxons.selected.uri,
+					 	 value_labels: {
+						 	labels: taxons.selected.labels,
+						 	upstream_identifier: taxons.selected.upstream_identifier,
+						 	term_id: taxons.selected.term_id
+						 }
+	
+					 };
+	
+					 // copy nonpreferred array
+					 if(typeof taxons.selected.nonpreferred != 'undefined'){
+						 if(taxons.selected.nonpreferred.length > 0){
+							 t.value_labels['nonpreferred'] = [];
+							 for (var j = 0; j < taxons.selected.nonpreferred.length; ++j) {
+								 t.value_labels['nonpreferred'].push(taxons.selected.nonpreferred[j]);
+							 }
 						 }
 					 }
+	
+	
+					 taxonpath.children.push(t);
 				 }
-
-
-				 taxonpath.children.push(t);
 			 }
-		 }
-		 var ch = $scope.selectBagClassificationNode().children;
-		 // -2 because the last two are not taxonpaths but description and keywords
-		 ch.splice(ch.length-2,0,taxonpath);
-		 $scope.save();
+			 var ch = $scope.selectBagClassificationNode().children;
+			 // -2 because the last two are not taxonpaths but description and keywords
+			 ch.splice(ch.length-2,0,taxonpath);
+			 $scope.save();
+		}
 	 };
 
 	 $scope.getFields = function() {

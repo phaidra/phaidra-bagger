@@ -1,22 +1,36 @@
-<div class="container">
+<div bindonce class="container">
 
-
-	<div class="class-panel" data-ng-repeat="tpath in selectBagClassificationNode().children" ng-if="tpath.xmlname == 'taxonpath' && tpath.children[0].ui_value != ''">
-		<div class="class-panel-header" data-ng-repeat="elm in tpath.children" ng-if="elm.xmlname == 'source'">{{elm.value_labels.en}}</div>
-		<span class="pull-left">
-			<a href="#tax_collapse{{$index}}" data-toggle="collapse">{{tpath.children[tpath.children.length-1].value_labels.labels.en}}</a>
-			<span id="tax_collapse{{$index}}" class="collapse">
-				<ol class="breadcrumb class-breadcrumb">
-				  	<li data-ng-repeat="elm in tpath.children" ng-if="elm.xmlname == 'taxon'">{{elm.value_labels.labels.en}}</li>
-				</ol>
+	<span bo-if="mode == 'bagedit_uwmetadata'">
+		<div class="class-panel" data-ng-repeat="tpath in selectBagClassificationNode().children" ng-if="tpath.xmlname == 'taxonpath' && tpath.children[0].ui_value != ''">
+			<div class="class-panel-header" data-ng-repeat="elm in tpath.children" ng-if="elm.xmlname == 'source'">{{elm.value_labels.en}}</div>
+			<span class="pull-left">
+				<a href="#tax_collapse{{$index}}" data-toggle="collapse">{{tpath.children[tpath.children.length-1].value_labels.labels.en}}</a>
+				<span id="tax_collapse{{$index}}" class="collapse">
+					<ol class="breadcrumb class-breadcrumb">
+					  	<li data-ng-repeat="elm in tpath.children" ng-if="elm.xmlname == 'taxon'">{{elm.value_labels.labels.en}}</li>
+					</ol>
+				</span>
 			</span>
-		</span>
-		<span class="btn-group pull-right class-panel-buttons">
-		    <button class="btn btn-default" ng-click="toggleClassification(tpath.children[tpath.children.length-1].ui_value)"><span class="glyphicon glyphicon-star star-class" ng-class="{'star-class-fav': isMyClass(tpath.children[tpath.children.length-1].ui_value)}"></span></button>
-		    <button class="btn btn-primary" ng-click="removeClassFromObject($index)"><span class="glyphicon glyphicon-minus-sign"></span></button>
-		</span>
-		<div class="clearfix"></div>
-	</div>
+			<span class="btn-group pull-right class-panel-buttons">
+			    <button class="btn btn-default" ng-click="toggleClassification(tpath.children[tpath.children.length-1].ui_value)"><span class="glyphicon glyphicon-star star-class" ng-class="{'star-class-fav': isMyClass(tpath.children[tpath.children.length-1].ui_value)}"></span></button>
+			    <button class="btn btn-primary" ng-click="removeClassFromObject($index)"><span class="glyphicon glyphicon-minus-sign"></span></button>
+			</span>
+			<div class="clearfix"></div>
+		</div>
+	</span>
+	
+	<span bo-if="mode == 'bagedit_mods'">
+		<div class="class-panel" data-ng-repeat="item in mods_bag_classes">
+			<div class="class-panel-header">{{item.classification.en}}</div>
+			<span class="pull-left">
+				<strong>{{item.labels.en}}</strong> <small>{{item.upstream_identifier}}</small>
+			</span>
+			<span class="btn-group pull-right class-panel-buttons">
+			  <button class="btn btn-primary" ng-click="removeClassFromObject($index)"><span class="glyphicon glyphicon-minus-sign"></span> Remove and save</button>
+			</span>
+			<div class="clearfix"></div>
+		</div>
+	</span>
 
 	<tabset>
 
