@@ -49,26 +49,26 @@ sub load {
 
 	if($doc->{uwmetadata}){
 		$self->reset_hide_rec($doc->{uwmetadata});
-		
+
 		$self->app->log->info("[".$self->current_user->{username}."] Loaded uwmetadata template ".$doc->{title}." [$tid]");
 		$self->render(
 			json => {
-				uwmetadata => $doc->{uwmetadata},			
+				uwmetadata => $doc->{uwmetadata},
 				title => $doc->{title},
 			},
 			status => 200
 		);
 		return;
-	}	
-	
+	}
+
 	if($doc->{mods}){
 		my $cache_model = PhaidraBagger::Model::Cache->new;
 		my $res = $cache_model->get_mods_tree($self);
-		my $mods_tree = $res->{tree};		 		
-		my $mods_model = PhaidraBagger::Model::Mods->new;	
+		my $mods_tree = $res->{tree};
+		my $mods_model = PhaidraBagger::Model::Mods->new;
 		$mods_model->mods_fill_tree($self, $doc->{mods}, $mods_tree);
-		
-		$self->app->log->info("[".$self->current_user->{username}."] Loaded uwmetadata template ".$doc->{title}." [$tid]");
+
+		$self->app->log->info("[".$self->current_user->{username}."] Loaded mods template ".$doc->{title}." [$tid]");
 		$self->render(
 			json => {
 				mods => $mods_tree,
@@ -78,8 +78,8 @@ sub load {
 				title => $doc->{title},
 			},
 			status => 200
-		);	
-		return;	
+		);
+		return;
 	}
 
 }
@@ -88,28 +88,28 @@ sub load {
 sub reset_hide_rec {
 	my $self = shift;
 	my $children = shift;
-	
-	foreach my $n (@{$children}){		
+
+	foreach my $n (@{$children}){
 		if($n->{hide}){
 			$n->{hide} = 0;
-		}				
+		}
 		my $children_size = defined($n->{children}) ? scalar (@{$n->{children}}) : 0;
-		if($children_size > 0){		
-			$self->reset_hide_rec($n->{children});						
-		}		
-	}	
+		if($children_size > 0){
+			$self->reset_hide_rec($n->{children});
+		}
+	}
 }
 
-sub toggle_shared {	
+sub toggle_shared {
 	my $self = shift;
 	my $tid = $self->stash('tid');
-	
+
 	$self->app->log->info("[".$self->current_user->{username}."] Toggle shared on template $tid");
 
 	my $oid = Mango::BSON::ObjectID->new($tid);
 
 	my $t = $self->mango->db->collection('templates')->find_one({_id => $oid}, {shared => 1, created_by => 1});
-	
+
 	if($t->{created_by} ne $self->current_user->{username}){
 		$self->app->log->error("[".$self->current_user->{username}."] Cannot toggle shared: User is not the owner of the template ".$tid);
 		$self->render(
@@ -119,7 +119,7 @@ sub toggle_shared {
 		status => 400);
 		return;
 	}
-	
+
 	my $shared;
 	if($t->{shared}){
 		$shared = Mojo::JSON->false;
@@ -128,7 +128,7 @@ sub toggle_shared {
 	}
 	$self->mango->db->collection('templates')->update({_id => $oid},{ '$set' => {shared => $shared} } );
 
-	$self->render(json => { alerts => [] }, status => 200);		
+	$self->render(json => { alerts => [] }, status => 200);
 }
 
 sub save {
@@ -144,9 +144,9 @@ sub save {
 		my $reply = $self->mango->db->collection('templates')->update({_id => $oid},{ '$set' => {updated => time, uwmetadata => $self->req->json->{uwmetadata}} } );
 	}
 	if($self->req->json->{mods}){
-		
-		my $mods_model = PhaidraBagger::Model::Mods->new;	
-		my $mods = $mods_model->mods_strip_empty_nodes($self, $self->req->json->{mods});		
+
+		my $mods_model = PhaidraBagger::Model::Mods->new;
+		my $mods = $mods_model->mods_strip_empty_nodes($self, $self->req->json->{mods});
 		my $reply = $self->mango->db->collection('templates')->update({_id => $oid},{ '$set' => {updated => time, mods => $mods} } );
 	}
 
@@ -185,11 +185,11 @@ sub create {
 	}
 	elsif($self->req->json->{mods}){
 		$self->app->log->info("[".$self->current_user->{username}."] saving mods");
-		my $mods_model = PhaidraBagger::Model::Mods->new;		
-		my $mods = $mods_model->mods_strip_empty_nodes($self, $self->req->json->{mods});		
+		my $mods_model = PhaidraBagger::Model::Mods->new;
+		my $mods = $mods_model->mods_strip_empty_nodes($self, $self->req->json->{mods});
 		$reply = $self->mango->db->collection('templates')->insert({ title => $title, created => time, updated => time, project => $self->current_user->{project}, created_by => $self->current_user->{username}, mods => $mods } );
 	}
-	
+
 	$self->render(json => { alerts => [{ type => 'danger', msg => "Saving template $title failed" }] }, status => 500)
 		unless($reply);
 
@@ -218,11 +218,11 @@ sub my {
 
 	my $uwcoll = $self->mango->db->collection('templates')
 		->find(
-			{ 
-			uwmetadata => {'$exists' => Mojo::JSON->true},	
-			'$or' => 
-				[ 
-					{ project => $self->current_user->{project}, created_by => $self->current_user->{username} }, 					 
+			{
+			uwmetadata => {'$exists' => Mojo::JSON->true},
+			'$or' =>
+				[
+					{ project => $self->current_user->{project}, created_by => $self->current_user->{username} },
 					{ project => $self->current_user->{project}, shared => Mojo::JSON->true }
 				]
 			}
@@ -233,11 +233,11 @@ sub my {
 
 	my $modscoll = $self->mango->db->collection('templates')
 		->find(
-			{ 
+			{
 				mods => {'$exists' => Mojo::JSON->true},
-				'$or' => 
-				[ 
-					{ project => $self->current_user->{project}, created_by => $self->current_user->{username} }, 					 
+				'$or' =>
+				[
+					{ project => $self->current_user->{project}, created_by => $self->current_user->{username} },
 					{ project => $self->current_user->{project}, shared => Mojo::JSON->true }
 				]
 			}

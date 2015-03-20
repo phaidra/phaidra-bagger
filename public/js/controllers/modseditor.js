@@ -26,7 +26,7 @@ app.controller('ModseditorCtrl',  function($scope, $modal, $location, DirectoryS
     $scope.fields = [];
     $scope.vocs = [];
     $scope.vocsmap = [];
-    $scope.separateTabs = ["originInfo", "physicalDescription", "subject", "part", "recordInfo"];
+    $scope.separateTabs = ["originInfo", "physicalDescription", "subject", "part", "recordInfo", "relatedItem"];
     $scope.languages = [];
 	$scope.geo = [];
 
@@ -121,7 +121,7 @@ app.controller('ModseditorCtrl',  function($scope, $modal, $location, DirectoryS
     	node.value = default_value;
     	node.loaded_value = default_value;
     }
-   
+
     $scope.load_init = function(){
 
 
@@ -164,7 +164,7 @@ app.controller('ModseditorCtrl',  function($scope, $modal, $location, DirectoryS
     			$scope.fields = response.data.metadata.mods;
     			$scope.vocs = response.data.metadata.vocabularies;
     			$scope.vocsmap = response.data.metadata.vocabularies_mapping;
-    			$scope.bag = response.data;    			
+    			$scope.bag = response.data;
     			$scope.load_init();
     		}
     		,function(response) {
@@ -217,7 +217,7 @@ app.controller('ModseditorCtrl',  function($scope, $modal, $location, DirectoryS
       	function(response) {
       		$scope.alerts = response.data.alerts;
       		$scope.fields = response.data.mods;
-      		$scope.templatetitle = response.data.title;      		
+      		$scope.templatetitle = response.data.title;
       		$scope.languages = response.data.languages;
 			$scope.vocs = response.data.vocabularies;
 			$scope.vocsmap = response.data.vocabularies_mapping;
@@ -303,7 +303,7 @@ $scope.saveTemplateAs = function () {
     	}else{
     		a = $scope.fields;
     	}
-    	
+
     	var cnt = 0;
     	for (i = 0; i < a.length; ++i) {
     		if(a[i].xmlns == child.xmlns && a[i].xmlname == child.xmlname){
@@ -340,7 +340,7 @@ $scope.saveTemplateAs = function () {
     	}
     	// insert into array at specified index, angular will sort the rest out
     	arr.splice(idx+1, 0, tobesistr);
-    	
+
     }
 
     $scope.deleteElement = function(child, parent){
@@ -440,7 +440,7 @@ $scope.saveTemplateAs = function () {
     	}else{
     		arr = $scope.fields;
     	}
-    	
+
 	    var i;
 	    for (i = 0; i < arr.length; ++i) {
 	        if(arr[i].data_order > child.data_order){
@@ -462,7 +462,7 @@ $scope.saveTemplateAs = function () {
     $scope.hasLangAttr = function(child){
     	return $scope.getLangAttrNodeIdx == -1 ? false : true;
     }
-    
+
     $scope.getLangAttrNodeIdx = function(child){
     	if(child.attributes){
     		for (var i = 0; i < child.attributes.length; ++i) {
@@ -473,12 +473,12 @@ $scope.saveTemplateAs = function () {
     	}
     	return -1;
     }
-    
+
     $scope.getVocLabel = function(value){
     	return value;
     	//return value.charAt(0).toUpperCase() + value.slice(1);
     }
-    
+
     $scope.editAttributes = function(child, fieldid){
 
 	    var attrsModalInstance = $modal.open({
@@ -487,7 +487,7 @@ $scope.saveTemplateAs = function () {
 	      scope: $scope,
 	      resolve: {
 	        params: function () {
-	          return { 
+	          return {
 	        	  attributes: child.attributes,
 	        	  xmlname: child.xmlname,
 	        	  label: child.label,
@@ -495,8 +495,8 @@ $scope.saveTemplateAs = function () {
 	          }
 	        }
 	      }
-	    });	
-	    
+	    });
+
 	}
 
 
