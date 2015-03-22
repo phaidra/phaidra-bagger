@@ -1,4 +1,4 @@
-% layout 'default', title => 'Template editor';
+% layout 'default', title => 'UW Meadata template editor';
 
 %= include 'partials_cache'
 
@@ -36,9 +36,10 @@
         <div class="modal-body">
 	        <div class="form-group">
 			    <div class="col-sm-10">
-			    	<input class="form-control" placeholder="Untitled" type="text" data-ng-model="newtemplatetitle.value"></input>
+			    	<input class="form-control" placeholder="Untitled" type="text" data-ng-model="newtemplatetitle.value"></input>			    	
 			    </div>
 			</div>
+			<div class="clearfix"></div>
         </div>
         <div class="modal-footer">
             <button class="btn btn-primary" ng-click="ok()">OK</button>
@@ -148,7 +149,7 @@
 														
 						                                <div ng-switch-default>
 															
-							                                <div ng-if="!child1.hide" data-ng-hide="child1.hidden" data-ng-init="child = child1; parent = parent1" data-ng-include="'<%= url_for '/views/partials/' %>' + child1.input_type + '.html'"></div>
+							                                <div ng-if="!child1.hide" data-ng-hide="child1.hidden" data-ng-init="child = child1; parent = parent1" data-ng-include="'<%= url_for '/views/partials/uwmetadata/' %>' + child1.input_type + '.html'"></div>
 							
 									                        <!-- children fields of the field -->
 									                        <ul data-ng-show="child.children.length">																                        

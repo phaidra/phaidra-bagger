@@ -13,6 +13,17 @@ var ConfirmDeleteModalCtrl = function ($scope, $modalInstance, itemname) {
 	};
 };
 
+var NewTemplateModalCtrl = function ($scope, $modalInstance) {
+
+	$scope.ok = function (format) {
+		$modalInstance.close(format);
+	};
+
+	$scope.cancel = function () {
+		$modalInstance.dismiss('cancel');
+	};
+};
+
 app.controller('TemplatesCtrl',  function($scope, $modal, $location, DirectoryService, MetadataService, promiseTracker) {
 
 	// we will use this to track running ajax requests to show spinner
@@ -33,6 +44,26 @@ app.controller('TemplatesCtrl',  function($scope, $modal, $location, DirectorySe
 		$scope.initdata = angular.fromJson(initdata);
 		$scope.current_user = $scope.initdata.current_user;
     	$scope.getMyTemplates();
+    };
+    
+    
+    $scope.newTemplate = function () {
+
+    	var modalInstance = $modal.open({
+            templateUrl: $('head base').attr('href')+'views/modals/new_template.html',
+            controller: NewTemplateModalCtrl
+    	});
+
+    	modalInstance.result.then(function (format) {
+	      if(format == 'uwmetadata'){
+	    	  window.location = $('head base').attr('href')+'uwmetadata_template_editor';
+	      }
+	    	  
+	      if(format == 'mods'){
+	    	  window.location = $('head base').attr('href')+'mods_template_editor';
+	      }
+	      
+	    });
     };
 
     $scope.deleteTemplate = function (tid, name) {

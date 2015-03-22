@@ -106,12 +106,14 @@ sub get_classifications {
 		$self->render(json => { alerts => [{ type => 'danger', msg => "Cannot load classifications, current user is missing (the session might be expired)." }] }, status => 500);
 		return;
 	}
+	
+	my $cache_model = PhaidraBagger::Model::Cache->new;	
 
 	my @clss;
 	# project defined classifications
 	my $r = $self->mango->db->collection('project.settings')->find_one({project => $self->current_user->{project}});
 	foreach my $uri (@{$r->{settings}->{classifications}}){
-		my $class = $self->_resolve_class_uri($uri);
+		my $class = $cache_model->resolve_class_uri($self, $uri);
 		$class->{type} = 'project';
 		push @clss, $class;
 	}
@@ -119,7 +121,7 @@ sub get_classifications {
 	# user defined classification
 	$r = $self->mango->db->collection('user.classifications')->find_one({username => $username});
 	foreach my $uri (@{$r->{classifications}}){
-		my $class = $self->_resolve_class_uri($uri);
+		my $class = $cache_model->resolve_class_uri($self, $uri);
 		$class->{type} = 'user';
 		push @clss, $class;
 	}
@@ -127,35 +129,6 @@ sub get_classifications {
 	$self->render(json => { classifications => \@clss }, status => 200);
 }
 
-sub _resolve_class_uri {
-		my $self = shift;
-		my $uri = shift;
-
-		my $class;
-
-		my $cache_model = PhaidraBagger::Model::Cache->new;
-
-		# get taxon labels
-		my $res = $cache_model->get_terms_label($self, $uri);
-		if($res->{status} eq 200){
-			$class = $res->{labels};
-		}else{
-			$self->app->log->error("Cannot get taxon labels: ".$self->app->dumper($res));
-		}
-
-		# get classification labels
-		my $ns = 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification';
-		$uri =~ m/($ns\/cls_\d+)\//;
-		$res = $cache_model->get_terms_label($self, $1);
-		if($res->{status} eq 200){
-			$class->{classification} = $res->{labels};
-		}else{
-			$self->app->log->error("Cannot get classification labels: ".$self->app->dumper($res));
-		}
-		$class->{uri} = $uri;
-
-		return $class;
-}
 
 
 1;

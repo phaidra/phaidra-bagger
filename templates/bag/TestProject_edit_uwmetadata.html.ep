@@ -4,12 +4,12 @@
 
 % content_for header => begin
 
-   <script type="text/javascript" src="<%= url_for '/js/controllers/uwmetadataeditor.js' %>"></script>
-   <script type="text/javascript" src="<%= url_for '/js/controllers/classification.js' %>"></script>
-   <script type="text/javascript" src="<%= url_for '/js/controllers/geo.js' %>"></script>
-   <script type="text/javascript" src="<%= url_for '/js/controllers/baginfo.js' %>"></script>
-
-   <link href="<%= url_for '/css/uwmetadataeditor.css' %>" rel="stylesheet">
+	<script type="text/javascript" src="<%= url_for '/js/controllers/classification.js' %>"></script>
+	<script type="text/javascript" src="<%= url_for '/js/controllers/geo.js' %>"></script>
+	<script type="text/javascript" src="<%= url_for '/js/controllers/baginfo.js' %>"></script>
+   
+	<script type="text/javascript" src="<%= url_for '/js/controllers/uwmetadataeditor.js' %>"></script>
+	<link href="<%= url_for '/css/uwmetadataeditor.css' %>" rel="stylesheet">	
 
 % end
 
@@ -88,31 +88,31 @@
 							      	</select>
 							      </div>
 
-                    <div class="navbar-form navbar-left navbar-bag-status">
-                      <div ng-class="{'btn-group':canSetAttribute('status')}"  data-ng-if="baginfo.status">
-                        <button class="btn dropdown-toggle navbar-btn" ng-show="canSetAttribute('status')" data-toggle="dropdown" ng-class="{'btn-danger': (baginfo.status == 'new'), 'btn-warning': (baginfo.status == 'to_check'), 'btn-primary': (baginfo.status == 'checked'), 'btn-success': (baginfo.status == 'to_ingest') }">
-                          <span ng-repeat="status in initdata.statuses">
-                            <span ng-show="baginfo.status == status.value">{{status.label}}</span>
-                          </span>
-                          <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu" role="menu" ng-show="canSetAttribute('status')">
-                          <li ng-repeat="status in initdata.statuses" ng-hide="baginfo.status == status.value"><a href="" data-ng-click="setAttribute(bag, 'status', status.value)">{{status.label}}</a></li>
-                        </ul>
-                      </div>
-                    </div>
-
-                    <div class="navbar-form navbar-left navbar-bag-assignee">
-                      <div ng-class="{'btn-group':canSetAttribute('assignee')}" data-ng-if="baginfo.assignee">
-                        <button class="btn btn-default dropdown-toggle navbar-btn" data-toggle="dropdown" ng-show="canSetAttribute('assignee')">
-                        {{getMemberDisplayname(baginfo.assignee)}}
-                        <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu" role="menu" ng-show="canSetAttribute('assignee')">
-                        <li ng-repeat="member in initdata.members" ng-hide="baginfo.assignee == member.username"><a href="" data-ng-click="setAttribute(bag, 'assignee', member.username)">{{member.displayname}}</a></li>
-                        </ul>
-                      </div>
-                    </div>
+			                    <div class="navbar-form navbar-left navbar-bag-status">
+			                      <div ng-class="{'btn-group':canSetAttribute('status')}"  data-ng-if="baginfo.status">
+			                        <button class="btn dropdown-toggle navbar-btn" ng-show="canSetAttribute('status')" data-toggle="dropdown" ng-class="{'btn-danger': (baginfo.status == 'new'), 'btn-warning': (baginfo.status == 'to_check'), 'btn-primary': (baginfo.status == 'checked'), 'btn-success': (baginfo.status == 'to_ingest') }">
+			                          <span ng-repeat="status in initdata.statuses">
+			                            <span ng-show="baginfo.status == status.value">{{status.label}}</span>
+			                          </span>
+			                          <span class="caret"></span>
+			                        </button>
+			                        <ul class="dropdown-menu" role="menu" ng-show="canSetAttribute('status')">
+			                          <li ng-repeat="status in initdata.statuses" ng-hide="baginfo.status == status.value"><a href="" data-ng-click="setAttribute(bag, 'status', status.value)">{{status.label}}</a></li>
+			                        </ul>
+			                      </div>
+			                    </div>
+			
+			                    <div class="navbar-form navbar-left navbar-bag-assignee">
+			                      <div ng-class="{'btn-group':canSetAttribute('assignee')}" data-ng-if="baginfo.assignee">
+			                        <button class="btn btn-default dropdown-toggle navbar-btn" data-toggle="dropdown" ng-show="canSetAttribute('assignee')">
+			                        {{getMemberDisplayname(baginfo.assignee)}}
+			                        <span class="caret"></span>
+			                        </button>
+			                        <ul class="dropdown-menu" role="menu" ng-show="canSetAttribute('assignee')">
+			                        <li ng-repeat="member in initdata.members" ng-hide="baginfo.assignee == member.username"><a href="" data-ng-click="setAttribute(bag, 'assignee', member.username)">{{member.displayname}}</a></li>
+			                        </ul>
+			                      </div>
+			                    </div>
 
 							      <div class="navbar-form navbar-right">
 									<button ng-disabled="form.$invalid || form_disabled" data-ng-click="save()" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-save"></span> Save</button>
@@ -181,7 +181,7 @@
 																					
 													                                <div ng-switch-default>
 																						
-														                                <div ng-if="!child1.hide" data-ng-hide="child1.hidden" data-ng-init="child = child1; parent = parent1" data-ng-include="'<%= url_for '/views/partials/' %>' + child1.input_type + '.html'"></div>
+														                                <div ng-if="!child1.hide" data-ng-hide="child1.hidden" data-ng-init="child = child1; parent = parent1" data-ng-include="'<%= url_for '/views/partials/uwmetadata/' %>' + child1.input_type + '.html'"></div>
 														
 																                        <!-- children fields of the field -->
 																                        <ul data-ng-show="child.children.length">																                        
@@ -211,7 +211,7 @@
 						<tab-heading>
 				       		<span>Classification</span>
 				   		</tab-heading>
-				   		<div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>', 'bagedit')" data-ng-include="'<%= url_for '/views/partials/' %>classification.html'"></div>
+				   		<div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>', 'bagedit_uwmetadata')" data-ng-include="'<%= url_for '/views/partials/' %>classification.html'"></div>
 					</tab>
 
 		          <tab select="triggerGeoTabActivated()">

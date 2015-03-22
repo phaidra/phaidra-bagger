@@ -10,89 +10,27 @@ use File::Find;
 use Mojo::Util qw(slurp);
 use lib "lib";
 use PhaidraBagMan qw(list_bags print_bags);
+use PhaidraBagger::Model::Cache;
+use PhaidraBagger::Model::Mods;
 use base 'Mojolicious::Controller';
 use utf8;
 
 sub get_uwmetadata_tree {
-    my $self = shift;
+	my $self = shift;
 
-	my $res = { alerts => [], status => 200 };
+	my $cache_model = PhaidraBagger::Model::Cache->new;
+	my $res = $cache_model->get_uwmetadata_tree($self);
 
-	my $cachekey = 'uwmetadata_tree';
-	my $cacheval = $self->app->chi->get($cachekey);
-	if($cacheval){
-		$self->app->log->debug("[cache hit] $cachekey");
-		return $cacheval;
-	}
+	$self->render( json => $res, status => $res->{status});
+}
 
-	if($self->app->config->{phaidra}->{local_uwmetadata_tree}){
+sub get_mods_tree {
+	my $self = shift;
 
-		$self->app->log->debug("Reading uwmetadata tree from file");
+	my $cache_model = PhaidraBagger::Model::Cache->new;
+	my $res = $cache_model->get_mods_tree($self);
 
-		# read metadata tree
-		my $content;
-		open my $fh, "<", $self->app->config->{phaidra}->{local_uwmetadata_tree} or push @{$res->{alerts}}, "Error reading uwmetadata/tree.json, ".$!;
-	    local $/;
-	    $content = <$fh>;
-	    close $fh;
-
-	    unless(defined($content)){
-	    	push @{$res->{alerts}}, "Error reading local_uwmetadata_tree, no content";
-	    	next;
-	    }
-
-		my $metadata = decode_json($content);
- 		$res->{tree} = $metadata->{tree};
- 		$res->{languages} = $metadata->{languages};
-
- 		$cacheval = $res;
- 		$self->app->chi->set($cachekey, $cacheval, '1 day');
-	    # serialization check
-	    $cacheval = $self->app->chi->get($cachekey);
-
- 		return $res;
-	}
-
-	$self->app->log->debug("Reading uwmetadata tree from api");
-
-	my $url = Mojo::URL->new;
-	$url->scheme('https');
-	my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
-	$url->host($base[0]);
-	if(exists($base[1])){
-		$url->path($base[1]."/uwmetadata/tree");
-	}else{
-		$url->path("/uwmetadata/tree");
-	}
-	$url->query({mfv => $self->app->config->{phaidra}->{metadata_format_version}});
-
-	 my $tx = $self->ua->get($url);
-
-		  	if (my $rs = $tx->success) {
-
-				$res->{languages} = $rs->json->{languages};
-				$res->{tree} = $rs->json->{tree};
-				push @{$res->{alerts}}, $rs->json->{alerts};
-
-				$cacheval = $res;
-		 		$self->app->chi->set($cachekey, $cacheval, '1 day');
-			    # serialization check
-			    $cacheval = $self->app->chi->get($cachekey);
-		  		return $res;
-
-		  	}else {
-			 	my ($err, $code) = $tx->error;
-			  	if(exists($tx->res->json->{alerts})) {
-			  		push @{$res->{alerts}}, $tx->res->json->{alerts};
-			  		$res->{status} = $code ? $code : 500;
-			  		return $res;
-
-				 }else{
-				 	push @{$res->{alerts}}, $err;
-				  	$res->{status} = $code ? $code : 500;
-			  		return $res;
-				 }
-			}
+	$self->render( json => $res, status => $res->{status});
 }
 
 sub import_uwmetadata_xml {
@@ -617,8 +555,9 @@ sub generate_thumbnails {
 
 sub get_languages {
 	my $self = shift;
-	my $rs = $self->get_uwmetadata_tree();
-	return $rs->{languages};
+	my $cache_model = PhaidraBagger::Model::Cache->new;
+	my $res = $cache_model->get_uwmetadata_tree($self);
+	return $res->{languages};
 }
 
 sub get_geo {
@@ -642,6 +581,65 @@ sub get_geo {
 	}
 }
 
+sub get_mods_classifications {
+	my $self = shift;
+	my $bagid = $self->stash('bagid');
+
+	$self->app->log->info("[".$self->current_user->{username}."] Loading bag (get_mods_classifications) $bagid");
+
+	my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, project => $self->current_user->{project}}, {'metadata.mods' => 1});
+	my $mods;
+	unless($bag){
+		$self->app->log->error("[".$self->current_user->{username}."] Error loading bag ".$bagid);
+		$self->render(
+			json => {
+				alerts => [{ type => 'danger', msg => "Error loading bag with id ".$bagid }]
+			},
+		status => 500);
+	}else{
+		$mods = $bag->{metadata}->{mods};
+	}
+
+	unless(defined($mods) || $mods eq ''){
+		$self->render(json => { bag_classifications => [] }, status => 200);
+		return;
+	}
+
+	if(scalar @$mods < 1){
+		$self->render(json => { bag_classifications => [] }, status => 200);
+		return;
+	}
+
+	my @bagclasses;
+	foreach my $n (@$mods){
+		if($n->{xmlname} eq 'classification'){
+			my $authuri;
+			my $valueuri = '';
+			foreach my $a (@{$n->{attributes}}){
+				if($a->{xmlname} eq 'authorityURI'){
+					$authuri = $a->{ui_value};
+				}
+				if($a->{xmlname} eq 'valueURI'){
+					$valueuri = $a->{ui_value};
+				}
+			}
+			if($authuri eq 'http://phaidra.univie.ac.at/XML/metadata/lom/V1.0/classification' && $valueuri ne ''){
+				push @bagclasses, $valueuri;
+			}
+		}
+	}
+
+	my $cache_model = PhaidraBagger::Model::Cache->new;
+
+	my @clss;
+	foreach my $uri (@bagclasses){
+		my $class = $cache_model->resolve_class_uri($self, $uri);
+		push @clss, $class;
+	}
+
+	$self->render(json => { bag_classifications => \@clss }, status => 200);
+}
+
 sub load {
 
 	my $self = shift;
@@ -656,42 +654,98 @@ sub load {
 	if(defined($bag)){
 
 		#$self->app->log->info("[".$self->current_user->{username}."] Loaded bag $bagid: ".$self->app->dumper($bag));
-		my $metadata_exists = 0;
+
+		my $md_type;
 		if($bag->{metadata}){
+
 			if($bag->{metadata}->{uwmetadata}){
-				$metadata_exists = 1;
+
+				if(!@{$bag->{metadata}->{uwmetadata}}){
+
+					my $tid = $self->get_default_template_id();
+					if($tid){
+			            my $oid = Mango::BSON::ObjectID->new($tid);
+			            my $tmplt = $self->mango->db->collection('templates')->find_one({_id => $oid});
+			            $self->app->log->info("[".$self->current_user->{username}."] Loaded default template '".$tmplt->{title}."' [$tid]");
+			            # init
+			            $bag->{metadata} = undef unless($bag->{metadata});
+			            $bag->{metadata}->{uwmetadata} = $tmplt->{uwmetadata};
+			            $bag->{metadata}->{languages} = $self->get_languages();
+		          	}else{
+		          		my $cache_model = PhaidraBagger::Model::Cache->new;
+						my $rs = $cache_model->get_uwmetadata_tree($self);
+		            	# init
+		  				$bag->{metadata} = undef unless($bag->{metadata});
+		    		  	if($rs->{status} eq 200){
+		    		   		$bag->{metadata}->{uwmetadata} = $rs->{tree};
+		    		   		$bag->{metadata}->{languages} = $rs->{languages};
+		    		   	}
+		          	}
+
+				}else{
+					$bag->{metadata}->{languages} = $self->get_languages();
+				}
+
+				$self->apply_hide_filter_uwmetadata($bag->{metadata}->{uwmetadata});
+				$self->render(json => $bag, status => 200);
+				return;
 			}
+
+			if($bag->{metadata}->{mods}){
+
+				my $cache_model = PhaidraBagger::Model::Cache->new;
+				my $res = $cache_model->get_mods_tree($self);
+
+				unless($bag->{metadata}->{mods}){
+					my $tid = $self->get_default_template_id_mods();
+					if($tid){
+			            my $oid = Mango::BSON::ObjectID->new($tid);
+			            my $tmplt = $self->mango->db->collection('templates')->find_one({_id => $oid});
+			            $self->app->log->info("[".$self->current_user->{username}."] Loaded default template '".$tmplt->{title}."' [$tid]");
+			            # init
+			            $bag->{metadata} = undef unless($bag->{metadata});
+			            $bag->{metadata}->{mods} = $tmplt->{mods};
+		          	}else{
+						$bag->{metadata}->{mods} = $res->{tree};
+		          	}
+				}
+
+				my $mods_model = PhaidraBagger::Model::Mods->new;
+
+				# now the data from $bag->{metadata}->{mods} will be written to $res->{tree}
+				if($bag->{metadata}->{mods}){
+					$mods_model->mods_fill_tree($self, $bag->{metadata}->{mods}, $res->{tree});
+				}
+
+				# so we have to set the tree as the mods to sent to frontend
+				$bag->{metadata}->{mods} = $res->{tree};
+
+				$bag->{metadata}->{vocabularies} = $res->{vocabularies};
+				$bag->{metadata}->{vocabularies_mapping} = $res->{vocabularies_mapping};
+				$bag->{metadata}->{languages} = $self->get_languages();
+
+				$self->apply_hide_filter_mods($bag->{metadata}->{mods});
+				$self->render(
+					json => $bag,
+					languages => $res->{languages},
+					status => 200
+				);
+				return;
+			}
+
+			# fall through to no metadata found error
 		}
 
-		unless($metadata_exists){
+		$self->app->log->error("[".$self->current_user->{username}."] Error loading bag $bagid, no metadata found");
+		$self->render(
+			json => {
+				metadata => '',
+				created => '',
+				updated => '',
+				alerts => [{ type => 'danger', msg => "Error loading bag $bagid, no metadata found"}]
+			},
+		status => 500);
 
-          # load projects default template, if available
-          my $tid = $self->get_default_template_id();
-          if($tid){
-            my $oid = Mango::BSON::ObjectID->new($tid);
-            my $tmplt = $self->mango->db->collection('templates.uwmetadata')->find_one({_id => $oid});
-            $self->app->log->info("[".$self->current_user->{username}."] Loaded default template '".$tmplt->{title}."' [$tid]");
-            # init
-            $bag->{metadata} = undef unless($bag->{metadata});
-            $bag->{metadata}->{uwmetadata} = $tmplt->{uwmetadata};
-            $bag->{metadata}->{languages} = $self->get_languages();
-          }else{
-  				  my $rs = $self->get_uwmetadata_tree();
-            # init
-  				  $bag->{metadata} = undef unless($bag->{metadata});
-    		  	if($rs->{status} eq 200){
-    		   		$bag->{metadata}->{uwmetadata} = $rs->{tree};
-    		   		$bag->{metadata}->{languages} = $rs->{languages};
-    		   	}
-          }
-
-		}else{
-			$bag->{metadata}->{languages} = $self->get_languages();
-		}
-    $self->apply_hide_filter($bag->{metadata}->{uwmetadata});
-
-		#$self->app->log->debug("[".$self->current_user->{username}."] Loaded bag $bagid");
-		$self->render(json => $bag, status => 200);
 
 	}else{
 		$self->app->log->error("[".$self->current_user->{username}."] Error loading bag ".$bagid);
@@ -731,6 +785,29 @@ sub get_default_template_id {
     }
 }
 
+sub get_default_template_id_mods {
+    my $self = shift;
+
+    # get user default template, if not availabe search for project default template
+    my $length = 0;
+    my $settings;
+    my $res = $self->mango->db->collection('user.settings')->find_one({username => $self->current_user->{username}});
+    if($res){
+      $settings = $res->{settings};
+      if($settings->{default_template_mods}){
+        return $settings->{default_template_mods};
+      }else{
+        $res = $self->mango->db->collection('project.settings')->find_one({project => $self->current_user->{project}});
+        if($res){
+          $settings = $res->{settings};
+          if($settings->{default_template_mods}){
+            return $settings->{default_template_mods};
+          }
+        }
+      }
+    }
+}
+
 
 sub save_uwmetadata {
 
@@ -740,6 +817,21 @@ sub save_uwmetadata {
 	$self->app->log->info("[".$self->current_user->{username}."] Saving uwmetadata for bag $bagid");
 
 	my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time, 'metadata.uwmetadata' => $self->req->json->{uwmetadata}} } );
+
+	$self->render(json => { alerts => [] }, status => 200);
+
+}
+
+sub save_mods {
+
+	my $self = shift;
+	my $bagid = $self->stash('bagid');
+
+	$self->app->log->info("[".$self->current_user->{username}."] Saving mods for bag $bagid");
+
+	my $mods_model = PhaidraBagger::Model::Mods->new;
+	my $mods = $mods_model->mods_strip_empty_nodes($self, $self->req->json->{mods});
+	my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time, 'metadata.mods' => $mods} } );
 
 	$self->render(json => { alerts => [] }, status => 200);
 
@@ -778,7 +870,7 @@ sub _edit_prepare_data {
 	my $redmine_baseurl = $project_config->{redmine_baseurl};
   my $included_classifications = $project_config->{included_classifications};
 
-    my $templates = $self->mango->db->collection('templates.uwmetadata')
+    my $templates = $self->mango->db->collection('templates')
 		->find(
 			{ '$or' =>
 				[
@@ -790,11 +882,21 @@ sub _edit_prepare_data {
 		->sort({created => 1})
 		->fields({ title => 1, created => 1, updated => 1, created_by => 1, shared => 1 })->all();
 
+  my $mode;
+  my $has_mods = $self->mango->db->collection('bags')->find_one({bagid => $self->stash('bagid'), project => $self->current_user->{project}, 'metadata.mods' => {'$exists' => Mojo::JSON->true }}, {_id => 1});
+
+  if($has_mods){
+  	$mode = 'mods';
+  }else{
+  	$mode = 'uwmetadata';
+  }
+
   my $bag = $self->mango->db->collection('bags')->find_one({bagid => $self->stash('bagid'), project => $self->current_user->{project}}, {label => 1, created => 1, updated => 1, assignee => 1, status => 1, project => 1});
 
-	my $init_data = {
+  my $init_data = {
     bagid => $self->stash('bagid'),
-    baginfo => $bag ,
+    baginfo => $bag,
+    editor_mode => $mode,
     templates => $templates,
     current_user => $self->current_user,
     thumb_path => $thumb_path,
@@ -809,7 +911,8 @@ sub _edit_prepare_data {
 
 	$self->stash(
     	navtitle => $init_data->{navtitle},
-    	navtitlelink => $init_data->{navtitlelink}
+    	navtitlelink => $init_data->{navtitlelink},
+    	editor_mode => $mode
     );
 
 	return $init_data;
@@ -834,8 +937,8 @@ sub edit {
 
 	    my %query = (
 	    	filter => $filter,
-	    	from => $from,
-	    	limit => $limit,
+	    	#from => $from,
+	    	#limit => $limit,
 	    	sortfield => $sortfield,
 	    	sortvalue => $sortvalue
 	    );
@@ -870,7 +973,6 @@ sub edit {
 	   		$init_data->{next_bag} = { bagid => $next->{bagid}, label => $next->{label} };
 	   	}
 
-
 	   	if($filter->{folderid}){
 	   		my $folder = $self->mango->db->collection('folders')->find_one({folderid => $filter->{folderid}, project => $self->current_user->{project}},{ name => 1 });
 	   		$init_data->{folder} = { folderid => $filter->{folderid}, name => $folder->{name} };
@@ -881,7 +983,7 @@ sub edit {
 
     $self->stash(init_data => encode_json($init_data));
 
-	$self->render('bag/'.$self->current_user->{project}.'_edit');
+	$self->render('bag/'.$self->current_user->{project}.'_edit_'.$init_data->{editor_mode});
 }
 
 sub bags {
@@ -1209,7 +1311,7 @@ sub unset_attribute_mass {
 	$self->render(json => { alerts => [] }, status => 200);
 }
 
-sub apply_hide_filter {
+sub apply_hide_filter_uwmetadata {
     my $self = shift;
     my $children = shift;
 
@@ -1241,12 +1343,11 @@ sub apply_hide_filter {
       foreach my $uri (@{$settings->{visible_uwmfields}}){
           $filter{$uri} = 1;
       }
-      $self->apply_hide_filter_rec($children, \%filter);
+      $self->apply_hide_filter_uwmetadata_rec($children, \%filter);
     }
 }
 
-
-sub apply_hide_filter_rec {
+sub apply_hide_filter_uwmetadata_rec {
   my $self = shift;
   my $children = shift;
   my $filter = shift;
@@ -1267,9 +1368,70 @@ sub apply_hide_filter_rec {
 
     my $children_size = defined($child->{children}) ? scalar (@{$child->{children}}) : 0;
     if($children_size > 0){
-      $self->apply_hide_filter_rec($child->{children}, $filter);
+      $self->apply_hide_filter_uwmetadata_rec($child->{children}, $filter);
     }
   }
+}
+
+sub apply_hide_filter_mods {
+    my $self = shift;
+    my $children = shift;
+
+    # get user include filter
+    my $length = 0;
+    my $settings;
+    my $res = $self->mango->db->collection('user.settings')->find_one({username => $self->current_user->{username}});
+    if($res){
+      $settings = $res->{settings};
+      if($settings->{visible_modsfields}){
+        $length = scalar @{$settings->{visible_modsfields}};
+      }
+    }
+
+    # if there is no user filter, fetch project settings
+    if($length == 0){
+      $res = $self->mango->db->collection('project.settings')->find_one({project => $self->current_user->{project}});
+    }
+
+    if($res){
+      $settings = $res->{settings};
+      if($settings->{visible_modsfields}){
+        $length = scalar @{$settings->{visible_modsfields}};
+      }
+    }
+
+    if($length > 0){
+      my %filter;
+      foreach my $path (@{$settings->{visible_modsfields}}){
+          $filter{$path} = 1;
+      }
+      $self->apply_hide_filter_mods_rec($children, \%filter, '');
+    }
+}
+
+sub apply_hide_filter_mods_rec {
+  my $self = shift;
+  my $children = shift;
+  my $filter = shift;
+  my $parent_path = shift;
+
+	foreach my $n (@{$children}){
+
+		my $path = ($parent_path eq '' ? '' : $parent_path.'_').$n->{xmlname};
+
+		if($filter->{$path}){
+	      $n->{hide} = 0;
+	    }else{
+	      $n->{hide} = 1;
+	    }
+
+		my $children_size = defined($n->{children}) ? scalar (@{$n->{children}}) : 0;
+		if($children_size > 0){
+			$self->apply_hide_filter_mods_rec($n->{children}, $filter, $path);
+		}
+
+	}
+
 }
 
 sub load_template {
@@ -1281,39 +1443,54 @@ sub load_template {
 
   my $oid = Mango::BSON::ObjectID->new($tid);
 
-  $self->render_later;
-  my $reply = $self->mango->db->collection('templates.uwmetadata')->find_one(
-    {_id => $oid} =>
-      sub {
-            my ($reply, $error, $doc) = @_;
+	my $doc = $self->mango->db->collection('templates')->find_one({_id => $oid});
 
-            if ( $error ){
-              $self->app->log->error("[".$self->current_user->{username}."] Error loading template ".$tid.":".$self->app->dumper($error));
-            $self->render(
-                json => {
-                  uwmetadata => '',
-                  title => '',
-                  alerts => [{ type => 'danger', msg => "Template with id ".$tid." was not found" }]
-                },
-            status => 500);
-            }
+	unless(defined($doc)){
+		$self->app->log->error("[".$self->current_user->{username}."] Error loading template ".$tid);
+		$self->render(
+			json => {
+			uwmetadata => '',
+			title => '',
+			alerts => [{ type => 'danger', msg => "Template with id ".$tid." was not found" }]
+			},
+		status => 500);
+		return;
+	}
 
-            $self->app->log->info("[".$self->current_user->{username}."] Loaded template ".$doc->{title}." [$tid]");
+	if($doc->{uwmetadata}){
+		$self->apply_hide_filter_uwmetadata($doc->{uwmetadata});
 
-            my $uwmetadata = $doc->{uwmetadata};
+		$self->app->log->info("[".$self->current_user->{username}."] Loaded uwmetadata template ".$doc->{title}." [$tid]");
+		$self->render(
+			json => {
+				uwmetadata => $doc->{uwmetadata},
+				title => $doc->{title},
+			},
+			status => 200
+		);
+		return;
+	}
 
-            $self->apply_hide_filter($uwmetadata);
+	if($doc->{mods}){
+		my $cache_model = PhaidraBagger::Model::Cache->new;
+		my $res = $cache_model->get_mods_tree($self);
+		my $mods_tree = $res->{tree};
+		my $mods_model = PhaidraBagger::Model::Mods->new;
+		$mods_model->mods_fill_tree($self, $doc->{mods}, $mods_tree);
 
-          $self->render(
-              json => {
-                uwmetadata => $uwmetadata,
-                title => $doc->{title},
-                #alerts => [{ type => 'success', msg => "Template ".$doc->{title}." loaded" }]
-              },
-          status => 200);
-
-        }
-  );
+		$self->app->log->info("[".$self->current_user->{username}."] Loaded mods template ".$doc->{title}." [$tid]");
+		$self->render(
+			json => {
+				mods => $mods_tree,
+				vocabularies => $res->{vocabularies},
+				vocabularies_mapping => $res->{vocabularies_mapping},
+				languages => $res->{languages},
+				title => $doc->{title},
+			},
+			status => 200
+		);
+		return;
+	}
 
 }
 
@@ -1391,7 +1568,7 @@ sub load_difab_template {
 	my $oid = Mango::BSON::ObjectID->new($tid);
 
 	$self->render_later;
-	my $reply = $self->mango->db->collection('templates.uwmetadata')->find_one(
+	my $reply = $self->mango->db->collection('templates')->find_one(
 		{_id => $oid} =>
 			sub {
 				    my ($reply, $error, $doc) = @_;

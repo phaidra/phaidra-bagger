@@ -35,7 +35,7 @@ sub load {
 	my $user_settings = $self->mango->db->collection('user.settings')->find_one({ username => $self->current_user->{username}, project => $self->current_user->{project}});
 
 	# get user templates (default template settings)
-	my $templates = $self->mango->db->collection('templates.uwmetadata')
+	my $templates = $self->mango->db->collection('templates')
 		->find({ created_by => $self->current_user->{username} })
 		->sort({ created => 1 })
 		->fields({ title => 1, created => 1, updated => 1, created_by => 1 })

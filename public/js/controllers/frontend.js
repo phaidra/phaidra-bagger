@@ -1,4 +1,4 @@
-var app = angular.module('frontendApp', ['ngAnimate', 'ngSanitize', 'ui.bootstrap', 'ui.bootstrap.modal', 'ui.bootstrap.datepicker', 'ui.bootstrap.timepicker', 'ui.sortable', 'ui.select', 'ajoslin.promise-tracker', 'directoryService', 'vocabularyService', 'metadataService', 'frontendService', 'bagService', 'jobService', 'Url', 'uiGmapgoogle-maps']);
+var app = angular.module('frontendApp', ['ngAnimate', 'ngSanitize', 'ui.bootstrap', 'ui.bootstrap.modal', 'ui.bootstrap.datepicker', 'ui.bootstrap.timepicker', 'ui.sortable', 'ui.select', 'ajoslin.promise-tracker', 'directoryService', 'vocabularyService', 'metadataService', 'frontendService', 'bagService', 'jobService', 'Url', 'uiGmapgoogle-maps', 'pascalprecht.translate', 'pasvaz.bindonce']);
 
 
 app.config(function(uiGmapGoogleMapApiProvider) {
@@ -8,17 +8,21 @@ app.config(function(uiGmapGoogleMapApiProvider) {
         v: '3.17',
         libraries: 'weather,geometry,visualization'
     });
-})
-
-
-app.filter("nl2br", function($filter) {
- return function(data) {
-   if (!data) return data;
-   return data.replace(/\n\r?/g, '<br />');
- };
 });
 
-app.controller('FrontendCtrl', function($scope, $window, $modal, $log, DirectoryService, MetadataService, FrontendService, promiseTracker) {
+app.config(['$translateProvider', function($translateProvider){
+  
+  // [prefix][langKey][suffix]
+  $translateProvider.useStaticFilesLoader({
+    prefix: 'i18n/',
+    suffix: '.json'
+  });
+
+  // Tell the module what language to use by default
+  $translateProvider.preferredLanguage('en_US');
+}]);
+
+app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translate, DirectoryService, MetadataService, FrontendService, promiseTracker) {
 
   // we will use this to track running ajax requests to show spinner
   $scope.loadingTracker = promiseTracker.register('loadingTrackerFrontend');
@@ -311,6 +315,9 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, Directory
       }
     };
 
+     $scope.setLang = function(langKey) {
+	    $translate.use(langKey);
+	 };
 });
 
 var SigninModalCtrl = function ($scope, $modalInstance, DirectoryService, FrontendService, promiseTracker) {

@@ -106,9 +106,11 @@ app.controller('GeoCtrl', function($scope, $modal, $location, MetadataService, p
 
     $scope.refreshMaps = function() {
     	for (i = 0; i < $scope.placemarks.length; ++i) {
-			var p = $scope.placemarks[i];
-			p.map.refresh(p.point.coordinates);
-		}
+				var p = $scope.placemarks[i];
+				if(p.map){
+					p.map.refresh(p.point.coordinates);
+				}
+			}
     }
 
     $scope.$parent.$watch('geoTabActivated', function(newValue, oldValue) {
@@ -131,10 +133,12 @@ app.controller('GeoCtrl', function($scope, $modal, $location, MetadataService, p
 	    				var p = $scope.placemarks[i];
 	    				p.id = i;
 	    				if(!p['map']){
-		    				p['map'] = {
-		    					center: { latitude: $scope.placemarks[i].point.coordinates.latitude, longitude: $scope.placemarks[i].point.coordinates.longitude },
-		    					zoom: 8
-		    				}
+								if($scope.placemarks[i].point){
+			    				p['map'] = {
+			    					center: { latitude: $scope.placemarks[i].point.coordinates.latitude, longitude: $scope.placemarks[i].point.coordinates.longitude },
+			    					zoom: 8
+			    				}
+								}
 	    				}
 	    			}
 					}
