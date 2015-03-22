@@ -112,7 +112,6 @@ sub get_mods_tree {
 	}else{
 		$url->path("/mods/tree");
 	}
-
 	 my $tx = $c->ua->get($url);
 
 		  	if (my $rs = $tx->success) {
@@ -133,6 +132,7 @@ sub get_mods_tree {
 
 		  	}else {
 			 	my ($err, $code) = $tx->error;
+				$c->app->log->error($c->app->dumper($err));
 			  	if(exists($tx->res->json->{alerts})) {
 			  		foreach my $a (@{$tx->res->json->{alerts}}){
 						push @{$res->{alerts}}, $a;

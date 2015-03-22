@@ -55,6 +55,7 @@
                 "in": "/var/www/bagger/data/p1/folders/in",
                 "uwmetadata_import": "/var/www/bagger/data/p1/folders/in"
             },
+	    "import_url": "import-sub-app",
             "thumbnails": {
 		    	"dir": "/var/www/bagger/public/thumbnails/p1",
 		    	"url_path": "thumbnails/p2",

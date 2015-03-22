@@ -138,7 +138,12 @@
         		<li class="active" data-ng-click="forceLoadPage('<%= $navtitlelink %>')"><a ><%= $navtitle %></a></li>
         	<% } %>
         <% } %>
-        <li><a href="<%= url_for '/folders/' %>">Folders</a></li>
+	<% if (exists($config->{projects}->{current_user->{project}}->{folders})){ %>
+            <li><a href="<%= url_for '/folders/' %>">Folders</a></li>
+	<% } %>
+        <% if (exists($config->{projects}->{current_user->{project}}->{import_url})){ %>
+            <li><a href="<%= url_for '/'.$config->{projects}->{current_user->{project}}->{import_url}.'/' %>">Import</a></li>
+        <% } %>
         <li><a href="<%= url_for '/bags/' %>">Bags</a></li>
         <li><a href="<%= url_for '/templates/' %>">Templates</a></li>
         <li><a href="<%= url_for '/jobs/' %>">Jobs</a></li>
