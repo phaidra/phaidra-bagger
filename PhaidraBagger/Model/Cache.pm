@@ -119,6 +119,8 @@ sub get_mods_tree {
 
 				$res->{languages} = $rs->json->{languages};
 				$res->{tree} = $rs->json->{tree};
+				$res->{vocabularies} = $rs->json->{vocabularies};
+				$res->{vocabularies_mapping} = $rs->json->{vocabularies_mapping};
 				foreach my $a (@{$rs->json->{alerts}}){
 					push @{$res->{alerts}}, $a;
 				}
