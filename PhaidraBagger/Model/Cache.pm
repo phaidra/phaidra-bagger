@@ -9,24 +9,24 @@ use base qw/Mojo::Base/;
 
 sub get_terms_label {
 	my $self = shift;
-	my $c = shift;   	
+	my $c = shift;
 	my $uri = shift;
-	
+
 	my $res = { alerts => [], status => 200 };
-	
+
 	my $cachekey = 'labels_'.$uri;
 	my $cacheval = $c->app->chi->get($cachekey);
-	  		
-	if($cacheval){   			  	
+
+	if($cacheval){
 		#$c->app->log->debug("[cache hit] $cachekey");
 		$res->{labels} = $cacheval;
-		return $res;			
+		return $res;
 	}else{
-		
+
 		$c->app->log->debug("[cache miss] $cachekey");
-	
+
 		my $url = Mojo::URL->new;
-		$url->scheme('https');		
+		$url->scheme('https');
 		my @base = split('/',$c->app->config->{phaidra}->{apibaseurl});
 		$url->host($base[0]);
 		if(exists($base[1])){
@@ -34,37 +34,37 @@ sub get_terms_label {
 		}else{
 			$url->path("/terms/label");
 		}
-		
+
 		$url->query({uri => $uri});
-		
+
   		my $tx = $c->ua->get($url);
-  		
+
   		if (my $r = $tx->success) {
-  			my $cacheval = $tx->res->json->{labels};  		
-	    	$c->app->chi->set($cachekey, $cacheval, '1 day');    
+  			my $cacheval = $tx->res->json->{labels};
+	    	$c->app->chi->set($cachekey, $cacheval, '1 day');
 	    	# serialization check
 	    	$cacheval = $c->app->chi->get($cachekey);
-  			$res->{labels} = $cacheval;  
+  			$res->{labels} = $cacheval;
   			return $res;
   		} else {
 			my ($err, $code) = $tx->error;
 			if(exists($tx->res->json->{alerts})) {
 				$res->{alerts} = $tx->res->json->{alerts};
-				$res->{status} = $code ? $code : 500;				
+				$res->{status} = $code ? $code : 500;
 			}else{
 				$res->{alerts} = [{ type => 'danger', msg => $err }];
-				$res->{status} = $code ? $code : 500;	
+				$res->{status} = $code ? $code : 500;
 			}
 			return $res;
 		}
-  
+
 	}
-	
-}	
+
+}
 
 sub get_mods_tree {
     my $self = shift;
-    my $c = shift;   	
+    my $c = shift;
 
 	my $res = { alerts => [], status => 200 };
 
@@ -79,13 +79,13 @@ sub get_mods_tree {
 
 		$c->app->log->debug("Reading mods tree from file: ".$c->app->config->{phaidra}->{local_mods_tree});
 
-		# read metadata tree	    
+		# read metadata tree
 	    my $bytes = slurp $c->app->config->{phaidra}->{local_mods_tree};
 		unless(defined($bytes)){
 		   	push @{$res->{alerts}}, "Error reading local_mods_tree";
 		   	$res->{status} = 500;
 	    	return $res;
-		}	    
+		}
 
 		my $metadata = decode_json($bytes);
  		$res->{tree} = $metadata->{tree};
@@ -113,14 +113,14 @@ sub get_mods_tree {
 		$url->path("/mods/tree");
 	}
 
-	 my $tx = $self->ua->get($url);
+	 my $tx = $c->ua->get($url);
 
 		  	if (my $rs = $tx->success) {
 
 				$res->{languages} = $rs->json->{languages};
 				$res->{tree} = $rs->json->{tree};
 				foreach my $a (@{$rs->json->{alerts}}){
-					push @{$res->{alerts}}, $a;	
+					push @{$res->{alerts}}, $a;
 				}
 
 				$cacheval = $res;
@@ -133,7 +133,7 @@ sub get_mods_tree {
 			 	my ($err, $code) = $tx->error;
 			  	if(exists($tx->res->json->{alerts})) {
 			  		foreach my $a (@{$tx->res->json->{alerts}}){
-						push @{$res->{alerts}}, $a;	
+						push @{$res->{alerts}}, $a;
 					}
 			  		$res->{status} = $code ? $code : 500;
 			  		return $res;
@@ -164,13 +164,13 @@ sub get_uwmetadata_tree {
 
 		$c->app->log->debug("Reading uwmetadata tree from file");
 
-		# read metadata tree	    
+		# read metadata tree
 	    my $bytes = slurp $c->app->config->{phaidra}->{local_uwmetadata_tree};
 		unless(defined($bytes)){
 		   	push @{$res->{alerts}}, "Error reading local_uwmetadata_tree";
 		   	$res->{status} = 500;
 	    	return $res;
-		}	    
+		}
 
 		my $metadata = decode_json($bytes);
  		$res->{tree} = $metadata->{tree};
@@ -197,14 +197,14 @@ sub get_uwmetadata_tree {
 	}
 	$url->query({mfv => $c->app->config->{phaidra}->{metadata_format_version}});
 
-	 my $tx = $self->ua->get($url);
+	 my $tx = $c->ua->get($url);
 
 		  	if (my $rs = $tx->success) {
 
 				$res->{languages} = $rs->json->{languages};
 				$res->{tree} = $rs->json->{tree};
 				foreach my $a (@{$rs->json->{alerts}}){
-					push @{$res->{alerts}}, $a;	
+					push @{$res->{alerts}}, $a;
 				}
 
 
@@ -218,7 +218,7 @@ sub get_uwmetadata_tree {
 			 	my ($err, $code) = $tx->error;
 			  	if(exists($tx->res->json->{alerts})) {
 			  		foreach my $a (@{$tx->res->json->{alerts}}){
-						push @{$res->{alerts}}, $a;	
+						push @{$res->{alerts}}, $a;
 					}
 			  		$res->{status} = $code ? $code : 500;
 			  		return $res;
