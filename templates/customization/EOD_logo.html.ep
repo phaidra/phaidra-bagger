@@ -1,0 +1,1 @@
+<center><img src="<%= url_for '/img/home/eod_subline_long_grey_web.jpg' %>" class="difab_logo img-rounded" title="EOD" alt="EOD"></center>
