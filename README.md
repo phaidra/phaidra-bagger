@@ -14,9 +14,7 @@ export PERLBREW_ROOT=/opt/perl5
 
 curl -kL http://install.perlbrew.pl | bash
 
-###  add 'source /opt/perl5/etc/bashrc'
-
-sudo vi ~/.bash_profile
+sudo vi ~/.bash_profile (add 'source /opt/perl5/etc/bashrc')
 
 perlbrew install perl-5.16.0
 
