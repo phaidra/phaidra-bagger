@@ -4,7 +4,7 @@
 
 ### install perlbrew
 
-##### tis to install one perlbrew that all users can use, alternatively install 
+(/opt/perl5 to install one perlbrew that all users can use, alternatively install into home directory)
 
 mkdir /opt/perl5
 
