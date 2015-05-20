@@ -76,7 +76,8 @@ see PhaidraBagger.json.example, point the bagger against eg phaidra-sandbox API
 
    "session_expiration":"7200",
 
-#### 0 if the bagger is served from http!!! otherwise the browser won't be sending the cookies so login/session won't be possible
+#### 0 if the bagger is served from http!!! otherwise the browser won't be sending the cookies 
+so login/session won't be possible
   "secure_cookies":"1",
    
   "log_path":"/var/log/phaidra/PhaidraBagger.log",
@@ -96,7 +97,10 @@ see PhaidraBagger.json.example, point the bagger against eg phaidra-sandbox API
             "account": "username",
             
 
-#### configure project members, only the members listed are able to log in. THIS IS NO USER MANAGEMENT. For authentication, Mojolicious::Plugin::Authentication is used. Users are authenticated against phaidra-api of the default phaidra instance (see ingest_instances config), so it only makes sense to list users which can be authenticated there
+#### configure project members, only the members listed are able to log in. THIS IS NO USER MANAGEMENT. 
+For authentication, Mojolicious::Plugin::Authentication is used. 
+Users are authenticated against phaidra-api of the default phaidra instance (see ingest_instances config), 
+so it only makes sense to list users which can be authenticated there
 
             "members":  [
 	            		{
@@ -109,7 +113,8 @@ see PhaidraBagger.json.example, point the bagger against eg phaidra-sandbox API
 	            		}
             		],
             		
-#### some logic, like status colors or the need for to_ingest status on ingest are hardcoded, so don't change this unless necessary
+#### some logic, like status colors or the need for to_ingest status on ingest are hardcoded, 
+so don't change this unless necessary
             		
             "statuses":  [
 	            		{
