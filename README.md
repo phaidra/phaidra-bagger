@@ -54,6 +54,167 @@ cpanm Mojo::IOLoop::ProcBackground
 
 see PhaidraBagger.json.example, point the bagger against eg phaidra-sandbox API
 
+<pre>
+{
+
+#### replace all the /var/www/bagger with actual path to repo
+
+#### whatever
+    "installation_id": "nice_n_unique",
+
+#### proxy = 1 if the hypnotoad is possibly behined another server (like apache <-> hypnotoad)
+    "hypnotoad": {
+
+        "listen": ["http://*:3001"],
+
+        "proxy": 1
+    },
+
+	"mode":"production",
+
+#### encryption keys, just generate some random stuff 
+	"secret":"changeme",
+	"enc_key":"changeme",
+
+	"session_expiration":"7200",
+
+#### 0 if the bagger is served from http!!! otherwise the browser won't be sending the cookies so login/session won't be possible
+	"secure_cookies":"1",
+
+  "log_path":"/var/log/phaidra/PhaidraBagger.log",
+
+  "log_level":"debug",
+
+  "bagger_agent_path":"/var/www/bagger/lib/PhaidraBaggerAgent/phaidra_bagger_agent.pl",
+
+  "validate_uwmetadata":"1",
+
+  "defaults": {
+
+    	"metadata_field_language": "de"
+	},
+
+#### configure project members, only the members listed are able to log in. THIS IS NO USER MANAGEMENT. For authentication, Mojolicious::Plugin::Authentication is used. Users are authenticated against phaidra-api of the default phaidra instance (see ingest_instances config), so it only makes sense to list users which can be authenticated there
+
+    "projects": {
+        "p1": {
+            "account": "username",
+            "members": [
+	            		{
+		            		"username": "username",
+		            		"displayname": "chuck",
+		            		"role": "manager"
+	            		},
+	            		{
+		            		"username": "username",
+		            		"displayname": "steven",
+		            		"role": "member"
+	            		}
+            		],
+            		
+
+            "bags": {
+                "in": "/var/www/bagger/data/p1/bags/in",
+                "out": "/var/www/bagger/data/p1/bags/out"
+            },
+#### input folder
+            "folders": {
+                "in": "/var/www/bagger/data/p1/folders/in",
+                "uwmetadata_import": "/var/www/bagger/data/p1/folders/in"
+            },
+#### if the import is implemented in another webapp
+	        "import_url": "import-sub-app",
+
+#### convert command is used by the import from folder (see 'folders') to generate thumbnails
+            "thumbnails": {
+		    	"dir": "/var/www/bagger/public/thumbnails/p1",
+		    	"url_path": "thumbnails/p1",
+		    	"convert_cmd": "convert",
+		    	"thumbnail_medium_cmd": "/var/www/bagger/lib/downsize -s 2048 -t 20",
+		    	"thumbnail_small_cmd": "/var/www/bagger/lib/downsize -s 60 -t 20"
+		    },
+		    "redmine_baseurl": "https://redmine.phaidra.org/redmine/"
+
+        },
+        "p2": {
+            "account": "username",
+            "members":  [
+	            		{
+		            		"username": "username",
+		            		"role": "manager"
+	            		},
+	            		{
+		            		"username": "username",
+		            		"role": "manager"
+	            		}
+            		],
+            "statuses":  [
+	            		{
+		            		"label": "New",
+		            		"value": "new"
+	            		},
+	            		{
+		            		"label": "Fixed",
+		            		"value": "fixed"
+	            		}
+            		],
+            "default_assignee": "username",
+            "restricted_operations": ["set_assignee"],
+            "restricted_actions": ["POST /job/"],
+            "bags": {
+                "in": "/var/www/bagger/data/p2/bags/in",
+                "out": "/var/www/bagger/data/p2/bags/out"
+            },
+            "thumbnails": {
+		    	"dir": "/var/www/bagger/thumbnails/p2",
+		    	"url_path": "thumbnails/p2",
+		    	"convert_cmd": "convert",
+		    	"thumbnail_medium_cmd": "/var/www/bagger/lib/downsize -s 2048 -t 20",
+		    	"thumbnail_small_cmd": "/var/www/bagger/lib/downsize -s 60 -t 20"
+		    },
+		    "redmine_baseurl": "https://redmine.phaidra.org/redmine/"
+        }
+    },
+
+    "ingest_instances": {
+        "phaidra-instance": {
+            "baseurl": "phaidra-instance.univie.ac.at",
+            "apibaseurl": "services.phaidra-instance.univie.ac.at/api",
+            "metadata_format_version": "1",
+            "local_uwmetadata_tree": "/var/www/bagger/public/uwmetadata/tree.json",
+            "local_mods_tree": "/var/www/bagger/public/mods/tree.json",
+            "is_default": "1"
+        },
+        "phaidra-instance2": {
+            "baseurl": "phaidra-instance2.univie.ac.at",
+            "apibaseurl": "services.phaidra-instance2.univie.ac.at/api",
+            "metadata_format_version": "1",
+            "local_uwmetadata_tree": "/var/www/bagger/public/uwmetadata/tree.json",
+            "is_default": "0"
+        }
+    },
+
+    "directory_user": {
+      "username": "username",
+      "password": "password"
+    },
+
+    "mongodb": {
+        "host": "host",
+        "port": "27017",
+        "username": "username",
+        "password": "password",
+        "database": "database"
+    },
+
+    "authentication": {
+    	"realm": "Phaidra",
+    	"token_header": "X-XSRF-TOKEN",
+        "token_cookie": "XSRF-TOKEN",
+    },
+}
+</pre>
+
 ## Run
 
 hypnotoad phaidra-bagger.cgi
