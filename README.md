@@ -63,36 +63,29 @@ see PhaidraBagger.json.example, point the bagger against eg phaidra-sandbox API
     "installation_id": "nice_n_unique",
 
 #### proxy = 1 if the hypnotoad is possibly behined another server (like apache <-> hypnotoad)
-    "hypnotoad": {
-
+   "hypnotoad": {
         "listen": ["http://*:3001"],
-
         "proxy": 1
-    },
+   },
 
-	"mode":"production",
+   "mode":"production",
 
 #### encryption keys, just generate some random stuff 
-	"secret":"changeme",
-	"enc_key":"changeme",
+   "secret":"changeme",
+   "enc_key":"changeme",
 
-	"session_expiration":"7200",
+   "session_expiration":"7200",
 
 #### 0 if the bagger is served from http!!! otherwise the browser won't be sending the cookies so login/session won't be possible
-	"secure_cookies":"1",
-
+  "secure_cookies":"1",
+   
   "log_path":"/var/log/phaidra/PhaidraBagger.log",
-
   "log_level":"debug",
-
   "bagger_agent_path":"/var/www/bagger/lib/PhaidraBaggerAgent/phaidra_bagger_agent.pl",
-
   "validate_uwmetadata":"1",
-
   "defaults": {
-
     	"metadata_field_language": "de"
-	},
+   },
 
     "projects": {
         
