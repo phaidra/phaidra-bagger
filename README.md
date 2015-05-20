@@ -94,50 +94,17 @@ see PhaidraBagger.json.example, point the bagger against eg phaidra-sandbox API
     	"metadata_field_language": "de"
 	},
 
+    "projects": {
+        
+        "TestProject": {
+
+#### the project account
+        
+            "account": "username",
+            
+
 #### configure project members, only the members listed are able to log in. THIS IS NO USER MANAGEMENT. For authentication, Mojolicious::Plugin::Authentication is used. Users are authenticated against phaidra-api of the default phaidra instance (see ingest_instances config), so it only makes sense to list users which can be authenticated there
 
-    "projects": {
-        "p1": {
-            "account": "username",
-            "members": [
-	            		{
-		            		"username": "username",
-		            		"displayname": "chuck",
-		            		"role": "manager"
-	            		},
-	            		{
-		            		"username": "username",
-		            		"displayname": "steven",
-		            		"role": "member"
-	            		}
-            		],
-            		
-
-            "bags": {
-                "in": "/var/www/bagger/data/p1/bags/in",
-                "out": "/var/www/bagger/data/p1/bags/out"
-            },
-#### input folder
-            "folders": {
-                "in": "/var/www/bagger/data/p1/folders/in",
-                "uwmetadata_import": "/var/www/bagger/data/p1/folders/in"
-            },
-#### if the import is implemented in another webapp
-	        "import_url": "import-sub-app",
-
-#### convert command is used by the import from folder (see 'folders') to generate thumbnails
-            "thumbnails": {
-		    	"dir": "/var/www/bagger/public/thumbnails/p1",
-		    	"url_path": "thumbnails/p1",
-		    	"convert_cmd": "convert",
-		    	"thumbnail_medium_cmd": "/var/www/bagger/lib/downsize -s 2048 -t 20",
-		    	"thumbnail_small_cmd": "/var/www/bagger/lib/downsize -s 60 -t 20"
-		    },
-		    "redmine_baseurl": "https://redmine.phaidra.org/redmine/"
-
-        },
-        "p2": {
-            "account": "username",
             "members":  [
 	            		{
 		            		"username": "username",
@@ -148,41 +115,67 @@ see PhaidraBagger.json.example, point the bagger against eg phaidra-sandbox API
 		            		"role": "manager"
 	            		}
             		],
+            		
+#### some logic, like status colors or the need for to_ingest status on ingest are hardcoded, so don't change this unless necessary
+            		
             "statuses":  [
 	            		{
-		            		"label": "New",
-		            		"value": "new"
-	            		},
-	            		{
-		            		"label": "Fixed",
-		            		"value": "fixed"
-	            		}
+                                        "label": "New",
+                                        "value": "new"
+                                },
+                                {
+                                        "label": "To check",
+                                        "value": "to_check"
+                                },
+                                {
+                                        "label": "Checked",
+                                        "value": "checked"
+                                },
+                                {
+                                        "label": "To ingest",
+                                        "value": "to_ingest"
+                                }
             		],
+
             "default_assignee": "username",
+            
+#### operations/actions only a manager role can invoke
+            
             "restricted_operations": ["set_assignee"],
             "restricted_actions": ["POST /job/"],
-            "bags": {
-                "in": "/var/www/bagger/data/p2/bags/in",
-                "out": "/var/www/bagger/data/p2/bags/out"
+            
+#### input folder
+            
+            "folders": {
+                "in": "/var/www/bagger/data/p1/folders/in",
+                "uwmetadata_import": "/var/www/bagger/data/p1/folders/in"
             },
+            
+#### if the import is implemented in another webapp
+	    "import_url": "import-sub-app",
+            
+#### convert command is used by the import from folder (see 'folders') to generate thumbnails
             "thumbnails": {
 		    	"dir": "/var/www/bagger/thumbnails/p2",
 		    	"url_path": "thumbnails/p2",
 		    	"convert_cmd": "convert",
 		    	"thumbnail_medium_cmd": "/var/www/bagger/lib/downsize -s 2048 -t 20",
 		    	"thumbnail_small_cmd": "/var/www/bagger/lib/downsize -s 60 -t 20"
-		    },
-		    "redmine_baseurl": "https://redmine.phaidra.org/redmine/"
+		    }
         }
     },
 
     "ingest_instances": {
+
+#### example: phaidra-sandbox    
         "phaidra-instance": {
-            "baseurl": "phaidra-instance.univie.ac.at",
-            "apibaseurl": "services.phaidra-instance.univie.ac.at/api",
+            "baseurl": "phaidra-sandbox.univie.ac.at",
+            "apibaseurl": "services.phaidra-sandbox.univie.ac.at/api",
             "metadata_format_version": "1",
             "local_uwmetadata_tree": "/var/www/bagger/public/uwmetadata/tree.json",
             "local_mods_tree": "/var/www/bagger/public/mods/tree.json",
+            
+#### important
             "is_default": "1"
         },
         "phaidra-instance2": {
@@ -194,6 +187,7 @@ see PhaidraBagger.json.example, point the bagger against eg phaidra-sandbox API
         }
     },
 
+#### user used to ask for directory informations  (names, departments, etc)
     "directory_user": {
       "username": "username",
       "password": "password"
@@ -207,6 +201,7 @@ see PhaidraBagger.json.example, point the bagger against eg phaidra-sandbox API
         "database": "database"
     },
 
+#### let this be
     "authentication": {
     	"realm": "Phaidra",
     	"token_header": "X-XSRF-TOKEN",
