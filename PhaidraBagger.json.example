@@ -97,7 +97,7 @@
             },
             "thumbnails": {
 		    	"dir": "/var/www/bagger/thumbnails/p2",
-		    	"url_path": "thumbnails/p2"
+		    	"url_path": "thumbnails/p2",
 		    	"convert_cmd": "convert",
 		    	"thumbnail_medium_cmd": "/var/www/bagger/lib/downsize -s 2048 -t 20",
 		    	"thumbnail_small_cmd": "/var/www/bagger/lib/downsize -s 60 -t 20"
@@ -140,6 +140,6 @@
     "authentication": {
     	"realm": "Phaidra",
     	"token_header": "X-XSRF-TOKEN",
-        "token_cookie": "XSRF-TOKEN",
-    },
+        "token_cookie": "XSRF-TOKEN"
+    }
 }
