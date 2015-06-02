@@ -130,9 +130,9 @@ sub get_uwmetadata_languages {
 	my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
 	$url->host($base[0]);
 	if(exists($base[1])){
-		$url->path($base[1]."/uwmetadata/languages");
+		$url->path($base[1]."/languages");
 	}else{
-		$url->path("/uwmetadata/languages");
+		$url->path("/languages");
 	}
   	$self->ua->get($url => sub { 	
   		my ($ua, $tx) = @_;
