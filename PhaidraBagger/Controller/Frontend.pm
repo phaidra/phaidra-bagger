@@ -27,7 +27,7 @@ sub home {
 
     my $init_data = { current_user => $self->current_user };
     $self->stash(init_data => encode_json($init_data));
-    $self->stash(init_data_perl => $init_data);
+    $self->stash(init_data_perl => $init_data);   
 
     $self->render('home');
 }

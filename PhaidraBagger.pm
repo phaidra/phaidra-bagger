@@ -11,6 +11,10 @@ use Mojo::Loader;
 use lib "lib/phaidra_directory";
 use PhaidraBagger::Model::Session::Store::Mongo;
 
+$ENV{MOJO_MAX_MESSAGE_SIZE} = 1073741824;
+$ENV{MOJO_INACTIVITY_TIMEOUT} = 600;
+$ENV{MOJO_HEARTBEAT_TIMEOUT} = 600;
+
 # This method will run once at server start
 sub startup {
     my $self = shift;
@@ -22,15 +26,18 @@ sub startup {
 
     # init log
   	$self->log(Mojo::Log->new(path => $config->{log_path}, level => $config->{log_level}));
+	#$self->log->debug("Config:\n".$self->app->dumper($self));
 
 	# make config->{phaidra} point to default ingest instance, for quick access
 	my $have_default_instance = 0;
 	foreach my $k (%{$config->{ingest_instances}}){
-		if(exists($config->{ingest_instances}->{$k}->{is_default})){
-			if($config->{ingest_instances}->{$k}->{is_default} eq '1'){
-				$have_default_instance = 1;
-				$config->{phaidra} = $config->{ingest_instances}->{$k};
-				#$self->log->info("Default ingest instance: ".$self->dumper($config->{phaidra}));
+		if(exists($config->{ingest_instances}->{$k})){
+			if(exists($config->{ingest_instances}->{$k}->{is_default})){
+				if($config->{ingest_instances}->{$k}->{is_default} eq '1'){
+					$have_default_instance = 1;
+					$config->{phaidra} = $config->{ingest_instances}->{$k};
+					#$self->log->info("Default ingest instance: ".$self->dumper($config->{phaidra}));
+				}
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 
 =pod
 
@@ -19,6 +19,10 @@ use FindBin;
 use lib $FindBin::Bin;
 use PhaidraBaggerAgent;
 use Switch;
+
+$ENV{MOJO_MAX_MESSAGE_SIZE} = 1073741824;
+$ENV{MOJO_INACTIVITY_TIMEOUT} = 600;
+$ENV{MOJO_HEARTBEAT_TIMEOUT} = 600;
 
 my $jobid;
 my $configpath;

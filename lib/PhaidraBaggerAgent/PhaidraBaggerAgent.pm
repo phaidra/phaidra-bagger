@@ -44,15 +44,8 @@ sub new {
 		return undef;
 	}
 
-	my $bytes = slurp $configpath;
-	my $json = Mojo::JSON->new;
-	$config = $json->decode($bytes);
-	my $err  = $json->error;
-
-	if($err){
-		say "Error: $err";
-		return undef;
-	}
+	my $bytes = slurp $configpath;	
+	$config = decode_json($bytes);	
 
 	$log = Mojo::Log->new(path => $config->{'log'}->{path}, level => $config->{'log'}->{level});
 
@@ -208,7 +201,7 @@ sub run_job {
 
 		# check if file exist
 		unless(-f $filepath){
-			my @alerts = [{ type => 'danger', msg => "Bag ".$bag->{bagid}.":File $filepath does not exist"}];
+			my @alerts = [{ type => 'danger', msg => "Bag [".$bag->{bagid}."]: File $filepath does not exist"}];
 			$self->{'log'}->error(Dumper(\@alerts));
 			# save error to bag
 			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => \@alerts}});
@@ -217,7 +210,7 @@ sub run_job {
 
 		# check if file is readable
 		unless(-r $filepath){
-			my @alerts = [{ type => 'danger', msg => "Bag ".$bag->{bagid}.": File $filepath is not readable"}];
+			my @alerts = [{ type => 'danger', msg => "Bag [".$bag->{bagid}."]: File $filepath is not readable"}];
 			$self->{'log'}->error(Dumper(\@alerts));
 			# save error to bag
 			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => \@alerts}});
@@ -225,8 +218,8 @@ sub run_job {
 		}
 
 		# check if there are metadata
-		unless($bag->{metadata}->{uwmetadata}){ # or mods later
-			my @alerts = [{ type => 'danger', msg => "Bag ".$bag->{bagid}." has no bibliographical metadata"}];
+		unless($bag->{metadata}->{uwmetadata} || $bag->{metadata}->{mods}){
+			my @alerts = [{ type => 'danger', msg => "Bag [".$bag->{bagid}."] has no bibliographical metadata"}];
 			$self->{'log'}->error(Dumper(\@alerts));
 			# save error to bag
 			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => \@alerts}});
@@ -242,7 +235,7 @@ sub run_job {
 		my $b = $self->{bags_coll}->find_one({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}}, {'jobs.$.pid' => 1});
 		my $current_job = @{$b->{jobs}}[0];
 		if($current_job->{pid}){
-			my @alerts = [{ type => 'info', msg => "Bag ".$bag->{bagid}." already imported in this job, skipping"}];
+			my @alerts = [{ type => 'info', msg => "Bag [".$bag->{bagid}."] already imported in this job, skipping"}];
 			$self->{'log'}->info(Dumper(\@alerts));
 			# save error to bag
 			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => \@alerts}});
@@ -251,6 +244,14 @@ sub run_job {
 
 		# ingest bag
 		my ($pid, $alerts) = $self->_ingest_bag($filepath, $bag, $ingest_instance, $username, $password);
+		# update alerts
+		if(defined($alerts)){
+			if(scalar @{$alerts} > 0){
+				$self->{'log'}->info(Dumper(\@alerts));
+				$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => $alerts}});
+			}
+		}
+		$self->{'log'}->info("Ingested bagid[".$bag->{bagid}."] pid[$pid]") if(defined($pid));
 
 		if($pid){
 			push @pids, $pid;
@@ -269,13 +270,6 @@ sub run_job {
 				}
 			}
 
-			# update alerts
-			if(defined($alerts)){
-				if(scalar @{$alerts} > 0){
-					$self->{'log'}->info('Alerts: '.Dumper($alerts));
-					$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => $alerts}});
-				}
-			}
 		}
 
 
@@ -375,6 +369,8 @@ sub _ingest_bag {
 		}else{
 			push(@alerts, { type => 'danger', msg => "Connection error: ".$err->{message} });
 		}
+
+		$self->{'log'}->error(Dumper(\@alerts));
 
 	}
 
