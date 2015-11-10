@@ -387,3 +387,7 @@ margin-top: 5px;
 .angular-google-map-container { 
 	height: 400px; 
 }
+
+.bags-min-col-width{
+        width: 100px;
+}

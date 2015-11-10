@@ -1006,7 +1006,7 @@ sub bags {
 
   $self->stash(init_data => encode_json($init_data));
 
-	$self->render('bags/list');
+	$self->render('bags/listBrowse');
 }
 
 
@@ -1052,7 +1052,7 @@ sub folder_bags_with_query {
 
   $self->stash(init_data => encode_json($init_data));
 
-  $self->render('bags/list');
+  $self->render('bags/listBrowse');
 }
 
 sub folder_bags {
@@ -1062,7 +1062,7 @@ sub folder_bags {
 
   $self->stash(init_data => encode_json($init_data));
 
-	$self->render('bags/list');
+	$self->render('bags/listBrowse');
 }
 
 sub search {
@@ -1083,6 +1083,31 @@ sub search {
 	my ($hits, $coll) = $self->_search($filter, $from, $limit, $sortfield, $sortvalue, $filterfield, $filtervalue);
 	#$self->app->log->debug("XXXXXXXX :".$self->app->dumper($coll));
 	$self->render(json => { items => $coll, hits => $hits, alerts => []}, status => 200);
+}
+
+sub solr_search {
+  
+    my $self = shift;
+
+    my $init_data = {
+       current_user => $self->current_user,
+       thumb_path => $self->url_for($self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path}),
+       redmine_baseurl => $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl},
+       members => $self->config->{projects}->{$self->current_user->{project}}->{members},
+       statuses => $self->config->{projects}->{$self->current_user->{project}}->{statuses},
+       restricted_ops => $self->config->{projects}->{$self->current_user->{project}}->{restricted_operations},
+       ingest_instances => $self->config->{ingest_instances}
+    };
+ 
+    $self->stash(
+       navtitle => $init_data->{navtitle},
+       navtitlelink => $init_data->{navtitlelink}
+    );
+
+    $self->stash(init_data => encode_json($init_data));
+    
+    $self->render('bags/listSearch');
+
 }
 
 sub _search {
@@ -1197,7 +1222,7 @@ sub set_attribute {
 			last;
 		}
 	}
-
+	
 	my $reply;
 	if($attribute eq 'tags'){
 		$self->app->log->info("[".$self->current_user->{username}."] Adding $attribute $value to bag $bagid");
@@ -1266,6 +1291,7 @@ sub set_attribute_mass {
 
 	my $reply;
 	if($attribute eq 'tags'){
+                $self->app->log->info("[".$self->current_user->{username}."] Value tags1: $value for bags:".$self->app->dumper($selection));
 		$self->app->log->info("[".$self->current_user->{username}."] Adding $attribute $value for bags:".$self->app->dumper($selection));
 		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, project => $self->current_user->{project}},{ '$set' => {updated => time }, '$addToSet' =>	{ tags => $value }}, { multi => 1 } );
 	}else{
@@ -1301,6 +1327,7 @@ sub unset_attribute_mass {
 
 	my $reply;
 	if($attribute eq 'tags'){
+		$self->app->log->info("[".$self->current_user->{username}."] Value tags2: $value for bags:".$self->app->dumper($selection));
 		$self->app->log->info("[".$self->current_user->{username}."] Removing $attribute $value from bags:".$self->app->dumper($selection));
 		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, project => $self->current_user->{project}},{ '$set' => {updated => time}, '$pullAll' => { tags => [$value] }}, { multi => 1 }  );
 	}else{

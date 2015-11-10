@@ -170,18 +170,21 @@ sub startup {
 	$self->attr(_mango => sub { return Mango->new('mongodb://'.$config->{mongodb}->{username}.':'.$config->{mongodb}->{password}.'@'.$config->{mongodb}->{host}.'/'.$config->{mongodb}->{database}) });
 	$self->helper(mango => sub { return shift->app->_mango});
 
+	#$self->attr(_mango_local => sub { return Mango->new('mongodb://'.$config->{mongodb_local}->{username}.':'.$config->{mongodb_local}->{password}.'@'.$config->{mongodb_local}->{host}.'/'.$config->{mongodb_local}->{database}) });
+        #$self->helper(mango_local => sub { return shift->app->_mango_local});
+	
     # we might possibly save a lot of data to session
     # so we are not going to use cookies, but a database instead
     $self->plugin(
         session => {
-            stash_key     => 'mojox-session',
-	    	store  => PhaidraBagger::Model::Session::Store::Mongo->new(
-	    		mango => $self->mango,
-	    		'log' => $self->log
-	    	),
-	    	transport => MojoX::Session::Transport::Cookie->new(name => 'b_'.$config->{installation_id}),
-            expires_delta => $config->{session_expiration},
-	    	ip_match      => 1
+                        stash_key     => 'mojox-session',
+                        store  => PhaidraBagger::Model::Session::Store::Mongo->new(
+                                mango => $self->mango,
+                                'log' => $self->log
+                        ),
+                        transport => MojoX::Session::Transport::Cookie->new(name => 'b_'.$config->{installation_id}),
+                        expires_delta => $config->{session_expiration},
+                        ip_match      => 1
         }
     );
 
@@ -198,7 +201,7 @@ sub startup {
 			}else{
 				# this will set expire on cookie as well as in store
 				$session->expire;
-	      		$session->flush;
+                                $session->flush;
 			}
 		}else{
 			if($self->signature_exists){
@@ -346,6 +349,8 @@ sub startup {
     $autz->route('bags/set/:attribute/:value') ->via('post')   ->to('bag#set_attribute_mass');
     $autz->route('bags/unset/:attribute/:value') ->via('post')   ->to('bag#unset_attribute_mass');
 
+    $autz->route('bags/solr_search') ->via('get')   ->to('bag#solr_search');
+    
     $autz->route('bag/:bagid/edit') ->via('get')   ->to('bag#edit');
     $autz->route('bag/:bagid') ->via('get')   ->to('bag#load');
     $autz->route('bag/template/:tid') ->via('get')   ->to('bag#load_template');
@@ -387,6 +392,10 @@ sub startup {
     $autz->route('log') ->via('get')   ->to('log#log');
     $autz->route('log/events') ->via('get')   ->to('log#events');
 
+    $autz->route('search_solr')     ->via('get')   ->to('frontend#search_solr');
+    $autz->route('search_solr_all')     ->via('get')   ->to('frontend#search_solr_all');
+   
+    
     return $self;
 }
 

@@ -16,6 +16,15 @@ sub create {
     my ($self, $sid, $expires, $data) = @_;
     
     $expires = $expires*1000;
+    #$self->log->debug("mango:",Dumper($self->mango));
+    #$self->log->debug("mango sid:",Dumper($sid));
+    #$self->log->debug("mango expires:",Dumper($expires));
+    #$self->log->debug("mango data:",Dumper($data));
+  
+    #mf hack!!!
+    $data->{"mojox\uff0Esession\uff0Eip_address"} = $data->{"mojox.session.ip_address"};
+    delete $data->{"mojox.session.ip_address"};
+    
     $self->mango->db->collection('session')->update({_id => $sid}, { _id => $sid, expires => Mango::BSON::Time->new($expires), data => $data }, { upsert => 1 }); 	   
     
     return 1;
@@ -28,7 +37,9 @@ sub update {
 sub load {
     my ($self, $sid) = @_;    
     
+    #$self->log->debug("loadsid:",Dumper($sid));
     my $res = $self->mango->db->collection('session')->find_one({_id => $sid});
+    #$res->{expires} = 0 if not defined $res->{expires};
     my $expires = $res->{expires}/1000;    
     
     return ($expires, $res->{data});

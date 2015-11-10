@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use v5.10;
 use Mango 0.24;
-use Mojo::JSON qw(encode_json);
+use Mojo::JSON qw(encode_json decode_json);
 use PhaidraBagger::Model::Cache;
 use base 'Mojolicious::Controller';
 
@@ -127,6 +127,328 @@ sub get_classifications {
 	}
 	#$self->app->log->debug($self->app->dumper(\@clss));
 	$self->render(json => { classifications => \@clss }, status => 200);
+}
+
+
+sub makeSolrFieldsQuery{
+    
+    my $self = shift;
+    my $filter = shift;
+    my $ranges = shift;
+    my $sortvalue = shift;
+    my $sortfield = shift;
+    my $allowedStatuses = shift;
+    $allowedStatuses = decode_json($allowedStatuses);
+    
+    # restriction of all statuses to allowed, defined in config json
+    my $defaulAllStatuses = '';
+    my $statCount = 1;
+    if(defined $allowedStatuses && ref($allowedStatuses) eq 'ARRAY'){
+         foreach my $allowedStatus (@{$allowedStatuses}){
+               if($statCount == 1){
+                      $defaulAllStatuses = "status:".$allowedStatus->{value};
+               }else{
+                      $defaulAllStatuses = $defaulAllStatuses." OR status:".$allowedStatus->{value};
+               }
+               $statCount++;
+         }
+    }
+    
+    $self->app->log->debug("makeSolrFieldsQuery ranges::",$self->app->dumper($ranges));
+    $self->app->log->debug("makeSolrFieldsQuery filter::",$self->app->dumper($filter));
+    $self->app->log->debug("makeSolrFieldsQuery allowedStatuses::",$self->app->dumper($allowedStatuses));
+    $self->app->log->debug("makeSolrFieldsQuery defaulAllStatuses::",$self->app->dumper($defaulAllStatuses));
+    
+    my $fieldsQuery = '';
+    my $fieldsQueryHash = {};
+    #accessed over search
+    if(defined $filter->{solr_field} and $filter->{solr_field} ne "" and $filter->{solr_field} ne 'status'){
+           $filter->{solr_query} = "*" if not defined $filter->{solr_query};
+           $filter->{solr_query} = "*" if $filter->{solr_query} eq '';
+           $fieldsQueryHash->{$filter->{solr_field}} = $filter->{solr_query};
+    }
+    
+    #handled separately because "*" is not 'all' but only filter:"to_check, checked, to_ingest, new" in status
+    if( not defined $filter->{solr_field} or  $filter->{solr_field} eq "" ){
+          $filter->{solr_field} = "status";
+          $filter->{solr_query} = "" if not defined $filter->{solr_query};
+    }
+    #accessed over facet/filter
+    if(defined $filter->{assignee}){
+           $filter->{assignee} = "*" if $filter->{assignee} eq '';
+           $fieldsQueryHash->{assignee} = $filter->{assignee};
+    }
+    #accessed over facet/filter
+    if(defined $filter->{status}){
+            #$filter->{status} = "*" if $filter->{status} eq '';
+            $fieldsQueryHash->{status} = $filter->{status};
+    }
+    #accessed over facet/filter
+    if(defined $filter->{tag}){
+            #$filter->{status} = "*" if $filter->{status} eq '';
+            $fieldsQueryHash->{bag_tgs} = $filter->{tag};
+    }
+    #http://localhost:8983/solr/koolcha/select?q=test_date:[2006-03-06T23:59:59Z%20TO%20*]
+    # ranges for 'created'
+    if(defined $ranges->{created}->{year} and not defined $ranges->{created}->{month} and not defined $ranges->{created}->{day}){            
+            my $year = $ranges->{created}->{year};
+            # TODO replace with 'created' in mongoDb! later
+            $fieldsQueryHash->{test_date} = "[".$year."-01-01T00:00:00Z%20TO%20".$year."-01-01T00:00:00Z%2B1YEARS]";
+    }
+    if(defined $ranges->{created}->{year} and defined $ranges->{created}->{month} and not defined $ranges->{created}->{day}){            
+            my $year  = $ranges->{created}->{year};
+            my $month = $ranges->{created}->{month};
+            # TODO replace with 'created' in mongoDb! later
+            $fieldsQueryHash->{test_date} = "[".$year."-".$month."-01T00:00:00Z%20TO%20".$year."-".$month."-01T00:00:00Z%2B1MONTHS]";
+    }
+    if(defined $ranges->{created}->{year} and defined $ranges->{created}->{month} and defined $ranges->{created}->{day}){            
+            my $year  = $ranges->{created}->{year};
+            my $month = $ranges->{created}->{month};
+            my $day   = $ranges->{created}->{day};
+            # TODO replace with 'created' in mongoDb! later
+             $fieldsQueryHash->{test_date} = "[".$year."-".$month."-".$day."T00:00:00Z%20TO%20".$year."-".$month."-".$day."T00:00:00Z%2B1DAYS]";
+    }
+    # ranges for 'updated' 
+    if(defined $ranges->{updated}->{year} and not defined $ranges->{updated}->{month} and not defined $ranges->{updated}->{day}){            
+            my $year = $ranges->{updated}->{year};
+            # TODO replace with 'updated' in mongoDb! later
+            $fieldsQueryHash->{test_date_updated} = "[".$year."-01-01T00:00:00Z%20TO%20".$year."-01-01T00:00:00Z%2B1YEARS]";
+    }
+    if(defined $ranges->{updated}->{year} and defined $ranges->{updated}->{month} and not defined $ranges->{updated}->{day}){            
+            my $year  = $ranges->{updated}->{year};
+            my $month = $ranges->{updated}->{month};
+            # TODO replace with 'updated' in mongoDb! later
+            $fieldsQueryHash->{test_date_updated} = "[".$year."-".$month."-01T00:00:00Z%20TO%20".$year."-".$month."-01T00:00:00Z%2B1MONTHS]";
+    }
+    if(defined $ranges->{updated}->{year} and defined $ranges->{updated}->{month} and defined $ranges->{updated}->{day}){            
+            my $year  = $ranges->{updated}->{year};
+            my $month = $ranges->{updated}->{month};
+            my $day   = $ranges->{updated}->{day};
+            # TODO replace with 'updated' in mongoDb! later
+             $fieldsQueryHash->{test_date_updated} = "[".$year."-".$month."-".$day."T00:00:00Z%20TO%20".$year."-".$month."-".$day."T00:00:00Z%2B1DAYS]";
+    }
+     
+    $self->app->log->debug("makeSolrFieldsQuery fieldsQueryHash765::",$self->app->dumper($fieldsQueryHash)); 
+    my $i = 1;
+    foreach my $key ( keys %{$fieldsQueryHash} ){
+            if($i == 1){
+                   $fieldsQuery = $key.":".$fieldsQueryHash->{$key};
+            }else{
+                   $fieldsQuery = $fieldsQuery." AND ".$key.":".$fieldsQueryHash->{$key};
+            }
+            $i++;
+    }
+    # handled separately because "*" is not 'all' but only filter:"to_check, checked, to_ingest, new"
+    if(defined $filter->{solr_field} and $filter->{solr_field} eq 'status'){
+            #$fieldsQuery = $fieldsQuery." AND (status:to_check OR status:checked OR status:to_ingest OR status:new)" if $filter->{status} eq '';
+            #$self->app->log->debug("makeSolrFieldsQuery fieldsQuery222::",$self->app->dumper($fieldsQuery));
+            if($fieldsQuery eq ''){
+                  if( $filter->{solr_query} eq '' ){
+                        if($defaulAllStatuses eq ''){
+                               $fieldsQuery = "status:*";
+                        }else{
+                               $fieldsQuery = $defaulAllStatuses;
+                        }
+                        #$fieldsQuery = "status:to_check OR status:checked OR status:to_ingest OR status:new";
+                  }else{
+                       $fieldsQuery = "status:".$filter->{solr_query};
+                  }
+            }else{
+                  if( $filter->{solr_query} eq '' ){
+                          if($defaulAllStatuses eq ''){
+                                  $fieldsQuery = $fieldsQuery." AND status:*";
+                          }else{
+                                  $fieldsQuery = $fieldsQuery." AND (".$defaulAllStatuses.")";
+                          }
+                          #$fieldsQuery = $fieldsQuery." AND (status:to_check OR status:checked OR status:to_ingest OR status:new)";
+                  }else{
+                       $fieldsQuery = $fieldsQuery." AND status:".$filter->{solr_query};
+                  }
+            }
+    }
+    
+   
+    
+    # temporary!!!
+    if($sortfield eq "created"){
+           $sortfield = "test_date";
+    }
+    if($sortfield eq "updated"){
+           $sortfield = "test_date_updated";
+    }
+    
+    if($sortvalue eq '1'){
+           $sortvalue = "asc";
+    }else{
+           $sortvalue = "desc";
+    }
+    $fieldsQuery = $fieldsQuery."&sort=".$sortfield." ".$sortvalue;
+    
+    $self->app->log->debug("search_solr fieldsQueryHash::",$self->app->dumper($fieldsQueryHash));
+    $self->app->log->debug("search_solr fieldsQuery111::",$self->app->dumper($fieldsQuery));
+    
+    return $fieldsQuery;
+    
+}
+
+sub makeSolrRangesQuery{
+    
+    my $self = shift;
+    my $ranges = shift;
+
+    my $createdRange;
+    if(defined $ranges->{created}->{day}){
+          my $day = $ranges->{created}->{day};
+          my $month = $ranges->{created}->{month};
+          my $year = $ranges->{created}->{year};
+          #$createdRange = "&facet.range={!tag=r1}test_date&f.test_date.facet.range.start=".$year."-".$month."-".$day."T00:00:00.000Z&f.test_date.facet.range.end=".$year."-".$month."-".$day."T00:00:00.000Z%2B1DAYS&f.test_date.facet.range.gap=%2B1DAY&f.test_date.facet.pivot={!range=r1}test_date";
+          #without pivot, also in other elsif
+          $createdRange = "&facet.range={!tag=r1}test_date&f.test_date.facet.range.start=".$year."-".$month."-".$day."T00:00:00.000Z&f.test_date.facet.range.end=".$year."-".$month."-".$day."T00:00:00.000Z%2B1DAYS&f.test_date.facet.range.gap=%2B1DAY";
+    }elsif(defined $ranges->{created}->{month}){
+          my $month_start = $ranges->{created}->{month};
+          my $year = $ranges->{created}->{year};
+          $createdRange = "&facet.range={!tag=r1}test_date&f.test_date.facet.range.start=".$year."-".$month_start."-01T00:00:00.000Z&f.test_date.facet.range.end=".$year."-".$month_start."-01T00:00:00.000Z%2B1MONTHS&f.test_date.facet.range.gap=%2B1DAY";
+    }elsif(defined $ranges->{created}->{year}){
+          my $year_start = $ranges->{created}->{year};
+          my $year_end = $year_start + 1;
+          $createdRange = "&facet.range={!tag=r1}test_date&f.test_date.facet.range.start=".$year_start."-01-01T00:00:00.000Z&f.test_date.facet.range.end=".$year_end."-01-01T00:00:00.000Z&f.test_date.facet.range.gap=%2B1MONTH";
+    }else{
+          $createdRange = "&facet.range={!tag=r1}test_date&f.test_date.facet.range.start=2007-01-01T00:00:00.000Z&f.test_date.facet.range.end=NOW/DAY&f.test_date.facet.range.gap=%2B1YEAR";
+    }
+    
+    my $updatedRange;
+    if(defined $ranges->{updated}->{day}){
+          my $day = $ranges->{updated}->{day};
+          my $month = $ranges->{updated}->{month};
+          my $year = $ranges->{updated}->{year};
+          $updatedRange = "&facet.range={!tag=r2}test_date_updated&f.test_date_updated.facet.range.start=".$year."-".$month."-".$day."T00:00:00.000Z&f.test_date_updated.facet.range.end=".$year."-".$month."-".$day."T00:00:00.000Z%2B1DAYS&f.test_date_updated.facet.range.gap=%2B1DAY";
+    }elsif(defined $ranges->{updated}->{month}){
+          my $month_start = $ranges->{updated}->{month};
+          my $year = $ranges->{updated}->{year};
+          $updatedRange = "&facet.range={!tag=r2}test_date_updated&f.test_date_updated.facet.range.start=".$year."-".$month_start."-01T00:00:00.000Z&f.test_date_updated.facet.range.end=".$year."-".$month_start."-01T00:00:00.000Z%2B1MONTHS&f.test_date_updated.facet.range.gap=%2B1DAY";
+    }elsif(defined $ranges->{updated}->{year}){
+         my $year_start = $ranges->{updated}->{year};
+         my $year_end = $year_start + 1;
+         $updatedRange = "&facet.range={!tag=r2}test_date_updated&f.test_date_updated.facet.range.start=".$year_start."-01-01T00:00:00.000Z&f.test_date_updated.facet.range.end=".$year_end."-01-01T00:00:00.000Z&f.test_date_updated.facet.range.gap=%2B1MONTH";
+    }else{
+         $updatedRange = "&facet.range={!tag=r2}test_date_updated&f.test_date_updated.facet.range.start=2007-01-01T00:00:00.000Z&f.test_date_updated.facet.range.end=NOW/DAY&f.test_date_updated.facet.range.gap=%2B1YEAR";
+    }
+    
+    my $range = $createdRange.$updatedRange;
+    
+    return $range;
+}
+
+
+sub search_solr_all {
+    
+    my $self = shift;
+
+    my $field           = $self->param('field');
+    my $filter          = $self->param('filter');
+    my $ranges          = $self->param('ranges');
+    my $sortvalue       = $self->param('sortvalue');
+    my $sortfield       = $self->param('sortfield');
+    my $allowedStatuses = $self->param('allowedStatuses');
+    
+    $filter = decode_json($filter);
+    $ranges = decode_json($ranges);
+    $self->app->log->debug("search_solr filter::",$self->app->dumper($filter));
+    $self->app->log->debug("search_solr ranges::",$self->app->dumper($ranges));
+    
+    my $fieldsQuery  = $self->makeSolrFieldsQuery($filter, $ranges, $sortvalue, $sortfield, $allowedStatuses);
+    my $createdRange = $self->makeSolrRangesQuery($ranges);
+    
+     
+    #my $url = Mojo::URL->new;
+    #$url->scheme('http');
+    #my $base = $self->app->config->{phaidra}->{solrbaseurl};
+    #$url->host($base);
+    $self->app->log->debug("search_solr fieldsQuery:",$fieldsQuery);
+    $self->app->log->debug("search_solr createdRange:",$createdRange);
+    $self->app->log->debug("AAAsearch_solr fieldsQuery uri:","http://localhost:8983/solr/koolcha/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json");
+
+    
+    my $tx = $self->ua->get("http://localhost:8983/solr/koolcha/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json");    
+    
+    if (my $res = $tx->success) {
+           $self->app->log->debug("search_solr success all");
+           $self->render(json => $res->json, status => 200 );
+    } else {
+          $self->app->log->debug("search_solr fail");
+          my ($err, $code) = $tx->error;
+          if($tx->res->json){       
+                 if(exists($tx->res->json->{alerts})) {
+                         $self->render(json => { alerts => $tx->res->json->{alerts} }, status =>  $code ? $code : 500);
+                 }else{
+                      $self->render(json => { alerts => [{ type => 'danger', msg => $err }] }, status =>  $code ? $code : 500);
+                 }
+          }else{
+                  $self->render(json => { alerts => [{ type => 'danger', msg => $err }] }, status =>  $code ? $code : 500);
+          }
+    }
+}
+
+
+sub search_solr {
+
+    my $self = shift;
+    
+    my $field           = $self->param('field');
+    my $from            = $self->param('from');
+    my $limit           = $self->param('limit');
+    my $sortvalue       = $self->param('sortvalue');
+    my $sortfield       = $self->param('sortfield');
+    my $allowedStatuses = $self->param('allowedStatuses');
+    
+    my $filter = $self->param('filter');
+    my $ranges = $self->param('ranges');
+    $filter = decode_json($filter);  
+    $ranges = decode_json($ranges);  
+
+               
+    my $fieldsQuery =  $self->makeSolrFieldsQuery($filter, $ranges, $sortvalue, $sortfield, $allowedStatuses);
+    my $createdRange = $self->makeSolrRangesQuery($ranges);  
+      
+    ##my $url = Mojo::URL->new;
+    ##$url->scheme('http');
+    #my @base = split('/',$c->app->config->{phaidra}->{apibaseurl});
+    #$url->host($base[0]);
+    #if(exists($base[1])){
+    #     $url->path($base[1]."/terms/label");
+    #}else{
+    #     $url->path("/terms/label");
+    #}
+    ##my $base = $self->app->config->{phaidra}->{solrbaseurl};
+    ##$self->app->log->debug("search_solr base:",$base);
+    ##$url->host($base);
+
+    #localhost:8983/solr/koolcha/
+    
+  
+   $self->app->log->debug("XXXhttp://localhost:8983/solr/koolcha/select?q=".$fieldsQuery." &rows=".$limit."&start=".$from."&facet=true&".$createdRange."&wt=json");
+
+   my $tx = $self->ua->get("http://localhost:8983/solr/koolcha/select?q=".$fieldsQuery." &rows=".$limit."&start=".$from."&facet=true&".$createdRange."&wt=json");
+  
+   if (my $res = $tx->success) {
+           $self->app->log->debug("search_solr success");
+           $self->app->log->debug("res1:",$self->app->dumper($res));
+           $self->render(json => $res->json, status => 200 );
+   } else {
+          $self->app->log->debug("search_solr fail");
+          my ($err, $code) = $tx->error;
+          if($tx->res->json){       
+                 if(exists($tx->res->json->{alerts})) {
+                         $self->render(json => { alerts => $tx->res->json->{alerts} }, status =>  $code ? $code : 500);
+                 }else{
+                      $self->render(json => { alerts => [{ type => 'danger', msg => $err }] }, status =>  $code ? $code : 500);
+                 }
+          }else{
+                  $self->render(json => { alerts => [{ type => 'danger', msg => $err }] }, status =>  $code ? $code : 500);
+          }
+   }
+    
+    
 }
 
 
