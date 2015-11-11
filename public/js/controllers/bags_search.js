@@ -197,11 +197,17 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
                         $scope.facetFieldsStatus = $scope.formatFacets(response.data.facet_counts.facet_fields.status);
                         $scope.facetFieldsAssignee = $scope.formatFacets(response.data.facet_counts.facet_fields.assignee);
                         $scope.facetFieldsLabel = $scope.formatFacets(response.data.facet_counts.facet_fields.label);
-                        if(typeof response.data.facet_counts.facet_ranges.test_date !== 'undefined'){
-                                 $scope.facetRangesCreated = $scope.formatFacets(response.data.facet_counts.facet_ranges.test_date.counts);
+                        //if(typeof response.data.facet_counts.facet_ranges.test_date !== 'undefined'){
+                        //         $scope.facetRangesCreated = $scope.formatFacets(response.data.facet_counts.facet_ranges.test_date.counts);
+                        //}
+                        //if(typeof response.data.facet_counts.facet_ranges.test_date_updated !== 'undefined'){
+                        //         $scope.facetRangesUpdated = $scope.formatFacets(response.data.facet_counts.facet_ranges.test_date_updated.counts);
+                        //}
+                        if(typeof response.data.facet_counts.facet_ranges.created !== 'undefined'){
+                                 $scope.facetRangesCreated = $scope.formatFacets(response.data.facet_counts.facet_ranges.created.counts);
                         }
-                        if(typeof response.data.facet_counts.facet_ranges.test_date_updated !== 'undefined'){
-                                 $scope.facetRangesUpdated = $scope.formatFacets(response.data.facet_counts.facet_ranges.test_date_updated.counts);
+                        if(typeof response.data.facet_counts.facet_ranges.updated !== 'undefined'){
+                                 $scope.facetRangesUpdated = $scope.formatFacets(response.data.facet_counts.facet_ranges.updated.counts);
                         }
                         console.log('search_solr_all  facetRangesCreated:', $scope.facetRangesCreated);
                         console.log('search_solr_all  scope.totalItems:', $scope.totalItems);
@@ -603,7 +609,12 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
 	  return $scope.initdata.restricted_ops.indexOf('set_'+attribute) == -1 || $scope.current_user.role == 'manager';
   }
 
+  $scope.iso8601ToUnixEpoch = function (dateString) {
+          
+          return Date.parse(dateString)
+  }
 
+  
 });
 
 var TagModalCtrl = function ($scope, $modalInstance, FrontendService, BagService, promiseTracker, mode) {

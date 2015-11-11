@@ -188,44 +188,44 @@ sub makeSolrFieldsQuery{
             #$filter->{status} = "*" if $filter->{status} eq '';
             $fieldsQueryHash->{bag_tgs} = $filter->{tag};
     }
-    #http://localhost:8983/solr/koolcha/select?q=test_date:[2006-03-06T23:59:59Z%20TO%20*]
+    #http://localhost:8983/solr/koolcha/select?q=created:[2006-03-06T23:59:59Z%20TO%20*]
     # ranges for 'created'
     if(defined $ranges->{created}->{year} and not defined $ranges->{created}->{month} and not defined $ranges->{created}->{day}){            
             my $year = $ranges->{created}->{year};
-            # TODO replace with 'created' in mongoDb! later
-            $fieldsQueryHash->{test_date} = "[".$year."-01-01T00:00:00Z%20TO%20".$year."-01-01T00:00:00Z%2B1YEARS]";
+            # TODO replace 'test_date' with 'created' in mongoDb! later
+            $fieldsQueryHash->{created} = "[".$year."-01-01T00:00:00Z%20TO%20".$year."-01-01T00:00:00Z%2B1YEARS]";
     }
     if(defined $ranges->{created}->{year} and defined $ranges->{created}->{month} and not defined $ranges->{created}->{day}){            
             my $year  = $ranges->{created}->{year};
             my $month = $ranges->{created}->{month};
             # TODO replace with 'created' in mongoDb! later
-            $fieldsQueryHash->{test_date} = "[".$year."-".$month."-01T00:00:00Z%20TO%20".$year."-".$month."-01T00:00:00Z%2B1MONTHS]";
+            $fieldsQueryHash->{created} = "[".$year."-".$month."-01T00:00:00Z%20TO%20".$year."-".$month."-01T00:00:00Z%2B1MONTHS]";
     }
     if(defined $ranges->{created}->{year} and defined $ranges->{created}->{month} and defined $ranges->{created}->{day}){            
             my $year  = $ranges->{created}->{year};
             my $month = $ranges->{created}->{month};
             my $day   = $ranges->{created}->{day};
             # TODO replace with 'created' in mongoDb! later
-             $fieldsQueryHash->{test_date} = "[".$year."-".$month."-".$day."T00:00:00Z%20TO%20".$year."-".$month."-".$day."T00:00:00Z%2B1DAYS]";
+             $fieldsQueryHash->{created} = "[".$year."-".$month."-".$day."T00:00:00Z%20TO%20".$year."-".$month."-".$day."T00:00:00Z%2B1DAYS]";
     }
     # ranges for 'updated' 
     if(defined $ranges->{updated}->{year} and not defined $ranges->{updated}->{month} and not defined $ranges->{updated}->{day}){            
             my $year = $ranges->{updated}->{year};
-            # TODO replace with 'updated' in mongoDb! later
-            $fieldsQueryHash->{test_date_updated} = "[".$year."-01-01T00:00:00Z%20TO%20".$year."-01-01T00:00:00Z%2B1YEARS]";
+            # TODO replace 'test_date_updated' with 'updated' in mongoDb! later
+            $fieldsQueryHash->{updated} = "[".$year."-01-01T00:00:00Z%20TO%20".$year."-01-01T00:00:00Z%2B1YEARS]";
     }
     if(defined $ranges->{updated}->{year} and defined $ranges->{updated}->{month} and not defined $ranges->{updated}->{day}){            
             my $year  = $ranges->{updated}->{year};
             my $month = $ranges->{updated}->{month};
             # TODO replace with 'updated' in mongoDb! later
-            $fieldsQueryHash->{test_date_updated} = "[".$year."-".$month."-01T00:00:00Z%20TO%20".$year."-".$month."-01T00:00:00Z%2B1MONTHS]";
+            $fieldsQueryHash->{updated} = "[".$year."-".$month."-01T00:00:00Z%20TO%20".$year."-".$month."-01T00:00:00Z%2B1MONTHS]";
     }
     if(defined $ranges->{updated}->{year} and defined $ranges->{updated}->{month} and defined $ranges->{updated}->{day}){            
             my $year  = $ranges->{updated}->{year};
             my $month = $ranges->{updated}->{month};
             my $day   = $ranges->{updated}->{day};
             # TODO replace with 'updated' in mongoDb! later
-             $fieldsQueryHash->{test_date_updated} = "[".$year."-".$month."-".$day."T00:00:00Z%20TO%20".$year."-".$month."-".$day."T00:00:00Z%2B1DAYS]";
+             $fieldsQueryHash->{updated} = "[".$year."-".$month."-".$day."T00:00:00Z%20TO%20".$year."-".$month."-".$day."T00:00:00Z%2B1DAYS]";
     }
      
     $self->app->log->debug("makeSolrFieldsQuery fieldsQueryHash765::",$self->app->dumper($fieldsQueryHash)); 
@@ -271,10 +271,12 @@ sub makeSolrFieldsQuery{
     
     # temporary!!!
     if($sortfield eq "created"){
-           $sortfield = "test_date";
+           #$sortfield = "test_date";
+           $sortfield = "created";
     }
     if($sortfield eq "updated"){
-           $sortfield = "test_date_updated";
+           #$sortfield = "test_date_updated";
+           $sortfield = "updated";
     }
     
     if($sortvalue eq '1'){
@@ -303,17 +305,17 @@ sub makeSolrRangesQuery{
           my $year = $ranges->{created}->{year};
           #$createdRange = "&facet.range={!tag=r1}test_date&f.test_date.facet.range.start=".$year."-".$month."-".$day."T00:00:00.000Z&f.test_date.facet.range.end=".$year."-".$month."-".$day."T00:00:00.000Z%2B1DAYS&f.test_date.facet.range.gap=%2B1DAY&f.test_date.facet.pivot={!range=r1}test_date";
           #without pivot, also in other elsif
-          $createdRange = "&facet.range={!tag=r1}test_date&f.test_date.facet.range.start=".$year."-".$month."-".$day."T00:00:00.000Z&f.test_date.facet.range.end=".$year."-".$month."-".$day."T00:00:00.000Z%2B1DAYS&f.test_date.facet.range.gap=%2B1DAY";
+          $createdRange = "&facet.range={!tag=r1}created&f.created.facet.range.start=".$year."-".$month."-".$day."T00:00:00.000Z&f.created.facet.range.end=".$year."-".$month."-".$day."T00:00:00.000Z%2B1DAYS&f.created.facet.range.gap=%2B1DAY";
     }elsif(defined $ranges->{created}->{month}){
           my $month_start = $ranges->{created}->{month};
           my $year = $ranges->{created}->{year};
-          $createdRange = "&facet.range={!tag=r1}test_date&f.test_date.facet.range.start=".$year."-".$month_start."-01T00:00:00.000Z&f.test_date.facet.range.end=".$year."-".$month_start."-01T00:00:00.000Z%2B1MONTHS&f.test_date.facet.range.gap=%2B1DAY";
+          $createdRange = "&facet.range={!tag=r1}created&f.created.facet.range.start=".$year."-".$month_start."-01T00:00:00.000Z&f.created.facet.range.end=".$year."-".$month_start."-01T00:00:00.000Z%2B1MONTHS&f.created.facet.range.gap=%2B1DAY";
     }elsif(defined $ranges->{created}->{year}){
           my $year_start = $ranges->{created}->{year};
           my $year_end = $year_start + 1;
-          $createdRange = "&facet.range={!tag=r1}test_date&f.test_date.facet.range.start=".$year_start."-01-01T00:00:00.000Z&f.test_date.facet.range.end=".$year_end."-01-01T00:00:00.000Z&f.test_date.facet.range.gap=%2B1MONTH";
+          $createdRange = "&facet.range={!tag=r1}created&f.created.facet.range.start=".$year_start."-01-01T00:00:00.000Z&f.created.facet.range.end=".$year_end."-01-01T00:00:00.000Z&f.created.facet.range.gap=%2B1MONTH";
     }else{
-          $createdRange = "&facet.range={!tag=r1}test_date&f.test_date.facet.range.start=2007-01-01T00:00:00.000Z&f.test_date.facet.range.end=NOW/DAY&f.test_date.facet.range.gap=%2B1YEAR";
+          $createdRange = "&facet.range={!tag=r1}created&f.created.facet.range.start=2007-01-01T00:00:00.000Z&f.created.facet.range.end=NOW/DAY&f.created.facet.range.gap=%2B1YEAR";
     }
     
     my $updatedRange;
@@ -321,17 +323,17 @@ sub makeSolrRangesQuery{
           my $day = $ranges->{updated}->{day};
           my $month = $ranges->{updated}->{month};
           my $year = $ranges->{updated}->{year};
-          $updatedRange = "&facet.range={!tag=r2}test_date_updated&f.test_date_updated.facet.range.start=".$year."-".$month."-".$day."T00:00:00.000Z&f.test_date_updated.facet.range.end=".$year."-".$month."-".$day."T00:00:00.000Z%2B1DAYS&f.test_date_updated.facet.range.gap=%2B1DAY";
+          $updatedRange = "&facet.range={!tag=r2}updated&f.updated.facet.range.start=".$year."-".$month."-".$day."T00:00:00.000Z&f.updated.facet.range.end=".$year."-".$month."-".$day."T00:00:00.000Z%2B1DAYS&f.updated.facet.range.gap=%2B1DAY";
     }elsif(defined $ranges->{updated}->{month}){
           my $month_start = $ranges->{updated}->{month};
           my $year = $ranges->{updated}->{year};
-          $updatedRange = "&facet.range={!tag=r2}test_date_updated&f.test_date_updated.facet.range.start=".$year."-".$month_start."-01T00:00:00.000Z&f.test_date_updated.facet.range.end=".$year."-".$month_start."-01T00:00:00.000Z%2B1MONTHS&f.test_date_updated.facet.range.gap=%2B1DAY";
+          $updatedRange = "&facet.range={!tag=r2}updated&f.updated.facet.range.start=".$year."-".$month_start."-01T00:00:00.000Z&f.updated.facet.range.end=".$year."-".$month_start."-01T00:00:00.000Z%2B1MONTHS&f.updated.facet.range.gap=%2B1DAY";
     }elsif(defined $ranges->{updated}->{year}){
          my $year_start = $ranges->{updated}->{year};
          my $year_end = $year_start + 1;
-         $updatedRange = "&facet.range={!tag=r2}test_date_updated&f.test_date_updated.facet.range.start=".$year_start."-01-01T00:00:00.000Z&f.test_date_updated.facet.range.end=".$year_end."-01-01T00:00:00.000Z&f.test_date_updated.facet.range.gap=%2B1MONTH";
+         $updatedRange = "&facet.range={!tag=r2}updated&f.updated.facet.range.start=".$year_start."-01-01T00:00:00.000Z&f.updated.facet.range.end=".$year_end."-01-01T00:00:00.000Z&f.updated.facet.range.gap=%2B1MONTH";
     }else{
-         $updatedRange = "&facet.range={!tag=r2}test_date_updated&f.test_date_updated.facet.range.start=2007-01-01T00:00:00.000Z&f.test_date_updated.facet.range.end=NOW/DAY&f.test_date_updated.facet.range.gap=%2B1YEAR";
+         $updatedRange = "&facet.range={!tag=r2}updated&f.updated.facet.range.start=2007-01-01T00:00:00.000Z&f.updated.facet.range.end=NOW/DAY&f.updated.facet.range.gap=%2B1YEAR";
     }
     
     my $range = $createdRange.$updatedRange;
