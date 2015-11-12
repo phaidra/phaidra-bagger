@@ -1,41 +1,40 @@
-
 app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, DirectoryService, BagService, FrontendService, promiseTracker, Url) {
 
-        // we will use this to track running ajax requests to show spinner
-	$scope.loadingTracker = promiseTracker('loadingTrackerFrontend');
+  // we will use this to track running ajax requests to show spinner
+  $scope.loadingTracker = promiseTracker('loadingTrackerFrontend');
 
-	$scope.alerts = [];
+  $scope.alerts = [];
 
-	$scope.selection = [];
+  $scope.selection = [];
 
-	$scope.items = [];
-	$scope.itemstype = '';
+  $scope.items = [];
+  $scope.itemstype = '';
 
-	$scope.members = [];
+  $scope.members = [];
 
-	$scope.initdata = '';
-	$scope.current_user = '';
-	$scope.folderid = '';
+  $scope.initdata = '';
+  $scope.current_user = '';
+  $scope.folderid = '';
 
-        $scope.totalItems = 0;
-        $scope.currentPage = 1;
-        $scope.maxSize = 10;
-        $scope.filter = {};
-        $scope.from = 0;
-        $scope.limit = 10;
-        $scope.sortfield = 'label';
-        $scope.sortvalue = '1';
+  $scope.totalItems = 0;
+  $scope.currentPage = 1;
+  $scope.maxSize = 10;
+  $scope.filter = {};
+  $scope.from = 0;
+  $scope.limit = 10;
+  $scope.sortfield = 'label';
+  $scope.sortvalue = '1';
 
-        $scope.solr_query = "";
-        $scope.solr_field = "";
-        $scope.dublincoreFields = [];
+  $scope.solr_query = "";
+  $scope.solr_field = "";
+  $scope.dublincoreFields = [];
   
-        $scope.solr_response = {};
-        $scope.facetFieldsStatus = [];
-        $scope.filter_send = {};
-        $scope.ranges = {};
-        $scope.facetRangesCreated = [];
-        $scope.facetRangesUpdated = [];
+  $scope.solr_response = {};
+  $scope.facetFieldsStatus = [];
+  $scope.filter_send = {};
+  $scope.ranges = {};
+  $scope.facetRangesCreated = [];
+  $scope.facetRangesUpdated = [];
   
   $scope.init = function (initdata) {
 	
@@ -43,8 +42,6 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
 	console.log('search initdata:',$scope.initdata);
         $scope.current_user = $scope.initdata.current_user;
 	$scope.folderid = $scope.initdata.folderid;
-
-        console.log('search statuses test:',$scope.initdata.statuses);
 
 	if($scope.folderid){
 			$scope.filter['folderid'] = $scope.folderid;
@@ -165,23 +162,14 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
         field20.label = "publisher";
         $scope.dublincoreFields.push(field20);
         
-        
-        console.log('search_solr_all  facetRangesCreated:', $scope.facetRangesCreated);
   };
 
    
    $scope.searchQuerySolr = function() {
-           
-            console.log('searchQuerySolr solr_query:',$scope.solr_query,'solr_field:',$scope.solr_field, $scope.from, $scope.limit, $scope.sortvalue, $scope.sortfield, allowedStatuses);
-            
-            console.log('filter123:',$scope.filter);
-            
-          
+                       
             angular.copy($scope.filter, $scope.filter_send);
             $scope.filter_send.solr_query = $scope.solr_query;
             $scope.filter_send.solr_field = $scope.solr_field;
-            console.log('filter124:',$scope.filter_send);
-            console.log('ranges124:',$scope.ranges);
             
             var allowedStatuses = {};
             if($scope.initdata.statuses){
@@ -197,21 +185,12 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
                         $scope.facetFieldsStatus = $scope.formatFacets(response.data.facet_counts.facet_fields.status);
                         $scope.facetFieldsAssignee = $scope.formatFacets(response.data.facet_counts.facet_fields.assignee);
                         $scope.facetFieldsLabel = $scope.formatFacets(response.data.facet_counts.facet_fields.label);
-                        //if(typeof response.data.facet_counts.facet_ranges.test_date !== 'undefined'){
-                        //         $scope.facetRangesCreated = $scope.formatFacets(response.data.facet_counts.facet_ranges.test_date.counts);
-                        //}
-                        //if(typeof response.data.facet_counts.facet_ranges.test_date_updated !== 'undefined'){
-                        //         $scope.facetRangesUpdated = $scope.formatFacets(response.data.facet_counts.facet_ranges.test_date_updated.counts);
-                        //}
                         if(typeof response.data.facet_counts.facet_ranges.created !== 'undefined'){
                                  $scope.facetRangesCreated = $scope.formatFacets(response.data.facet_counts.facet_ranges.created.counts);
                         }
                         if(typeof response.data.facet_counts.facet_ranges.updated !== 'undefined'){
                                  $scope.facetRangesUpdated = $scope.formatFacets(response.data.facet_counts.facet_ranges.updated.counts);
                         }
-                        console.log('search_solr_all  facetRangesCreated:', $scope.facetRangesCreated);
-                        console.log('search_solr_all  scope.totalItems:', $scope.totalItems);
-                        console.log('search_solr_all response.data:', response.data);
                         $scope.form_disabled = false;
                         $scope.searchQuerySolr_onePage();
                 }
@@ -224,11 +203,12 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
     }
   
    $scope.searchQuerySolr_onePage = function() {
-            console.log('scope.ranges:',$scope.ranges);
+            
             var allowedStatuses = {};
             if($scope.initdata.statuses){
                   allowedStatuses = angular.toJson($scope.initdata.statuses); 
             }
+            
             var promise = FrontendService.searchSolr($scope.solr_query, $scope.solr_field, $scope.from, $scope.limit, $scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses);
             $scope.loadingTracker.addPromise(promise);
             promise.then(
@@ -236,8 +216,6 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
                         $scope.alerts = response.data.alerts;
                         $scope.solr_response = response.data.response;
                         console.log('searchQuerySolr response.data:',response.data);
-                        //$scope.totalItems = response.data.response.numFound;
-                        console.log('searchQuerySolr_onePage scope.totalItems:', $scope.totalItems);
                         $scope.form_disabled = false;
                 }
                 ,function(response) {
@@ -249,7 +227,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
    }
   
  $scope.formatFacets = function(facet) {
-          console.log('facet',facet);
+
           var formatedFacet = [];
           var couple = 1;
           var field_name = "";
@@ -268,27 +246,12 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
           return formatedFacet;
   }
   
-  
-  $scope.narrowFacet = function(field, query) {
-        
-      console.log('field77',field);
-      console.log('query77',query);
-      
-      $scope.solr_query = query;
-      $scope.solr_field = field;
-      $scope.searchQuerySolr();
-  }
-  
-
  $scope.addFilter = function (type, value) {
          
          if(typeof type !== 'undefined' ){                
                   $scope.filter[type] = value;
          }
          
-         console.log('solr_response.docs after:',$scope.solr_response.docs);
-         console.log('filter3333:',$scope.filter); 
-        
          $scope.searchQuerySolr();
  } 
  
@@ -402,7 +365,6 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
  
   $scope.setAttribute = function (bag, attribute, value) {
 
-     console.log('setAttribute::bag.bagid, attribute, value:1',bag.bagid,':2', attribute,':3', value);
      var promise = BagService.setAttribute(bag.bagid, attribute, value);
      $scope.loadingTracker.addPromise(promise);
      promise.then(
@@ -655,7 +617,6 @@ var TagModalCtrl = function ($scope, $modalInstance, FrontendService, BagService
 				break;
 
 			case 'remove':
-				console.log('modaldata.tag',$scope.modaldata.tag);
                                 promise = BagService.unsetAttributeMass($scope.selection, 'tags', $scope.modaldata.tag);
 				break;
 
