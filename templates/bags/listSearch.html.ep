@@ -147,18 +147,26 @@
         </div>
                  
 <div class="row solr-search-div-container">       
-      <div class="col-sm-8 solr-search-div">
+      <div class="col-sm-9 solr-search-div">
             <input class="solr-search-input" type="text" ng-model="solr_query" placeholder="Search">
       </div>
-      <div class="col-sm-2 solr-search-div">
+      <div class="col-sm-3 solr-search-div ">
+             <div class="solr-search-inline-block">
                <select class="form-control" data-style="btn-primary" ng-model="solr_field" ng-options="field.value as field.label for field in dublincoreFields | orderBy:'label'" >
-                  <option  value="">Please choose</option>
-                  <option  value="1000">All</option>
+                  <option value="">
+                        <span>All Fields</span>
+                  </option>
                </select>
+            </div>
+            <div class="sorticon glyphicon glyphicon glyphicon-arrow-down solr-search-inline-block solr-search-button-arrow"></div>
+            <button data-ng-click="searchQuerySolr()" class="btn btn-danger navbar-btn solr-search-btn solr-search-inline-block"><span class="glyphicon"></span>Search</button>
       </div>
+      
+      <!--
       <div class="col-sm-2 solr-search-div">
-           <button data-ng-click="searchQuerySolr()" class="btn btn-danger navbar-btn solr-search-btn"><span class="glyphicon"></span>Search</button>
+          
       </div>
+      -->
 </div>
 
         

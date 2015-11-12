@@ -81,15 +81,15 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
         field4.label = "bagid";
         $scope.dublincoreFields.push(field4);
         
-        var field5 = {};
-        field5.value = "created";
-        field5.label = "created";
-        $scope.dublincoreFields.push(field5);
+        //var field5 = {};
+        //field5.value = "created";
+        //field5.label = "created";
+        //$scope.dublincoreFields.push(field5);
         
-        var field6 = {};
-        field6.value = "file";
-        field6.label = "file";
-        $scope.dublincoreFields.push(field6);
+        //var field6 = {};
+        //field6.value = "file";
+        //field6.label = "file";
+        //$scope.dublincoreFields.push(field6);
         
         var field7 = {};
         field7.value = "folderid";
@@ -106,20 +106,20 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
         field9.label = "tags";
         $scope.dublincoreFields.push(field9);
         
-        var field10 = {};
-        field10.value = "updated";
-        field10.label = "updated";
-        $scope.dublincoreFields.push(field10);
+        //var field10 = {};
+        //field10.value = "updated";
+        //field10.label = "updated";
+        //$scope.dublincoreFields.push(field10);
         
         var field11 = {};
         field11.value = "dc_rights";
         field11.label = "rights";
         $scope.dublincoreFields.push(field11);
 
-        var field12 = {};
-        field12.value = "dc_date";
-        field12.label = "date";
-        $scope.dublincoreFields.push(field12);
+        //var field12 = {};
+        //field12.value = "dc_date";
+        //field12.label = "date";
+        //$scope.dublincoreFields.push(field12);
                 
         var field13 = {};
         field13.value = "dc_creator";
@@ -175,7 +175,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
             if($scope.initdata.statuses){
                   allowedStatuses = angular.toJson($scope.initdata.statuses); 
             }
-            
+            console.log('searchQuerySolr:',$scope.solr_query, $scope.solr_field, $scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses);
             var promise = FrontendService.search_solr_all($scope.solr_query, $scope.solr_field, $scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses);
             $scope.loadingTracker.addPromise(promise);
             promise.then(
