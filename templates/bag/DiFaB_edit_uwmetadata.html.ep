@@ -212,7 +212,7 @@
             <tab-heading>
                    <span>Classification</span>
                </tab-heading>
-               <div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>', 'bagedit')" data-ng-include="'<%= url_for '/views/partials/' %>classification.html'"></div>
+               <div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>', 'bagedit_uwmetadata')" data-ng-include="'<%= url_for '/views/partials/' %>classification.html'"></div>
           </tab>
 
               <tab select="triggerGeoTabActivated()">
