@@ -26,7 +26,9 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
   $scope.sortvalue = '1';
 
   $scope.solr_query = "";
-  $scope.solr_field = "";
+  $scope.solr_field = "All Fields";
+  $scope.solr_field_display = "All Fields";
+  $scope.placeholder = 'Search';
   $scope.dublincoreFields = [];
   
   $scope.solr_response = {};
@@ -61,6 +63,11 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
   		$scope.loadSelection();
   	}
   	//TODO get it from full dublicore later
+        var field0 = {};
+        field0.value = "All Fields";
+        field0.label = "All Fields";
+        $scope.dublincoreFields.push(field0);
+        
         var field1 = {};
         field1.value = "assignee";
         field1.label = "assignee";
@@ -81,10 +88,10 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
         field4.label = "bagid";
         $scope.dublincoreFields.push(field4);
         
-        //var field5 = {};
-        //field5.value = "created";
-        //field5.label = "created";
-        //$scope.dublincoreFields.push(field5);
+        var field5 = {};
+        field5.value = "created";
+        field5.label = "created";
+        $scope.dublincoreFields.push(field5);
         
         //var field6 = {};
         //field6.value = "file";
@@ -106,20 +113,20 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
         field9.label = "tags";
         $scope.dublincoreFields.push(field9);
         
-        //var field10 = {};
-        //field10.value = "updated";
-        //field10.label = "updated";
-        //$scope.dublincoreFields.push(field10);
+        var field10 = {};
+        field10.value = "updated";
+        field10.label = "updated";
+        $scope.dublincoreFields.push(field10);
         
         var field11 = {};
         field11.value = "dc_rights";
         field11.label = "rights";
         $scope.dublincoreFields.push(field11);
 
-        //var field12 = {};
-        //field12.value = "dc_date";
-        //field12.label = "date";
-        //$scope.dublincoreFields.push(field12);
+        var field12 = {};
+        field12.value = "dc_date";
+        field12.label = "date";
+        $scope.dublincoreFields.push(field12);
                 
         var field13 = {};
         field13.value = "dc_creator";
@@ -162,11 +169,27 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
         field20.label = "publisher";
         $scope.dublincoreFields.push(field20);
         
+        var field21 = {};
+        field21.value = "project";
+        field21.label = "project";
+        $scope.dublincoreFields.push(field21);
+        
+        
   };
 
    
    $scope.searchQuerySolr = function() {
-                       
+            
+            if($scope.solr_field == 'All Fields'){
+                 delete $scope.solr_field; 
+            }
+            
+            // here!!!  search all fields qeury = 2004-12-02T16:39:18 returns all  and qure and field are undefined
+            if(typeof $scope.solr_field == 'undefined'){
+                 //delete $scope.solr_query; 
+            }
+            
+            console.log('solr_queryAAAAAAAAAAAAAAAAAAAAAAA',$scope.solr_query);
             angular.copy($scope.filter, $scope.filter_send);
             $scope.filter_send.solr_query = $scope.solr_query;
             $scope.filter_send.solr_field = $scope.solr_field;
@@ -175,8 +198,16 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
             if($scope.initdata.statuses){
                   allowedStatuses = angular.toJson($scope.initdata.statuses); 
             }
-            console.log('searchQuerySolr:',$scope.solr_query, $scope.solr_field, $scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses);
-            var promise = FrontendService.search_solr_all($scope.solr_query, $scope.solr_field, $scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses);
+            console.log('searchQuerySolr solr_query:',$scope.solr_query);
+            console.log('searchQuerySolr solr_field:',$scope.solr_field);
+            console.log('searchQuerySolr filter_send:',$scope.filter_send);
+            console.log('searchQuerySolr ranges:',$scope.ranges);
+            console.log('searchQuerySolr sortvalue:',$scope.sortvalue);
+            console.log('searchQuerySolr sortfield:',$scope.sortfield);
+            console.log('searchQuerySolr allowedStatuses:',$scope.allowedStatuses);
+            
+            console.log('searchQuerySolr:', $scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses);
+            var promise = FrontendService.search_solr_all($scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses);
             $scope.loadingTracker.addPromise(promise);
             promise.then(
                 function(response) {
@@ -204,12 +235,19 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
   
    $scope.searchQuerySolr_onePage = function() {
             
+            if($scope.solr_field == 'All Fields'){
+                 delete $scope.solr_field; 
+            }
+            if(typeof $scope.solr_field == 'undefined'){
+                 //delete $scope.solr_query; 
+            }
+            
             var allowedStatuses = {};
             if($scope.initdata.statuses){
                   allowedStatuses = angular.toJson($scope.initdata.statuses); 
             }
             
-            var promise = FrontendService.searchSolr($scope.solr_query, $scope.solr_field, $scope.from, $scope.limit, $scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses);
+            var promise = FrontendService.searchSolr($scope.from, $scope.limit, $scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses);
             $scope.loadingTracker.addPromise(promise);
             promise.then(
                 function(response) {
@@ -576,6 +614,18 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
           return Date.parse(dateString)
   }
 
+  $scope.setSearchQuery = function (value, label) {
+          console.log('setSearchQuery',value);
+          
+          $scope.solr_field = value;
+          $scope.solr_field_display = label;
+          if(value == 'created' || value == 'updated' || value == 'dc_date') {
+               $scope.placeholder = '[YYYY-MM-DDThh:mm:ss TO YYYY-MM-DDThh:mm:ss]';   
+          }else{
+               $scope.placeholder = 'Search';
+          }
+  }
+  
   
 });
 

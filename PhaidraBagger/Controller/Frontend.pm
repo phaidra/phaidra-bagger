@@ -7,6 +7,8 @@ use Mango 0.24;
 use Mojo::JSON qw(encode_json decode_json);
 use PhaidraBagger::Model::Cache;
 use base 'Mojolicious::Controller';
+use utf8;
+#no utf8;
 
 sub chillin {
 	my $self = shift;
@@ -138,8 +140,11 @@ sub makeSolrFieldsQuery{
     my $sortvalue = shift;
     my $sortfield = shift;
     my $allowedStatuses = shift;
-    $allowedStatuses = decode_json($allowedStatuses);
+    $self->app->log->debug("solr_query project55",$self->app->dumper($filter));
+    $filter->{solr_query} = $self->escapeSolrSpecialChars($filter->{solr_query});
     
+    $allowedStatuses = decode_json($allowedStatuses);
+    #      + - && || ! ( ) { } [ ] ^ " ~ * ? : \
     
     $self->app->log->debug("makeSolrFieldsQuery project77",$self->app->dumper($self->current_user->{project}));
     $self->app->log->debug("makeSolrFieldsQuery fields78",$self->app->dumper($self->config->{projects}->{$self->current_user->{project}}->{fields}));
@@ -414,17 +419,21 @@ sub search_solr_all {
     
     my $self = shift;
 
-    my $field           = $self->param('field');
     my $filter          = $self->param('filter');
     my $ranges          = $self->param('ranges');
     my $sortvalue       = $self->param('sortvalue');
     my $sortfield       = $self->param('sortfield');
     my $allowedStatuses = $self->param('allowedStatuses');
     
+    
+    utf8::encode($filter); 
+    utf8::encode($ranges); 
     $filter = decode_json($filter);
     $ranges = decode_json($ranges);
-    ####$self->app->log->debug("search_solr filter::",$self->app->dumper($filter));
-    ####$self->app->log->debug("search_solr ranges::",$self->app->dumper($ranges));
+    #utf8::decode($filter); 
+    #utf8::decode($ranges); 
+    $self->app->log->debug("search_solr filter:123:",$self->app->dumper($filter));
+    $self->app->log->debug("search_solr ranges:123:",$self->app->dumper($ranges));
     
     my $fieldsQuery  = $self->makeSolrFieldsQuery($filter, $ranges, $sortvalue, $sortfield, $allowedStatuses);
     my $createdRange = $self->makeSolrRangesQuery($ranges);
@@ -443,7 +452,9 @@ sub search_solr_all {
     #my $tx = $self->ua->get($url);
      
     $self->app->log->debug("AAAsearch_solr fieldsQuery uri:","http://".$base."/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json");
-
+    
+    my $url =  "http://".$base."/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json";
+    $self->app->log->debug("search_solr url5555555555::",$self->app->dumper($url));
     my $tx = $self->ua->get("http://".$base."/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json");    
     
     if (my $res = $tx->success) {
@@ -469,7 +480,6 @@ sub search_solr {
 
     my $self = shift;
     
-    my $field           = $self->param('field');
     my $from            = $self->param('from');
     my $limit           = $self->param('limit');
     my $sortvalue       = $self->param('sortvalue');
@@ -507,5 +517,37 @@ sub search_solr {
     
     
 }
+
+sub escapeSolrSpecialChars {
+
+    my $self = shift;
+    my $query = shift;
+    
+    $query =~ s/\+/\%5C\%2B/g;
+    $query =~ s/-/\%5C-/g;
+    $query =~ s/!/\%5C\%21/g;
+    $query =~ s/\(/\%5C\%28/g;
+    $query =~ s/\)/\%5C\%29/g;
+    $query =~ s/{/\%5C\%7B/g;
+    $query =~ s/}/\%5C\%7D/g;
+    $query =~ s/\[/\%5C\%5B/g;
+    $query =~ s/\]/\%5C\%5D/g;
+    $query =~ s/\^/\%5C\%5E/g;
+    $query =~ s/"/\%5C\%22/g;
+    $query =~ s/~/\%5C\%7E/g;
+    $query =~ s/\*/\%5C\%2A/g;
+    $query =~ s/\:/\%5C\%3A/g;
+    $query =~ s/\?/\%5C\%3F/g;
+    # TODO
+    $query =~ s/\\/\%5C\%5C/g;
+    #$query =~ s/ /+/g;
+    
+    $self->app->log->debug("escapeSolrSpecialChars query::",$self->app->dumper($query));
+    
+    return $query;
+    
+
+}
+
 
 1;

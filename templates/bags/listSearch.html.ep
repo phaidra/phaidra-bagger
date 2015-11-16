@@ -147,9 +147,11 @@
         </div>
                  
 <div class="row solr-search-div-container">       
-      <div class="col-sm-9 solr-search-div">
-            <input class="solr-search-input" type="text" ng-model="solr_query" placeholder="Search">
+      <div class="col-sm-8 solr-search-div">
+            <input name="solrQuery" class="solr-search-input" type="text" ng-model="solr_query" placeholder={{placeholder}}  >
+            <!-- <input ng-if="solr_field_display == 'created' || solr_field_display == 'updated' || solr_field_display == 'date'" class="solr-search-input" type="text" ng-model="solr_query" placeholder="[YYYY-MM-DDThh:mm:ssZ TO YYYY-MM-DDThh:mm:ssZ]"> -->
       </div>
+      <!--
       <div class="col-sm-3 solr-search-div ">
              <div class="solr-search-inline-block">
                <select class="form-control" data-style="btn-primary" ng-model="solr_field" ng-options="field.value as field.label for field in dublincoreFields | orderBy:'label'" >
@@ -158,10 +160,29 @@
                   </option>
                </select>
             </div>
-            <div class="sorticon glyphicon glyphicon glyphicon-arrow-down solr-search-inline-block solr-search-button-arrow"></div>
+            <div class="sorticon glyphicon glyphicon-triangle-bottom solr-search-inline-block solr-search-button-arrow"></div>
             <button data-ng-click="searchQuerySolr()" class="btn btn-danger navbar-btn solr-search-btn solr-search-inline-block"><span class="glyphicon"></span>Search</button>
       </div>
+      -->
+          <div class="btn-group col-sm-4 solr-search-div">
+            <div class="btn-group " >
+                  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                         {{solr_field_display}} <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu" role="menu">
+                        <li><a href="" data-ng-repeat="field in dublincoreFields" data-ng-click="setSearchQuery(field.value, field.label)">{{field.label}}</a></li>
+                  </ul>
+          </div>
       
+      
+      <div ng-messages="solrQuery.$error">
+          <div ng-message="required">This field is required</div>
+          <div ng-message="pattern">Must be a valid 10 digit phone number</div>
+     </div>
+      
+      
+      <button data-ng-click="searchQuerySolr()" class="btn btn-danger navbar-btn solr-search-btn solr-search-inline-block"><span class="glyphicon"></span>Search</button>
+        </div>
       <!--
       <div class="col-sm-2 solr-search-div">
           

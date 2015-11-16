@@ -91,13 +91,13 @@
                     <div class="navbar-form navbar-left navbar-bag-status">
                       <div ng-class="{'btn-group':canSetAttribute('status')}"  data-ng-if="baginfo.status">
                         <button class="btn dropdown-toggle navbar-btn" ng-show="canSetAttribute('status')" data-toggle="dropdown" ng-class="{'btn-danger': (baginfo.status == 'new'), 'btn-warning': (baginfo.status == 'to_check'), 'btn-primary': (baginfo.status == 'checked'), 'btn-success': (baginfo.status == 'to_ingest') }">
-                          <span ng-repeat="status in initdata.statuses">
+                          <span ng-repeat="status in initdata.statuses | orderBy : [ getFieldOrder, getDataOrder ]">
                             <span ng-show="baginfo.status == status.value">{{status.label}}</span>
                           </span>
                           <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu" role="menu" ng-show="canSetAttribute('status')">
-                          <li ng-repeat="status in initdata.statuses" ng-hide="baginfo.status == status.value"><a href="" data-ng-click="setAttribute(bag, 'status', status.value)">{{status.label}}</a></li>
+                          <li ng-repeat="status in initdata.statuses | orderBy : [ getFieldOrder, getDataOrder ]" ng-hide="baginfo.status == status.value"><a href="" data-ng-click="setAttribute(bag, 'status', status.value)">{{status.label}}</a></li>
                         </ul>
                       </div>
                     </div>
@@ -109,7 +109,7 @@
                         <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu" role="menu" ng-show="canSetAttribute('assignee')">
-                        <li ng-repeat="member in initdata.members" ng-hide="baginfo.assignee == member.username"><a href="" data-ng-click="setAttribute(bag, 'assignee', member.username)">{{member.displayname}}</a></li>
+                        <li ng-repeat="member in initdata.members | orderBy : [ getFieldOrder, getDataOrder ]" ng-hide="baginfo.assignee == member.username"><a href="" data-ng-click="setAttribute(bag, 'assignee', member.username)">{{member.displayname}}</a></li>
                         </ul>
                       </div>
                     </div>
@@ -130,7 +130,7 @@
 						 <tabset>
 	
 		                    <!-- 1.st level are tabs -->
-		                    <tab  data-ng-repeat="child_lvl_1 in fields | filter:filterHidden" active="child_lvl_1.active" disabled="child_lvl_1.disabled">
+		                    <tab  data-ng-repeat="child_lvl_1 in fields | filter:filterHidden | orderBy : [ getFieldOrder, getDataOrder ] " active="child_lvl_1.active" disabled="child_lvl_1.disabled">
 		
 		                          <tab-heading>
 		                            <span phaidra-help phaidra-help-id="{{child_lvl_1.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>{{child_lvl_1.labels.en}}</span>
@@ -138,7 +138,7 @@
 		
 		                            <!-- children fields of the tab -->
 		                            <ul data-ng-show="child_lvl_1.children.length">
-		                              <li data-ng-repeat="child_lvl_2 in child_lvl_1.children" data-ng-init="child1 = child_lvl_2; parent1 = child_lvl_1" data-ng-include="'field_renderer.html'" class="form-li"></li>
+		                              <li data-ng-repeat="child_lvl_2 in child_lvl_1.children | orderBy : [ getFieldOrder, getDataOrder ] " data-ng-init="child1 = child_lvl_2; parent1 = child_lvl_1" data-ng-include="'field_renderer.html'" class="form-li"></li>
 		                            </ul>
 		
 		
@@ -167,7 +167,7 @@
 								
 									                                <!-- children fields of the field -->
 									                                <ul data-ng-show="child1.children.length">
-									                                   <li data-ng-repeat="ch in child1.children" data-ng-init="parent1 = child1; child1 = ch" data-ng-include="'field_renderer.html'"></li>
+									                                   <li data-ng-repeat="ch in child1.children | orderBy : [ getFieldOrder, getDataOrder ] " data-ng-init="parent1 = child1; child1 = ch" data-ng-include="'field_renderer.html'"></li>
 									                                </ul>
 									
 									                            </div>
@@ -185,7 +185,7 @@
 							
 									                        <!-- children fields of the field -->
 									                        <ul data-ng-show="child.children.length">																                        
-									                           <li data-ng-repeat="ch in child1.children" data-ng-init="parent1 = child1; child1 = ch" data-ng-include="'field_renderer.html'"></li>
+									                           <li data-ng-repeat="ch in child1.children | orderBy : [ getFieldOrder, getDataOrder ] " data-ng-init="parent1 = child1; child1 = ch" data-ng-include="'field_renderer.html'"></li>
 									                        </ul>
 							
 							                            </div><!-- switch default -->
@@ -212,7 +212,7 @@
             <tab-heading>
                    <span>Classification</span>
                </tab-heading>
-               <div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>', 'bagedit')" data-ng-include="'<%= url_for '/views/partials/' %>classification.html'"></div>
+               <div data-ng-controller="ClassificationCtrl" data-ng-init="init('<%= $init_data %>', 'bagedit_uwmetadata')" data-ng-include="'<%= url_for '/views/partials/' %>classification.html'"></div>
           </tab>
 
               <tab select="triggerGeoTabActivated()">

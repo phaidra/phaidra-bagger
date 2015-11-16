@@ -49,18 +49,18 @@ angular.module('frontendService', [])
 				url     : $('head base').attr('href')+'classifications'
 			});
 		},
-                searchSolr: function(query, field, from, limit, filter, ranges, sortvalue, sortfield, allowedStatuses){
+                searchSolr: function(from, limit, filter, ranges, sortvalue, sortfield, allowedStatuses){
                         return $http({
                                 method  : 'GET',
                                 url     : $('head base').attr('href')+'search_solr',
-                                params  : { query: query, field: field, from: from, limit: limit, filter: filter, ranges: ranges, sortvalue: sortvalue, sortfield: sortfield, allowedStatuses: allowedStatuses}
+                                params  : {from: from, limit: limit, filter: filter, ranges: ranges, sortvalue: sortvalue, sortfield: sortfield, allowedStatuses: allowedStatuses}
                         });
                 },
-                search_solr_all: function(query, field, filter, ranges, sortvalue, sortfield, allowedStatuses){
+                search_solr_all: function(filter, ranges, sortvalue, sortfield, allowedStatuses){
                         return $http({
                                 method  : 'GET',
                                 url     : $('head base').attr('href')+'search_solr_all',
-                                params  : { query: query, field: field, filter: filter, ranges: ranges, sortvalue: sortvalue, sortfield: sortfield, allowedStatuses: allowedStatuses }
+                                params  : {filter: filter, ranges: ranges, sortvalue: sortvalue, sortfield: sortfield, allowedStatuses: allowedStatuses }
                         });
                 }
 	}

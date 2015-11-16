@@ -531,7 +531,7 @@ $scope.saveTemplateAs = function () {
     	}
     	return cnt > 1;
     }
-
+    
     $scope.addNewElement = function(child, parent){
     	// array of elements to which we are going to insert
     	var arr = parent.children;
@@ -542,16 +542,21 @@ $scope.saveTemplateAs = function () {
     	// increment order of the new element (we are appending to the current one)
     	// and also all the next elements
     	// but only if the elements are actually ordered
-    	if(child.ordered){
-    		tobesistr.data_order++;
-    		var i;
-        	for (i = idx+1; i < arr.length; ++i) {
-        		// update only elements of the same type
-        		if(arr[i].xmlns == child.xmlns && arr[i].xmlname == child.xmlname){
-        			arr[i].data_order++;
-        		}
-        	}
-    	}
+        if(child.ordered){
+             tobesistr.data_order = parseInt(tobesistr.data_order);
+             tobesistr.data_order++;
+             var i;
+             for (i = 0; i < arr.length; ++i) {
+                     arr[i].data_order = parseInt(arr[i].data_order);
+                     // update only elements with higher or equal to data_order of the node we are adding
+                     if(arr[i].data_order >= tobesistr.data_order){
+                           // update only elements of the same type
+                           if(arr[i].xmlns == child.xmlns && arr[i].xmlname == child.xmlname){
+                                    arr[i].data_order++;
+                           }
+                    }
+            }
+        } 
     	// insert into array at specified index, angular will sort the rest out
     	arr.splice(idx+1, 0, tobesistr);
 
@@ -675,7 +680,14 @@ $scope.saveTemplateAs = function () {
     $scope.triggerGeoTabActivated = function (){
     	$scope.geoTabActivated = true;
     }
+    
+    $scope.getFieldOrder = function (node) {
+        return parseInt(node.field_order);
+    }
 
+    $scope.getDataOrder = function (node) {
+        return parseInt(node.data_order);
+    }
 
 });
 
