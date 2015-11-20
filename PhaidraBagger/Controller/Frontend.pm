@@ -163,9 +163,13 @@ sub makeSolrFieldsQuery{
          $filter->{solr_query} = $self->escapeSolrSpecialChars($filter->{solr_query});
     }
     
+    if(defined $allowedStatuses){
+          $allowedStatuses = decode_json($allowedStatuses);
+    }else{
+          $allowedStatuses = "";
+    }      
     
-    $allowedStatuses = decode_json($allowedStatuses);
-    
+    $self->app->log->debug("makeSolrFieldsQuery project76",$self->app->dumper($project));
     $self->app->log->debug("makeSolrFieldsQuery project77",$self->app->dumper($self->current_user->{project}));
 
     
@@ -344,9 +348,9 @@ sub makeSolrFieldsQuery{
     
     # user project
     if($fieldsQuery eq ''){
-        $fieldsQuery = "project:$project";
+        $fieldsQuery = "project:".$project;
     }else{
-        $fieldsQuery = "(".$fieldsQuery.") AND "."project:$project";
+        $fieldsQuery = "(".$fieldsQuery.") AND "."project:".$project;
     }
     
     if($sortfield eq "created"){

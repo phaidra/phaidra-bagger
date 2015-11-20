@@ -24,9 +24,6 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
   $scope.limit = 10;
   $scope.sortfield = 'label';
   $scope.sortvalue = '1';
-
-  $scope.solr_query = "";
-  $scope.solr_query2 = "";
   
   $scope.solr_field = "All Fields";
   $scope.solr_field_display = "All Fields";
@@ -85,27 +82,30 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
                $scope.dublincoreFields.push(field);    
         }
   };
+   $scope.getQuerySolr = function() {
+            
+            var sorlQuery = '';
+            if($scope.solr_query_date_flag){
+                 sorlQuery = $scope.solrQuery_date; 
+            }else{
+                 sorlQuery = $scope.solrQuery_not_date;
+            }
+            return sorlQuery;
+   }
 
-   
    $scope.searchQuerySolr = function() {
-            console.log('searchQuerySolr sorl_input.solr_query:',$scope.solr_query);
+          
             if($scope.solr_field == 'All Fields'){
                  delete $scope.solr_field; 
             }
             
             // here!!!  search all fields qeury = 2004-12-02T16:39:18 returns all  and qure and field are undefined
-            if(typeof $scope.solr_field == 'undefined'){
-                 //delete $scope.solr_query; 
-            }
+
             
-            console.log('solr_queryAAAAAAAAAAAAAAAAAAAAAAA',$scope.solr_query);
+           
             angular.copy($scope.filter, $scope.filter_send);
-            if($scope.solr_query_date_flag){
-                 $scope.filter_send.solr_query = $scope.solrQuery_date; 
-            }else{
-                 $scope.filter_send.solr_query = $scope.solrQuery_not_date;     
-            }
-            //$scope.filter_send.solr_query = $scope.solr_query;
+
+            $scope.filter_send.solr_query = $scope.getQuerySolr();           
             $scope.filter_send.solr_field = $scope.solr_field;
             
             var allowedStatuses = {};
@@ -156,14 +156,15 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
             if($scope.solr_field == 'All Fields'){
                  delete $scope.solr_field; 
             }
-            if(typeof $scope.solr_field == 'undefined'){
-                 //delete $scope.solr_query; 
-            }
+     
             
             var allowedStatuses = {};
             if($scope.initdata.statuses){
                   allowedStatuses = angular.toJson($scope.initdata.statuses); 
             }
+            
+            $scope.filter_send.solr_query = $scope.getQuerySolr();           
+            $scope.filter_send.solr_field = $scope.solr_field;
             
             var promise = FrontendService.searchSolr($scope.from, $scope.limit, $scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses, $scope.initdata.current_user.project);
             $scope.loadingTracker.addPromise(promise);
@@ -223,7 +224,8 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
   $scope.removeFilter = function (type, value) {
           if($scope.filter){                 
                  delete $scope.filter[type];
-                 $scope.solr_query = '';
+                 $scope.solrQuery_not_date = '';
+                 $scope.solrQuery_date = '';
                  $scope.searchQuerySolr(); 
           }
  }
@@ -352,15 +354,20 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
     $scope.selectAll = function() {
            
             angular.copy($scope.filter, $scope.filter_send);
-            $scope.filter_send.solr_query = $scope.solr_query;
+            $scope.filter_send.solr_query = $scope.getQuerySolr();
             $scope.filter_send.solr_field = $scope.solr_field;
-            var promise = FrontendService.search_solr_all($scope.solr_query, $scope.solr_field, $scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield);
+            var allowedStatuses = {};
+            if($scope.initdata.statuses){
+                  allowedStatuses = angular.toJson($scope.initdata.statuses); 
+            }
+            var promise = FrontendService.search_solr_all($scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses, $scope.initdata.current_user.project);
             $scope.loadingTracker.addPromise(promise);
             promise.then(
                 function(response) {
                         $scope.selection = [];
-                        for( var i = 0 ; i < response.data.docs.length ; i++ ){
-                                $scope.selection.push(response.data.docs[i].bagid);
+                        console.log('selectAll:',response.data);
+                        for( var i = 0 ; i < response.data.response.docs.length ; i++ ){
+                                $scope.selection.push(response.data.response.docs[i].bagid);
                         }
                         $scope.saveSelection();
                         $scope.alerts = response.data.alerts;
