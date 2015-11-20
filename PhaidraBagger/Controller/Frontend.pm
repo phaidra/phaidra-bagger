@@ -7,8 +7,11 @@ use Mango 0.24;
 use Mojo::JSON qw(encode_json decode_json);
 use PhaidraBagger::Model::Cache;
 use base 'Mojolicious::Controller';
-use utf8;
-#no utf8;
+
+
+use Encode qw(decode encode);
+use URI::Escape;
+
 
 sub chillin {
 	my $self = shift;
@@ -17,7 +20,7 @@ sub chillin {
 
 sub home {
     my $self = shift;
-
+    
     unless($self->flash('redirect_to')){
     	# if no redirect was set, reload the current url
 			$self->flash({redirect_to => $self->url_for('/')});
@@ -26,7 +29,14 @@ sub home {
     if($self->stash('opensignin')){
     	$self->flash({opensignin => 1});
     }
-
+    
+    my $solrInstalled = 0;
+    my $solrbaseurl = $self->app->config->{phaidra}->{solrbaseurl};
+    if(defined $solrbaseurl and $solrbaseurl ne ""){
+         $solrInstalled = 1;
+    }
+    $self->cookie( solr_installed => $solrInstalled);
+    
     my $init_data = { current_user => $self->current_user };
     $self->stash(init_data => encode_json($init_data));
     $self->stash(init_data_perl => $init_data);   
@@ -140,14 +150,24 @@ sub makeSolrFieldsQuery{
     my $sortvalue = shift;
     my $sortfield = shift;
     my $allowedStatuses = shift;
+    my $project = shift;
+    
+    
+    $filter->{solr_field} = '' if not defined $filter->{solr_field};
+    $filter->{solr_query} = '' if not defined $filter->{solr_query};
     $self->app->log->debug("solr_query project55",$self->app->dumper($filter));
-    $filter->{solr_query} = $self->escapeSolrSpecialChars($filter->{solr_query});
+    
+    if($filter->{solr_field} eq 'created' or $filter->{solr_field} eq 'updated'){
+       #skip
+    }else{
+         $filter->{solr_query} = $self->escapeSolrSpecialChars($filter->{solr_query});
+    }
+    
     
     $allowedStatuses = decode_json($allowedStatuses);
-    #      + - && || ! ( ) { } [ ] ^ " ~ * ? : \
     
     $self->app->log->debug("makeSolrFieldsQuery project77",$self->app->dumper($self->current_user->{project}));
-    $self->app->log->debug("makeSolrFieldsQuery fields78",$self->app->dumper($self->config->{projects}->{$self->current_user->{project}}->{fields}));
+
     
     
     
@@ -173,30 +193,25 @@ sub makeSolrFieldsQuery{
     my $fieldsQuery = '';
     my $fieldsQueryHash = {};
     #accessed over search
-    if(defined $filter->{solr_field} and $filter->{solr_field} ne "" and $filter->{solr_field} ne 'status'){
-           $filter->{solr_query} = "*" if not defined $filter->{solr_query};
+    if($filter->{solr_field} ne "" and $filter->{solr_field} ne 'status'){
            $filter->{solr_query} = "*" if $filter->{solr_query} eq '';
            $fieldsQueryHash->{$filter->{solr_field}} = $filter->{solr_query};
     }
     
-    #handled separately because "*" is not 'all' but only filter:"to_check, checked, to_ingest, new" in status
-    #if( not defined $filter->{solr_field} or  $filter->{solr_field} eq "" ){
-    #      $filter->{solr_field} = "status";#here add all fields from Dublincore
-    #      $filter->{solr_query} = "" if not defined $filter->{solr_query};
-    #}
     #accessed over facet/filter
     if(defined $filter->{assignee}){
            $filter->{assignee} = "*" if $filter->{assignee} eq '';
+           $filter->{assignee} = $self->escapeSolrSpecialChars($filter->{assignee});
            $fieldsQueryHash->{assignee} = $filter->{assignee};
     }
     #accessed over facet/filter
     if(defined $filter->{status}){
-            #$filter->{status} = "*" if $filter->{status} eq '';
+            $filter->{status} = $self->escapeSolrSpecialChars($filter->{status});
             $fieldsQueryHash->{status} = $filter->{status};
     }
     #accessed over facet/filter
     if(defined $filter->{tag}){
-            #$filter->{status} = "*" if $filter->{status} eq '';
+            $filter->{tag} = $self->escapeSolrSpecialChars($filter->{tag});
             $fieldsQueryHash->{bag_tgs} = $filter->{tag};
     }
     #http://localhost:8983/solr/koolcha/select?q=created:[2006-03-06T23:59:59Z%20TO%20*]
@@ -214,7 +229,7 @@ sub makeSolrFieldsQuery{
             my $year  = $ranges->{created}->{year};
             my $month = $ranges->{created}->{month};
             my $day   = $ranges->{created}->{day};
-             $fieldsQueryHash->{created} = "[".$year."-".$month."-".$day."T00:00:00Z%20TO%20".$year."-".$month."-".$day."T00:00:00Z%2B1DAYS]";
+            $fieldsQueryHash->{created} = "[".$year."-".$month."-".$day."T00:00:00Z%20TO%20".$year."-".$month."-".$day."T00:00:00Z%2B1DAYS]";
     }
     # ranges for 'updated' 
     if(defined $ranges->{updated}->{year} and not defined $ranges->{updated}->{month} and not defined $ranges->{updated}->{day}){            
@@ -233,29 +248,36 @@ sub makeSolrFieldsQuery{
             $fieldsQueryHash->{updated} = "[".$year."-".$month."-".$day."T00:00:00Z%20TO%20".$year."-".$month."-".$day."T00:00:00Z%2B1DAYS]";
     }
      
-    ####$self->app->log->debug("makeSolrFieldsQuery fieldsQueryHash765::",$self->app->dumper($fieldsQueryHash)); 
     my $i = 1;
+    my $doubleQuote = "\"";
     foreach my $key ( keys %{$fieldsQueryHash} ){
+             $doubleQuote = "\"";
+             $self->app->log->debug("foreach key::",$self->app->dumper($key)); 
+             if($key eq "created" or $key eq "updated"){
+                   $doubleQuote = "";
+             }
+             if($fieldsQueryHash->{$key} == "*"){
+                   $doubleQuote = "";
+             }
+             $self->app->log->debug("foreach doubleQuote::",$self->app->dumper($doubleQuote));
              if($defaulAllStatuses eq ''){
                     if($i == 1){
-                            $fieldsQuery = $key.":".$fieldsQueryHash->{$key};
+                            $fieldsQuery = $key.":".$doubleQuote.$fieldsQueryHash->{$key}.$doubleQuote;
                     }else{
-                            $fieldsQuery = $fieldsQuery." AND ".$key.":".$fieldsQueryHash->{$key};
+                            $fieldsQuery = $fieldsQuery." AND ".$key.":".$doubleQuote.$fieldsQueryHash->{$key}.$doubleQuote;
                     }
              }else{
                    if($i == 1){
-                            $fieldsQuery = $key.":".$fieldsQueryHash->{$key}." AND (".$defaulAllStatuses.")";
+                            $fieldsQuery = $key.":".$doubleQuote.$fieldsQueryHash->{$key}.$doubleQuote." AND (".$defaulAllStatuses.")";
                    }else{
-                            $fieldsQuery = $fieldsQuery." AND ".$key.":".$fieldsQueryHash->{$key}." AND (".$defaulAllStatuses.")";
+                            $fieldsQuery = $fieldsQuery." AND ".$key.":".$doubleQuote.$fieldsQueryHash->{$key}.$doubleQuote." AND (".$defaulAllStatuses.")";
                    }
              }
-
-
-            $i++;
+             $i++;
     }
     
     # handled separately because "*" is not 'all' but only filter:"to_check, checked, to_ingest, new"
-    if(defined $filter->{solr_field} and $filter->{solr_field} eq 'status'){
+    if($filter->{solr_field} eq 'status'){
             if($fieldsQuery eq ''){
                   if( $filter->{solr_query} eq '' ){
                         if($defaulAllStatuses eq ''){
@@ -265,7 +287,7 @@ sub makeSolrFieldsQuery{
                         }
                         #$fieldsQuery = "status:to_check OR status:checked OR status:to_ingest OR status:new";
                   }else{
-                       $fieldsQuery = "status:".$filter->{solr_query};
+                       $fieldsQuery = "status:\"".$filter->{solr_query}."\"";
                   }
             }else{
                   if( $filter->{solr_query} eq '' ){
@@ -276,7 +298,7 @@ sub makeSolrFieldsQuery{
                           }
                           #$fieldsQuery = $fieldsQuery." AND (status:to_check OR status:checked OR status:to_ingest OR status:new)";
                   }else{
-                       $fieldsQuery = $fieldsQuery." AND status:".$filter->{solr_query};
+                       $fieldsQuery = $fieldsQuery." AND status:\"".$filter->{solr_query}."\"";
                   }
             }
     }
@@ -284,9 +306,8 @@ sub makeSolrFieldsQuery{
     
     
     
-    # handled dddddddddddddddddddd
-    if( not defined $filter->{solr_field} or  $filter->{solr_field} eq "" ){
-            $filter->{solr_query} = "*" if not defined $filter->{solr_query};
+    # search all
+    if( $filter->{solr_field} eq "" ){
             $filter->{solr_query} = "*" if $filter->{solr_query} eq '';
             if($fieldsQuery eq ''){
                   if($defaulAllStatuses eq ''){
@@ -321,7 +342,13 @@ sub makeSolrFieldsQuery{
             }
     }
     
-
+    # user project
+    if($fieldsQuery eq ''){
+        $fieldsQuery = "project:$project";
+    }else{
+        $fieldsQuery = "(".$fieldsQuery.") AND "."project:$project";
+    }
+    
     if($sortfield eq "created"){
            $sortfield = "created";
     }
@@ -334,10 +361,14 @@ sub makeSolrFieldsQuery{
     }else{
            $sortvalue = "desc";
     }
-    $fieldsQuery = $fieldsQuery."&sort=".$sortfield." ".$sortvalue;
     
-    ####$self->app->log->debug("search_solr fieldsQueryHash::",$self->app->dumper($fieldsQueryHash));
-    ####$self->app->log->debug("search_solr fieldsQuery111::",$self->app->dumper($fieldsQuery));
+
+    
+   $fieldsQuery = $fieldsQuery."&sort=".$sortfield." ".$sortvalue;
+    
+   $self->app->log->debug("search_solr fieldsQuery111::",$self->app->dumper($fieldsQuery));
+   $self->app->log->debug("search_solr fieldsQuery112::",$fieldsQuery);
+    
     
     return $fieldsQuery;
     
@@ -349,20 +380,20 @@ sub getQuerySearchAllFields{
     my $query = shift;
     
     my $searchAllFields = '';
-    my $fields = $self->config->{projects}->{$self->current_user->{project}}->{fields};
+    my $fields = $self->app->config->{phaidra}->{fields};
    
     my $index = 1;
     foreach (@{$fields}) { 
-         if($index == 1){
-               $searchAllFields = $_ . ":$query";
-         }else{
-               $searchAllFields = $searchAllFields." OR " . $_ . ":$query";
+         if( !($_->{value} eq 'created'  || $_->{value} eq 'updated' || $_->{value} eq 'dc_date' ) ){
+               if($index == 1){
+                     $searchAllFields = $_->{value} . ":\"$query\"";
+               }else{
+                    $searchAllFields = $searchAllFields." OR " . $_->{value} . ":\"$query\"";
+               }
+               $index++;
          }
-         $index++;
     } 
     
-    #return "(label:$query)";
-    ####return "status:$query";
      $self->app->log->debug("getQuerySearchAllFields searchAllFields::",$self->app->dumper($searchAllFields));
     return $searchAllFields;
 }
@@ -424,32 +455,20 @@ sub search_solr_all {
     my $sortvalue       = $self->param('sortvalue');
     my $sortfield       = $self->param('sortfield');
     my $allowedStatuses = $self->param('allowedStatuses');
+    my $project         = $self->param('project');
     
-    
-    utf8::encode($filter); 
-    utf8::encode($ranges); 
+    $filter     = encode('UTF-8', $filter, Encode::FB_CROAK);    
     $filter = decode_json($filter);
     $ranges = decode_json($ranges);
-    #utf8::decode($filter); 
-    #utf8::decode($ranges); 
+     
+    $self->app->log->debug("search_solr filter decode_json:123:",$self->app->dumper($filter));    
     $self->app->log->debug("search_solr filter:123:",$self->app->dumper($filter));
     $self->app->log->debug("search_solr ranges:123:",$self->app->dumper($ranges));
     
-    my $fieldsQuery  = $self->makeSolrFieldsQuery($filter, $ranges, $sortvalue, $sortfield, $allowedStatuses);
+    my $fieldsQuery  = $self->makeSolrFieldsQuery($filter, $ranges, $sortvalue, $sortfield, $allowedStatuses, $project);
     my $createdRange = $self->makeSolrRangesQuery($ranges);
     
     my $base = $self->app->config->{phaidra}->{solrbaseurl};
-     
-     
-
-    #my $url = Mojo::URL->new;
-    #$url->scheme('http');
-    #
-    #$self->app->log->debug("search_solr base:",$base);
-    #$url->host($base);
-    #$url->path("/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json");
-    #$self->app->log->debug("search_solr url789:",$url);
-    #my $tx = $self->ua->get($url);
      
     $self->app->log->debug("AAAsearch_solr fieldsQuery uri:","http://".$base."/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json");
     
@@ -485,14 +504,15 @@ sub search_solr {
     my $sortvalue       = $self->param('sortvalue');
     my $sortfield       = $self->param('sortfield');
     my $allowedStatuses = $self->param('allowedStatuses');
+    my $filter          = $self->param('filter');
+    my $ranges          = $self->param('ranges');
+    my $project         = $self->param('project');
     
-    my $filter = $self->param('filter');
-    my $ranges = $self->param('ranges');
+    $filter     = encode('UTF-8', $filter, Encode::FB_CROAK);
     $filter = decode_json($filter);  
     $ranges = decode_json($ranges);  
-
                
-    my $fieldsQuery =  $self->makeSolrFieldsQuery($filter, $ranges, $sortvalue, $sortfield, $allowedStatuses);
+    my $fieldsQuery =  $self->makeSolrFieldsQuery($filter, $ranges, $sortvalue, $sortfield, $allowedStatuses, $project);
     my $createdRange = $self->makeSolrRangesQuery($ranges);  
       
     my $base = $self->app->config->{phaidra}->{solrbaseurl};
@@ -522,27 +542,27 @@ sub escapeSolrSpecialChars {
 
     my $self = shift;
     my $query = shift;
+
+    $query = uri_escape_utf8 $query;
     
-    $query =~ s/\+/\%5C\%2B/g;
-    $query =~ s/-/\%5C-/g;
-    $query =~ s/!/\%5C\%21/g;
-    $query =~ s/\(/\%5C\%28/g;
-    $query =~ s/\)/\%5C\%29/g;
-    $query =~ s/{/\%5C\%7B/g;
-    $query =~ s/}/\%5C\%7D/g;
-    $query =~ s/\[/\%5C\%5B/g;
-    $query =~ s/\]/\%5C\%5D/g;
-    $query =~ s/\^/\%5C\%5E/g;
-    $query =~ s/"/\%5C\%22/g;
+    $query =~ s/%5C/\%5C\%5C/g;
+    $query =~ s/%2B/\%5C\%2B/g; #+
+    $query =~ s/-/\%5C-/g;      #-
+    $query =~ s/%21/\%5C\%21/g; #!
+    $query =~ s/%28/\%5C\%28/g;
+    $query =~ s/%29/\%5C\%29/g;
+    $query =~ s/%7B/\%5C\%7B/g;
+    $query =~ s/%7D/\%5C\%7D/g;
+    $query =~ s/%5B/\%5C\%5B/g;
+    $query =~ s/%5D/\%5C\%5D/g;
+    $query =~ s/%5E/\%5C\%5E/g;
+    $query =~ s/%22/\%5C\%22/g;
     $query =~ s/~/\%5C\%7E/g;
-    $query =~ s/\*/\%5C\%2A/g;
-    $query =~ s/\:/\%5C\%3A/g;
-    $query =~ s/\?/\%5C\%3F/g;
-    # TODO
-    $query =~ s/\\/\%5C\%5C/g;
-    #$query =~ s/ /+/g;
-    
-    $self->app->log->debug("escapeSolrSpecialChars query::",$self->app->dumper($query));
+    $query =~ s/%2A/\%5C\%2A/g;
+    $query =~ s/%3A/\%5C\%3A/g;
+    $query =~ s/%3F/\%5C\%3F/g;
+
+    $self->app->log->debug("escapeSolrSpecialChars query444::",$self->app->dumper($query));
     
     return $query;
     

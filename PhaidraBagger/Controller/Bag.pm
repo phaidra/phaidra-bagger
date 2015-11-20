@@ -1088,9 +1088,10 @@ sub search {
 sub solr_search {
   
     my $self = shift;
-
+    
     my $init_data = {
        current_user => $self->current_user,
+       fields => $self->app->config->{phaidra}->{fields},
        thumb_path => $self->url_for($self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path}),
        redmine_baseurl => $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl},
        members => $self->config->{projects}->{$self->current_user->{project}}->{members},

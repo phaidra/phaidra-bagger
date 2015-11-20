@@ -8,6 +8,7 @@
 
 <div class="container" data-ng-controller="BagsCtrl" data-ng-init="init('<%= $init_data %>')">
 
+
 %= include 'alerts'
         <nav  id="control-panel" class="navbar navbar-default list-navbar">
 

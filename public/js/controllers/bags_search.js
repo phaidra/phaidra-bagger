@@ -26,6 +26,8 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
   $scope.sortvalue = '1';
 
   $scope.solr_query = "";
+  $scope.solr_query2 = "";
+  
   $scope.solr_field = "All Fields";
   $scope.solr_field_display = "All Fields";
   $scope.placeholder = 'Search';
@@ -37,14 +39,22 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
   $scope.ranges = {};
   $scope.facetRangesCreated = [];
   $scope.facetRangesUpdated = [];
-  
+  $scope.pattern_error_display = 0;
+  $scope.solr_query_date_flag = 0;
+  $scope.solrQuery_date = "";
+  $scope.solrQuery_not_date = "";
+
   $scope.init = function (initdata) {
 	
         $scope.initdata = angular.fromJson(initdata);
+        //delete it
+        //$scope.initdata.current_user.project = 'UB-Maps';
+        
 	console.log('search initdata:',$scope.initdata);
         $scope.current_user = $scope.initdata.current_user;
 	$scope.folderid = $scope.initdata.folderid;
-
+       
+        
 	if($scope.folderid){
 			$scope.filter['folderid'] = $scope.folderid;
 	}
@@ -62,124 +72,23 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
         if($scope.current_user){
   		$scope.loadSelection();
   	}
-  	//TODO get it from full dublicore later
-        var field0 = {};
+  	
+  	var field0 = {};
         field0.value = "All Fields";
         field0.label = "All Fields";
         $scope.dublincoreFields.push(field0);
-        
-        var field1 = {};
-        field1.value = "assignee";
-        field1.label = "assignee";
-        $scope.dublincoreFields.push(field1);
-        
-        var field2 = {};
-        field2.value = "label";
-        field2.label = "label";
-        $scope.dublincoreFields.push(field2);
-        
-        var field3 = {};
-        field3.value = "project";
-        field3.label = "project";
-        $scope.dublincoreFields.push(field3);
-        
-        var field4 = {};
-        field4.value = "bagid";
-        field4.label = "bagid";
-        $scope.dublincoreFields.push(field4);
-        
-        var field5 = {};
-        field5.value = "created";
-        field5.label = "created";
-        $scope.dublincoreFields.push(field5);
-        
-        //var field6 = {};
-        //field6.value = "file";
-        //field6.label = "file";
-        //$scope.dublincoreFields.push(field6);
-        
-        var field7 = {};
-        field7.value = "folderid";
-        field7.label = "folderid";
-        $scope.dublincoreFields.push(field7);
-        
-        var field8 = {};
-        field8.value = "status";
-        field8.label = "status";
-        $scope.dublincoreFields.push(field8);
-        
-        var field9 = {};
-        field9.value = "tags";
-        field9.label = "tags";
-        $scope.dublincoreFields.push(field9);
-        
-        var field10 = {};
-        field10.value = "updated";
-        field10.label = "updated";
-        $scope.dublincoreFields.push(field10);
-        
-        var field11 = {};
-        field11.value = "dc_rights";
-        field11.label = "rights";
-        $scope.dublincoreFields.push(field11);
-
-        var field12 = {};
-        field12.value = "dc_date";
-        field12.label = "date";
-        $scope.dublincoreFields.push(field12);
-                
-        var field13 = {};
-        field13.value = "dc_creator";
-        field13.label = "creator";
-        $scope.dublincoreFields.push(field13);
-                
-        var field14 = {};
-        field14.value = "dc_language";
-        field14.label = "language";
-        $scope.dublincoreFields.push(field14);
-        
-        var field15 = {};
-        field15.value = "dc_subject";
-        field15.label = "subject";
-        $scope.dublincoreFields.push(field15);
-
-        var field16 = {};
-        field16.value = "dc_description";
-        field16.label = "description";
-        $scope.dublincoreFields.push(field16);
-        
-        var field17 = {};
-        field17.value = "dc_identifier";
-        field17.label = "identifier";
-        $scope.dublincoreFields.push(field17);
-
-        var field18 = {};
-        field18.value = "dc_relation";
-        field18.label = "relation";
-        $scope.dublincoreFields.push(field18);
-        
-        var field19 = {};
-        field19.value = "dc_title";
-        field19.label = "title";
-        $scope.dublincoreFields.push(field19);
-
-        
-        var field20 = {};
-        field20.value = "dc_publisher";
-        field20.label = "publisher";
-        $scope.dublincoreFields.push(field20);
-        
-        var field21 = {};
-        field21.value = "project";
-        field21.label = "project";
-        $scope.dublincoreFields.push(field21);
-        
-        
+  	
+        for( var i = 0 ; i < $scope.initdata.fields.length ; i++ ){
+               var field = {};
+               field.value =  $scope.initdata.fields[i].value;
+               field.label = $scope.initdata.fields[i].label;
+               $scope.dublincoreFields.push(field);    
+        }
   };
 
    
    $scope.searchQuerySolr = function() {
-            
+            console.log('searchQuerySolr sorl_input.solr_query:',$scope.solr_query);
             if($scope.solr_field == 'All Fields'){
                  delete $scope.solr_field; 
             }
@@ -191,26 +100,35 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
             
             console.log('solr_queryAAAAAAAAAAAAAAAAAAAAAAA',$scope.solr_query);
             angular.copy($scope.filter, $scope.filter_send);
-            $scope.filter_send.solr_query = $scope.solr_query;
+            if($scope.solr_query_date_flag){
+                 $scope.filter_send.solr_query = $scope.solrQuery_date; 
+            }else{
+                 $scope.filter_send.solr_query = $scope.solrQuery_not_date;     
+            }
+            //$scope.filter_send.solr_query = $scope.solr_query;
             $scope.filter_send.solr_field = $scope.solr_field;
             
             var allowedStatuses = {};
             if($scope.initdata.statuses){
                   allowedStatuses = angular.toJson($scope.initdata.statuses); 
             }
-            console.log('searchQuerySolr solr_query:',$scope.solr_query);
+
+            
+            console.log('searchQuerySolr solrQuery_date:',$scope.solrQuery_date);
+            console.log('searchQuerySolr solrQuery_not_date:',$scope.solrQuery_not_date);
             console.log('searchQuerySolr solr_field:',$scope.solr_field);
             console.log('searchQuerySolr filter_send:',$scope.filter_send);
             console.log('searchQuerySolr ranges:',$scope.ranges);
             console.log('searchQuerySolr sortvalue:',$scope.sortvalue);
             console.log('searchQuerySolr sortfield:',$scope.sortfield);
             console.log('searchQuerySolr allowedStatuses:',$scope.allowedStatuses);
-            
-            console.log('searchQuerySolr:', $scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses);
-            var promise = FrontendService.search_solr_all($scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses);
+            console.log('searchQuerySolr user project:',$scope.initdata.current_user.project);
+
+            var promise = FrontendService.search_solr_all($scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses, $scope.initdata.current_user.project);
             $scope.loadingTracker.addPromise(promise);
             promise.then(
                 function(response) {
+                        console.log('searchQuerySolr response.data:',response.data);
                         $scope.alerts = response.data.alerts;
                         $scope.totalItems = response.data.response.numFound;
                         $scope.facetFieldsStatus = $scope.formatFacets(response.data.facet_counts.facet_fields.status);
@@ -247,7 +165,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
                   allowedStatuses = angular.toJson($scope.initdata.statuses); 
             }
             
-            var promise = FrontendService.searchSolr($scope.from, $scope.limit, $scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses);
+            var promise = FrontendService.searchSolr($scope.from, $scope.limit, $scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses, $scope.initdata.current_user.project);
             $scope.loadingTracker.addPromise(promise);
             promise.then(
                 function(response) {
@@ -620,8 +538,12 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
           $scope.solr_field = value;
           $scope.solr_field_display = label;
           if(value == 'created' || value == 'updated' || value == 'dc_date') {
-               $scope.placeholder = '[YYYY-MM-DDThh:mm:ss TO YYYY-MM-DDThh:mm:ss]';   
+               $scope.placeholder = '[YYYY-MM-DDThh:mm:ssZ TO YYYY-MM-DDThh:mm:ssZ]';
+               $scope.pattern_error_display = 1;
+               $scope.solr_query_date_flag = 1;
           }else{
+               $scope.solr_query_date_flag = 0;
+               $scope.pattern_error_display = 0;
                $scope.placeholder = 'Search';
           }
   }

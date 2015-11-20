@@ -414,3 +414,10 @@ margin-top: 5px;
    margin-bottom: 10px;
 }
 
+.solr-pattern-error-msg{
+    float: left;
+    margin-left: 15px;
+}
+.red{
+   color: red;
+}

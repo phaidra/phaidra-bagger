@@ -50,8 +50,11 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
 
   $scope.projectclasses = [];
 
+  
   $scope.init = function (initdata) {
+  
     $scope.initdata = angular.fromJson(initdata);
+   
     $scope.current_user = $scope.initdata.current_user;
     $scope.baseurl = $('head base').attr('href');
     };

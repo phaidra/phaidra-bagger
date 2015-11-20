@@ -112,6 +112,7 @@
       <script src="<%= url_for '/js/es5-shim.js' %>"></script>
       <script src="<%= url_for '/js/json3.min.js' %>"></script>
     <![endif]-->
+    
 
         <nav class="navbar navbar-default" role="navigation">
   <div class="container-fluid">
@@ -145,7 +146,9 @@
             <li><a href="<%= url_for '/'.$config->{projects}->{current_user->{project}}->{import_url}.'/' %>">Import</a></li>
         <% } %>
         <li><a href="<%= url_for '/bags/' %>">Browse</a></li>
-        <li><a href="<%= url_for '/bags/solr_search' %>">Search</a></li>
+        <% if($self->cookie('solr_installed')){ %>
+             <li><a href="<%= url_for '/bags/solr_search' %>">Search</a></li>
+        <% } %>
         <li><a href="<%= url_for '/templates/' %>">Templates</a></li>
         <li><a href="<%= url_for '/jobs/' %>">Jobs</a></li>
         <li><a href="<%= url_for '/settings/' %>">Settings</a></li>

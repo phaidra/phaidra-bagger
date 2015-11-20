@@ -28,6 +28,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, DirectoryService
 
         $scope.init = function (initdata) {
                 $scope.initdata = angular.fromJson(initdata);
+                console.log('initdata browse:',$scope.initdata);
                 $scope.current_user = $scope.initdata.current_user;
                 $scope.folderid = $scope.initdata.folderid;
 

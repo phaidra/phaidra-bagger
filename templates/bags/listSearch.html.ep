@@ -145,49 +145,29 @@
                                
                           </ul>
         </div>
-                 
+   <!--  data-ng-if="!solr_query_date"     ng-pattern="/\[(\d{4})-(\d{2})-(\d{2})T(\d{2})\:(\d{2})\:(\d{2})Z TO (\d{4})-(\d{2})-(\d{2})T(\d{2})\:(\d{2})\:(\d{2})Z\]/" -->              
 <div class="row solr-search-div-container">       
-      <div class="col-sm-8 solr-search-div">
-            <input name="solrQuery" class="solr-search-input" type="text" ng-model="solr_query" placeholder={{placeholder}}  >
-            <!-- <input ng-if="solr_field_display == 'created' || solr_field_display == 'updated' || solr_field_display == 'date'" class="solr-search-input" type="text" ng-model="solr_query" placeholder="[YYYY-MM-DDThh:mm:ssZ TO YYYY-MM-DDThh:mm:ssZ]"> -->
-      </div>
-      <!--
-      <div class="col-sm-3 solr-search-div ">
-             <div class="solr-search-inline-block">
-               <select class="form-control" data-style="btn-primary" ng-model="solr_field" ng-options="field.value as field.label for field in dublincoreFields | orderBy:'label'" >
-                  <option value="">
-                        <span>All Fields</span>
-                  </option>
-               </select>
-            </div>
-            <div class="sorticon glyphicon glyphicon-triangle-bottom solr-search-inline-block solr-search-button-arrow"></div>
-            <button data-ng-click="searchQuerySolr()" class="btn btn-danger navbar-btn solr-search-btn solr-search-inline-block"><span class="glyphicon"></span>Search</button>
-      </div>
-      -->
-          <div class="btn-group col-sm-4 solr-search-div">
-            <div class="btn-group " >
+      <ng-form id="sorl_input" name="sorl_input" >  
+           <div ng-show="solr_query_date_flag" class="col-sm-8 solr-search-div">
+                 <input name="solrQuery_date" class="solr-search-input" type="text" ng-model="solrQuery_date" placeholder={{placeholder}}  ng-pattern="/\[(\d{4})-(\d{2})-(\d{2})T(\d{2})\:(\d{2})\:(\d{2})Z TO (\d{4})-(\d{2})-(\d{2})T(\d{2})\:(\d{2})\:(\d{2})Z\]/" >
+           </div>      
+           <div ng-show="!solr_query_date_flag" class="col-sm-8 solr-search-div">
+                 <input name="solrQuery_not_date" class="solr-search-input" type="text" ng-model="solrQuery_not_date" placeholder={{placeholder}}>
+           </div> 
+           <div class="btn-group col-sm-4 solr-search-div">
+               <div class="btn-group " >
                   <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                          {{solr_field_display}} <span class="caret"></span>
                   </button>
                   <ul class="dropdown-menu" role="menu">
                         <li><a href="" data-ng-repeat="field in dublincoreFields" data-ng-click="setSearchQuery(field.value, field.label)">{{field.label}}</a></li>
                   </ul>
+               </div>
+               <button data-ng-click="searchQuerySolr()" class="btn btn-danger navbar-btn solr-search-btn solr-search-inline-block"><span class="glyphicon"></span>Search</button>
           </div>
-      
-      
-      <div ng-messages="solrQuery.$error">
-          <div ng-message="required">This field is required</div>
-          <div ng-message="pattern">Must be a valid 10 digit phone number</div>
-     </div>
-      
-      
-      <button data-ng-click="searchQuerySolr()" class="btn btn-danger navbar-btn solr-search-btn solr-search-inline-block"><span class="glyphicon"></span>Search</button>
-        </div>
-      <!--
-      <div class="col-sm-2 solr-search-div">
-          
-      </div>
-      -->
+          <div data-ng-if="pattern_error_display" class="solr-pattern-error-msg red" ng-show="sorl_input.solrQuery_date.$error.pattern">Time range format not maching pattern: [YYYY-MM-DDThh:mm:ssZ TO YYYY-MM-DDThh:mm:ssZ]</div>
+          <div data-ng-if="pattern_error_display" class="solr-pattern-error-msg red" ng-show="sorl_input.solrQuery_date.$error.pattern">Example: [2010-01-01T00:00:00Z TO 2012-06-01T21:30:00Z]</div>
+    </ng-form>  
 </div>
 
         
@@ -305,8 +285,7 @@
           </tr>
           </thead>
           <tbody>
-          <!--<tr ng-repeat="bag in items">-->
-           aaaaa
+
            <tr data-ng-repeat="bag in solr_response.docs" data-ng-if="!bag.hide">
                 <td data-ng-if="current_user"><span class="glyphicon glyphicon-flag flag" data-ng-class="{'flag-selected': selection.indexOf(bag.bagid) != -1}" data-ng-click="toggleFile(bag.bagid)"></span></td>
                 <!-- <td><img ng-src="{{initdata.thumb_path}}/s_{{bag.bagid}}_1.png" class="img-thumbnail" width="60" height="60" title="{{bag.bagid}}" alt="{{bag.bagid}}"></td> -->
