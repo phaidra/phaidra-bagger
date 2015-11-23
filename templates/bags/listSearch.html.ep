@@ -178,7 +178,6 @@
                     </thead>
                     <tbody>
                         <tr data-ng-repeat="facet in facetFieldsStatus | orderBy : count" data-ng-if="facet.count != 0">
-                           <!--<td data-ng-if="facet.field == 'to_check' || facet.field == 'checked' || facet.field == 'new' || facet.field == 'to_ingest'" ><a data-ng-click="addFilter('status', facet.field)" >{{facet.field}}</a> ({{facet.count}})</td>-->
                            <td  ><a data-ng-click="addFilter('status', facet.field)" >{{facet.field}}</a> ({{facet.count}})</td>
                         <tr>
                     </tbody>

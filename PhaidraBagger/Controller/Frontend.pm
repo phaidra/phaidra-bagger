@@ -155,7 +155,6 @@ sub makeSolrFieldsQuery{
     
     $filter->{solr_field} = '' if not defined $filter->{solr_field};
     $filter->{solr_query} = '' if not defined $filter->{solr_query};
-    $self->app->log->debug("solr_query project55",$self->app->dumper($filter));
     
     if($filter->{solr_field} eq 'created' or $filter->{solr_field} eq 'updated'){
        #skip
@@ -168,12 +167,6 @@ sub makeSolrFieldsQuery{
     }else{
           $allowedStatuses = "";
     }      
-    
-    $self->app->log->debug("makeSolrFieldsQuery project76",$self->app->dumper($project));
-    $self->app->log->debug("makeSolrFieldsQuery project77",$self->app->dumper($self->current_user->{project}));
-
-    
-    
     
     # restriction of all statuses to allowed, defined in config json
     my $defaulAllStatuses = '';
@@ -188,12 +181,7 @@ sub makeSolrFieldsQuery{
                $statCount++;
          }
     }
-    
-    ####$self->app->log->debug("makeSolrFieldsQuery ranges::",$self->app->dumper($ranges));
-    ####$self->app->log->debug("makeSolrFieldsQuery filter::",$self->app->dumper($filter));
-    ####$self->app->log->debug("makeSolrFieldsQuery allowedStatuses::",$self->app->dumper($allowedStatuses));
-    ####$self->app->log->debug("makeSolrFieldsQuery defaulAllStatuses::",$self->app->dumper($defaulAllStatuses));
-    
+ 
     my $fieldsQuery = '';
     my $fieldsQueryHash = {};
     #accessed over search
@@ -256,14 +244,12 @@ sub makeSolrFieldsQuery{
     my $doubleQuote = "\"";
     foreach my $key ( keys %{$fieldsQueryHash} ){
              $doubleQuote = "\"";
-             $self->app->log->debug("foreach key::",$self->app->dumper($key)); 
              if($key eq "created" or $key eq "updated"){
                    $doubleQuote = "";
              }
              if($fieldsQueryHash->{$key} == "*"){
                    $doubleQuote = "";
              }
-             $self->app->log->debug("foreach doubleQuote::",$self->app->dumper($doubleQuote));
              if($defaulAllStatuses eq ''){
                     if($i == 1){
                             $fieldsQuery = $key.":".$doubleQuote.$fieldsQueryHash->{$key}.$doubleQuote;
@@ -369,11 +355,7 @@ sub makeSolrFieldsQuery{
 
     
    $fieldsQuery = $fieldsQuery."&sort=".$sortfield." ".$sortvalue;
-    
-   $self->app->log->debug("search_solr fieldsQuery111::",$self->app->dumper($fieldsQuery));
-   $self->app->log->debug("search_solr fieldsQuery112::",$fieldsQuery);
-    
-    
+
     return $fieldsQuery;
     
 }
@@ -398,7 +380,6 @@ sub getQuerySearchAllFields{
          }
     } 
     
-     $self->app->log->debug("getQuerySearchAllFields searchAllFields::",$self->app->dumper($searchAllFields));
     return $searchAllFields;
 }
 
@@ -465,26 +446,19 @@ sub search_solr_all {
     $filter = decode_json($filter);
     $ranges = decode_json($ranges);
      
-    $self->app->log->debug("search_solr filter decode_json:123:",$self->app->dumper($filter));    
-    $self->app->log->debug("search_solr filter:123:",$self->app->dumper($filter));
-    $self->app->log->debug("search_solr ranges:123:",$self->app->dumper($ranges));
     
     my $fieldsQuery  = $self->makeSolrFieldsQuery($filter, $ranges, $sortvalue, $sortfield, $allowedStatuses, $project);
     my $createdRange = $self->makeSolrRangesQuery($ranges);
     
     my $base = $self->app->config->{phaidra}->{solrbaseurl};
      
-    $self->app->log->debug("AAAsearch_solr fieldsQuery uri:","http://".$base."/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json");
     
     my $url =  "http://".$base."/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json";
-    $self->app->log->debug("search_solr url5555555555::",$self->app->dumper($url));
     my $tx = $self->ua->get("http://".$base."/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json");    
     
     if (my $res = $tx->success) {
-           #$self->app->log->debug("search_solr success all");
            $self->render(json => $res->json, status => 200 );
     } else {
-          $self->app->log->debug("search_solr all fail");
           my ($err, $code) = $tx->error;
           if($tx->res->json){       
                  if(exists($tx->res->json->{alerts})) {
@@ -526,7 +500,6 @@ sub search_solr {
     if (my $res = $tx->success) {
            $self->render(json => $res->json, status => 200 );
     } else {
-          $self->app->log->debug("search_solr fail");
           my ($err, $code) = $tx->error;
           if($tx->res->json){       
                  if(exists($tx->res->json->{alerts})) {
@@ -565,8 +538,6 @@ sub escapeSolrSpecialChars {
     $query =~ s/%2A/\%5C\%2A/g;
     $query =~ s/%3A/\%5C\%3A/g;
     $query =~ s/%3F/\%5C\%3F/g;
-
-    $self->app->log->debug("escapeSolrSpecialChars query444::",$self->app->dumper($query));
     
     return $query;
     

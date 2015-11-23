@@ -113,22 +113,10 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
                   allowedStatuses = angular.toJson($scope.initdata.statuses); 
             }
 
-            
-            console.log('searchQuerySolr solrQuery_date:',$scope.solrQuery_date);
-            console.log('searchQuerySolr solrQuery_not_date:',$scope.solrQuery_not_date);
-            console.log('searchQuerySolr solr_field:',$scope.solr_field);
-            console.log('searchQuerySolr filter_send:',$scope.filter_send);
-            console.log('searchQuerySolr ranges:',$scope.ranges);
-            console.log('searchQuerySolr sortvalue:',$scope.sortvalue);
-            console.log('searchQuerySolr sortfield:',$scope.sortfield);
-            console.log('searchQuerySolr allowedStatuses:',$scope.allowedStatuses);
-            console.log('searchQuerySolr user project:',$scope.initdata.current_user.project);
-
             var promise = FrontendService.search_solr_all($scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses, $scope.initdata.current_user.project);
             $scope.loadingTracker.addPromise(promise);
             promise.then(
                 function(response) {
-                        console.log('searchQuerySolr response.data:',response.data);
                         $scope.alerts = response.data.alerts;
                         $scope.totalItems = response.data.response.numFound;
                         $scope.facetFieldsStatus = $scope.formatFacets(response.data.facet_counts.facet_fields.status);
@@ -172,7 +160,6 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
                 function(response) {
                         $scope.alerts = response.data.alerts;
                         $scope.solr_response = response.data.response;
-                        console.log('searchQuerySolr response.data:',response.data);
                         $scope.form_disabled = false;
                 }
                 ,function(response) {
@@ -365,7 +352,6 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
             promise.then(
                 function(response) {
                         $scope.selection = [];
-                        console.log('selectAll:',response.data);
                         for( var i = 0 ; i < response.data.response.docs.length ; i++ ){
                                 $scope.selection.push(response.data.response.docs[i].bagid);
                         }
@@ -401,7 +387,8 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
  }
  
   $scope.setAttributeMass = function (attribute, value) {
-         var promise = BagService.setAttributeMass($scope.selection, attribute, value);
+     
+     var promise = BagService.setAttributeMass($scope.selection, attribute, value);
      $scope.loadingTracker.addPromise(promise);
      promise.then(
         function(response) {
@@ -540,8 +527,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
   }
 
   $scope.setSearchQuery = function (value, label) {
-          console.log('setSearchQuery',value);
-          
+
           $scope.solr_field = value;
           $scope.solr_field_display = label;
           if(value == 'created' || value == 'updated' || value == 'dc_date') {
