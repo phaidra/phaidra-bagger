@@ -159,7 +159,7 @@
                          {{solr_field_display}} <span class="caret"></span>
                   </button>
                   <ul class="dropdown-menu" role="menu">
-                        <li><a href="" data-ng-repeat="field in dublincoreFields" data-ng-click="setSearchQuery(field.value, field.label)">{{field.label}}</a></li>
+                        <li><a href="" data-ng-repeat="field in dublincoreFields | orderBy : label" data-ng-click="setSearchQuery(field.value, field.label)">{{field.label}}</a></li>
                   </ul>
                </div>
                <button data-ng-click="searchQuerySolr()" class="btn btn-danger navbar-btn solr-search-btn solr-search-inline-block"><span class="glyphicon"></span>Search</button>
@@ -169,7 +169,6 @@
     </ng-form>  
 </div>
 
-        
 <div class="row">       
       <div class="col-sm-3">     
             <table class="table">
@@ -199,7 +198,6 @@
                     <tbody>
                         <tr data-ng-repeat="facet in facetRangesCreated | orderBy : field" data-ng-if="facet.count != 0">
                              <td>
-                                    
                                      <a data-ng-click="narrowFacetRange('created', 'year', facet.field)" >
                                            <span>{{getYear(facet.field)}}</span>
                                      </a>
@@ -260,7 +258,6 @@
                     </tbody>
              </table> 
              -->
-             
       </div>
       <div class="col-sm-9">     
          <table class="table">
@@ -318,6 +315,7 @@
                                 <span class="caret"></span>
                           </button>
                           <ul class="dropdown-menu" role="menu" data-ng-show="canSetAttribute('assignee')">
+                               
                                 <li data-ng-repeat="member in initdata.members" data-ng-hide="bag.assignee == member.username"><a href="" data-ng-click="setAttribute(bag, 'assignee', member.username)">{{member.displayname}}</a></li>
                           </ul>
                         </div>
