@@ -20,11 +20,8 @@ is that this file can be used as an example to add on different backends.
 To extend this to other systems, simply implement the exact same class and
 replace the method definitions with API calls for the desired backend.
 """
-import pprint
+
 from datetime import datetime, timedelta
-import os
-import pickle
-import simplejson
 
 import json
 import logging
@@ -137,10 +134,6 @@ class DocManager(DocManagerBase):
           {"a": 2, "b.c.d": 5, "e.0": 6, "e.1": 7, "e.2": 8}
 
         """
-
-        # Translate the _id field to whatever unique key we're using.
-        # _id may not exist in the doc, if we retrieved it from Solr
-        # as part of update.
         
         """mf mongo-connector extension"""
         if 'created' in doc:
@@ -153,6 +146,9 @@ class DocManager(DocManagerBase):
                 doc['updated'] = utc_dt.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         """end mf mongo-connector extension"""
         
+        # Translate the _id field to whatever unique key we're using.
+        # _id may not exist in the doc, if we retrieved it from Solr
+        # as part of update.
         if '_id' in doc:
             doc[self.unique_key] = u(doc.pop("_id"))
 
