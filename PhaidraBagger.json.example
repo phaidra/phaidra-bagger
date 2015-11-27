@@ -119,9 +119,8 @@
                                     { "value": "my_sorl_field1",       "label": "label for my sorl field1"},
                                     { "value": "my_sorl_field2",       "label": "label for my sorl field2"}
 
-                        ]
-        }
-        },
+                       ]
+         },
         "phaidra-instance2": {
             "baseurl": "phaidra-instance2.univie.ac.at",
             "apibaseurl": "services.phaidra-instance2.univie.ac.at/api",
@@ -133,8 +132,7 @@
                                     { "value": "my_sorl_field1",       "label": "label for my sorl field1"},
                                     { "value": "my_sorl_field2",       "label": "label for my sorl field2"}
 
-                        ]
-        }
+                       ]
         }
     },
 
