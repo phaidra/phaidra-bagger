@@ -108,7 +108,14 @@ class DocManager(DocManagerBase):
             elif wc_pattern[-1] == "*":
                 self._dynamic_field_regexes.append(
                     re.compile("\A%s.*" % wc_pattern[:-1]))
-
+    
+    def _is_number(self, s):
+        try:
+            float(s)
+            return True
+        except ValueError:
+            return False
+    
     def _clean_doc(self, doc, namespace, timestamp):
         """Reformats the given document before insertion into Solr.
 
@@ -137,11 +144,11 @@ class DocManager(DocManagerBase):
         
         """mf mongo-connector extension"""
         if 'created' in doc:
-            if isinstance( doc['created'], int ):
+            if self._is_number( doc['created'] ):
                 utc_dt = datetime(1970, 1, 1) + timedelta(seconds=doc['created'])
                 doc['created'] = utc_dt.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         if 'updated' in doc:
-            if isinstance( doc['updated'], int ):
+            if self._is_number( doc['updated'] ):
                 utc_dt = datetime(1970, 1, 1) + timedelta(seconds=doc['updated'])
                 doc['updated'] = utc_dt.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         """end mf mongo-connector extension"""
