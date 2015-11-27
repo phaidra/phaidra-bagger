@@ -116,8 +116,8 @@
             "local_mods_tree": "/var/www/bagger/public/mods/tree.json",
             "is_default": "1",
             "fields":  [
-                                    { "value": "my_field1",       "label": "label for my field1"},
-                                    { "value": "my_field2",       "label": "label for my field2"}
+                                    { "value": "my_sorl_field1",       "label": "label for my field1"},
+                                    { "value": "my_sorl_field2",       "label": "label for my field2"}
 
                         ]
         }
@@ -130,8 +130,8 @@
             "local_uwmetadata_tree": "/var/www/bagger/public/uwmetadata/tree.json",
             "is_default": "0"
             "fields":  [
-                                    { "value": "my_field1",       "label": "label for my field1"},
-                                    { "value": "my_field2",       "label": "label for my field2"}
+                                    { "value": "my_sorl_field1",       "label": "label for sorl my field1"},
+                                    { "value": "my_sorl_field2",       "label": "label for sorl my field2"}
 
                         ]
         }
