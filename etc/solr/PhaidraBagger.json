@@ -1,0 +1,210 @@
+{
+    "installation_id": "xxxxxxxxxx",
+
+    "hypnotoad": {
+        
+        "listen": ["http://*:3000"],
+        
+        "proxy": 0
+    },
+
+    "proxy_path":"",
+
+    "mode":"xxxxxxxxxxxxx",
+
+    "secret":"xxxxxxxxx",
+        
+    "enc_key":"xxxxxxxxxx",
+        
+    "session_expiration":"xxxxxxxxx",
+        
+    "secure_cookies":"0",
+        
+    "log_path":"/var/log/bagger/PhaidraBagger.log",
+    
+    "log_level":"debug",
+
+    "bagger_agent_path":"/home/michal/Documents/code/area42/user/mf/angularjs/bagger/bagger/lib/PhaidraBaggerAgent/phaidra_bagger_agent.pl",
+
+    "validate_uwmetadata":"1",
+      
+    "defaults": {    
+        "metadata_field_language": "de"                 
+    },
+
+    "projects": {
+        
+
+        "TestProject": {
+            "account": "phaidrs5",
+            "members": [
+                         {
+                           "username": "hudakr4",
+                           "role": "manager",
+                           "displayname": "Rasta"
+                         },
+                         {
+                           "username": "a4212500",
+                           "role": "member",
+                           "displayname": "Gerda (ZID Test)"
+                         },
+                         {
+                           "username": "budronp5",
+                           "role": "manager",
+                           "displayname": "Paolo"
+                         },
+                         {
+                           "username": "blumess6",
+                           "role": "manager",
+                           "displayname": "Susanne"
+                         },
+                         {
+                           "username": "pauszr6",
+                           "role": "manager",
+                           "displayname": "Ralf"
+                         },
+                         {
+                           "username": "andreol8",
+                           "role": "manager",
+                           "displayname": "Lorisa"
+                         }, 
+                         {
+                           "username": "carrery6",
+                           "role": "manager",
+                           "displayname": "Yuri"
+                         },
+                         {
+                           "username": "gn",
+                           "role": "manager",
+                           "displayname": "Raman"
+                         },
+                         {
+                           "username": "gg",
+                           "role": "manager",
+                           "displayname": "GG"
+                         },
+                         {
+                           "displayname" : "Jose",
+                           "role" : "manager",
+                           "username" : "prezaj14"
+                         }, 
+                         {
+                           "username": "folcanm4",
+                           "role": "manager",
+                           "displayname": "Michal"
+                         },
+                         {
+                           "username": "gappmaa6",
+                           "role": "manager",
+                           "displayname": "Alexandra"
+                         },             
+                         {              
+                           "username": "purerp6",
+                           "role": "manager",
+                           "displayname": "Pamela"
+                         }
+
+                       ],
+            "statuses":  [
+                                {
+                                        "label": "New",
+                                        "value": "new"
+                                },
+                                {
+                                        "label": "To check",
+                                        "value": "to_check"
+                                },
+                                {
+                                        "label": "Checked",
+                                        "value": "checked"
+                                },
+                                {
+                                        "label": "To ingest",
+                                        "value": "to_ingest"
+                                }
+                        ],
+          
+            "default_assignee": "hudakr4",
+            "restricted_actions": ["PUT /job", "POST /job/", "DELETE /job/"],
+            "restricted_operations": ["set_assignee"],
+            "folders": {
+                "in": "/home/michal/Documents/code/area42/user/mf/angularjs/bagger/bagger/data/TestProject/folders/in",
+                "uwmetadata_import": "/home/michal/Documents/code/area42/user/mf/angularjs/bagger/bagger/data/TestProject/folders/uwmetadata_import"
+            },
+            "thumbnails": {
+                "generate": "1",
+                "url_path": "thumbnails/TestProject",
+                "dir": "/home/michal/Documents/code/area42/user/mf/angularjs/bagger/bagger/public/thumbnails/TestProject",
+                "convert_cmd": "convert",
+                "thumbnail_medium_cmd": "/home/michal/Documents/code/area42/user/mf/angularjs/bagger/bagger/lib/downsize -s 2048 -t 20",
+                "thumbnail_small_cmd": "/home/michal/Documents/code/area42/user/mf/angularjs/bagger/bagger/lib/downsize -s 60 -t 20"
+            },
+            "redmine_baseurl": "https://redmine.phaidra.org/redmine/"
+        }
+    },
+    "ingest_instances": {
+        "phaidra-sandbox": {
+            "baseurl": "xxxxxxxxxxxxxxxxx",
+            "apibaseurl": "xxxxxxxxxxxx",
+            "solrbaseurl": "localhost:8983/solr/koolcha",
+            "metadata_format_version": "1",
+            "local_uwmetadata_tree": "/home/michal/Documents/code/area42/user/mf/angularjs/bagger/bagger/public/uwmetadata/tree.json",
+            "local_mods_tree": "/home/michal/Documents/code/area42/user/mf/angularjs/bagger/bagger/public/mods/tree.json",
+            "is_default": "1",
+            "directory_user": {
+                "username": "phaidrs5",
+                "password": "xxxxxx"
+            },
+            "fields":  [
+                                    { "value": "assignee",       "label": "assignee"},
+                                    { "value": "bagid",          "label": "bag id"},
+                                    { "value": "created",        "label": "created"},
+                                    { "value": "dc_creator",     "label": "creator"},
+                                    { "value": "dc_date",        "label": "date"},
+                                    { "value": "dc_description", "label": "description"},
+                                    { "value": "folderid",       "label": "folder id"},
+                                    { "value": "dc_identifier",  "label": "identifier"},
+                                    { "value": "label",          "label": "label"},
+                                    { "value": "dc_language",    "label": "language"},
+                                    { "value": "dc_publisher",   "label": "publisher"},
+                                    { "value": "dc_relation",    "label": "relation"},
+                                    { "value": "dc_rights",      "label": "rights"},
+                                    { "value": "status",         "label": "status"},
+                                    { "value": "dc_subject",     "label": "subject"},
+                                    { "value": "tags",           "label": "tags"},
+                                    { "value": "dc_title",       "label": "title"},
+                                    { "value": "dc_title_en",    "label": "title english"},
+                                    { "value": "dc_title_de",    "label": "title german"},
+                                    { "value": "updated",        "label": "updated"}
+                        ]
+        }
+    },
+
+    "directory_user": {
+        "username": "xxxxxxxxx",
+        "password": "xxxxxxxx"
+    },
+    
+    "mongodb2": {
+        "host": "xxxxxxxx",
+        "port": "xxxxxxxxxxxx",
+        "username": "xxxxxxxxxx",
+        "password": "xxxxxxxxx",
+        "database": "xxxxxxxxx"
+    },
+    "mongodb": {
+        "host": "localhost",
+        "port": "27017",
+        "username": "",
+        "password": "",
+        "database": "foo3"
+    }, 
+    "authentication": {
+        "realm": "xxxxxxxx",
+        "token_header": "xxxxxxxxx",
+        "token_cookie": "xxxxxxxx"
+    }
+}
+
+
+
