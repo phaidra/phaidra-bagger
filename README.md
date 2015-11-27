@@ -270,3 +270,23 @@ The tree is currently not compressed by saving (everything is saved, not just th
 
 4) Log in into bagger and open the bag to edit the metadata.... etc
 
+## Solr configuration
+
+Add solr url path and sorl search fields into phaidra-instance node
+
+<pre>
+        "phaidra-instance": {
+            "baseurl": "phaidra-instance.univie.ac.at",
+            "apibaseurl": "services.phaidra-instance.univie.ac.at/api",
+            "solrbaseurl": "localhost:8983/solr/my_solr_core",
+            "metadata_format_version": "1",
+            "local_uwmetadata_tree": "/var/www/bagger/public/uwmetadata/tree.json",
+            "local_mods_tree": "/var/www/bagger/public/mods/tree.json",
+            "is_default": "1",
+            "fields":  [
+                                    { "value": "my_solr_field1",       "label": "label for my solr field1"},
+                                    { "value": "my_solr_field2",       "label": "label for my solr field2"}
+
+                        ]
+        }
+</pre>
