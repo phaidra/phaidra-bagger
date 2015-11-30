@@ -163,6 +163,15 @@ so don't change this unless necessary
         }
     },
 
+#### config if using solr for search, see wiki for installation instructions
+    "solr": {
+    	"baseurl": "localhost:8983/solr/my_solr_core",
+    	"fields":  [
+          { "value": "my_sorl_field1",  "label": "label for my sorl field1"},
+          { "value": "my_sorl_field2",  "label": "label for my sorl field2"}
+        ]
+    },
+
     "ingest_instances": {
 
 #### example: phaidra-sandbox    
@@ -269,24 +278,3 @@ $bag->{metadata}->{uwmetadata} = $antwortjson->{uwmetadata}
 The tree is currently not compressed by saving (everything is saved, not just the filled in values). This will be fixed later for uwmetadata. For mods the compression is implemented.
 
 4) Log in into bagger and open the bag to edit the metadata.... etc
-
-## Solr configuration
-
-Add solr url path and sorl search fields into phaidra-instance node
-
-<pre>
-        "phaidra-instance": {
-            "baseurl": "phaidra-instance.univie.ac.at",
-            "apibaseurl": "services.phaidra-instance.univie.ac.at/api",
-            "solrbaseurl": "localhost:8983/solr/my_solr_core",
-            "metadata_format_version": "1",
-            "local_uwmetadata_tree": "/var/www/bagger/public/uwmetadata/tree.json",
-            "local_mods_tree": "/var/www/bagger/public/mods/tree.json",
-            "is_default": "1",
-            "fields":  [
-                                    { "value": "my_solr_field1",       "label": "label for my solr field1"},
-                                    { "value": "my_solr_field2",       "label": "label for my solr field2"}
-
-                        ]
-        }
-</pre>
