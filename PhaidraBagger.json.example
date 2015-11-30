@@ -105,34 +105,30 @@
 		    "redmine_baseurl": "https://redmine.phaidra.org/redmine/"
         }
     },
+    
+    "solr": {
+    	"baseurl": "localhost:8983/solr/my_solr_core",
+    	"fields":  [
+          { "value": "my_sorl_field1",  "label": "label for my sorl field1"},
+          { "value": "my_sorl_field2",  "label": "label for my sorl field2"}
+        ]
+    },
 
     "ingest_instances": {
         "phaidra-instance": {
             "baseurl": "phaidra-instance.univie.ac.at",
             "apibaseurl": "services.phaidra-instance.univie.ac.at/api",
-            "solrbaseurl": "localhost:8983/solr/my_solr_core",
             "metadata_format_version": "1",
             "local_uwmetadata_tree": "/var/www/bagger/public/uwmetadata/tree.json",
             "local_mods_tree": "/var/www/bagger/public/mods/tree.json",
-            "is_default": "1",
-            "fields":  [
-                                    { "value": "my_sorl_field1",       "label": "label for my sorl field1"},
-                                    { "value": "my_sorl_field2",       "label": "label for my sorl field2"}
-
-                       ]
+            "is_default": "1"
          },
         "phaidra-instance2": {
             "baseurl": "phaidra-instance2.univie.ac.at",
             "apibaseurl": "services.phaidra-instance2.univie.ac.at/api",
-            "solrbaseurl": "localhost:8983/solr/my_solr_core2",
             "metadata_format_version": "1",
             "local_uwmetadata_tree": "/var/www/bagger/public/uwmetadata/tree.json",
             "is_default": "0"
-            "fields":  [
-                                    { "value": "my_sorl_field1",       "label": "label for my sorl field1"},
-                                    { "value": "my_sorl_field2",       "label": "label for my sorl field2"}
-
-                       ]
         }
     },
 
