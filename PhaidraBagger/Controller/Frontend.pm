@@ -454,6 +454,7 @@ sub search_solr_all {
      
     
     my $url =  "http://".$base."/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json";
+    $self->app->log->debug("url12321:",$self->app->dumper($url));
     my $tx = $self->ua->get("http://".$base."/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json");    
     
     if (my $res = $tx->success) {
