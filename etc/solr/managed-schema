@@ -425,53 +425,53 @@
    <copyField source = "tags*" dest = "bag_tgs"/>
 
    
-   <dynamicField name="metadata.dc_indexing.rights*"  type="string"  indexed="true"  stored="true"/>
+   <dynamicField name="metadata.dc_index.rights*"  type="string"  indexed="true"  stored="true"/>
    <field name="dc_rights" type="string" indexed="true" stored="true" multiValued="true" />
-   <copyField source = "metadata.dc_indexing.rights*" dest = "dc_rights"/>
+   <copyField source = "metadata.dc_index.rights*" dest = "dc_rights"/>
  
-   <dynamicField name="metadata.dc_indexing.creator*"  type="string"  indexed="true"  stored="true"/>
+   <dynamicField name="metadata.dc_index.creator*"  type="string"  indexed="true"  stored="true"/>
    <field name="dc_creator" type="string" indexed="true" stored="true" multiValued="true" />
-   <copyField source = "metadata.dc_indexing.creator*" dest = "dc_creator"/>
+   <copyField source = "metadata.dc_index.creator*" dest = "dc_creator"/>
  
-   <dynamicField name="metadata.dc_indexing.language*"  type="string"  indexed="true"  stored="true"/>
+   <dynamicField name="metadata.dc_index.language*"  type="string"  indexed="true"  stored="true"/>
    <field name="dc_language" type="string" indexed="true" stored="true" multiValued="true" />
-   <copyField source = "metadata.dc_indexing.language*" dest = "dc_language"/>
+   <copyField source = "metadata.dc_index.language*" dest = "dc_language"/>
 
-   <dynamicField name="metadata.dc_indexing.date*"  type="string"  indexed="true"  stored="true"/>
+   <dynamicField name="metadata.dc_index.date*"  type="string"  indexed="true"  stored="true"/>
    <field name="dc_date" type="string" indexed="true" stored="true" multiValued="true" />
-   <copyField source = "metadata.dc_indexing.date*" dest = "dc_date"/>
+   <copyField source = "metadata.dc_index.date*" dest = "dc_date"/>
 
-   <dynamicField name="metadata.dc_indexing.subject*"  type="string"  indexed="true"  stored="true"/>
+   <dynamicField name="metadata.dc_index.subject*"  type="string"  indexed="true"  stored="true"/>
    <field name="dc_subject" type="string" indexed="true" stored="true" multiValued="true" />
-   <copyField source = "metadata.dc_indexing.subject*" dest = "dc_subject"/>
+   <copyField source = "metadata.dc_index.subject*" dest = "dc_subject"/>
   
-   <dynamicField name="metadata.dc_indexing.description*"  type="string"  indexed="true"  stored="true"/>
+   <dynamicField name="metadata.dc_index.description*"  type="string"  indexed="true"  stored="true"/>
    <field name="dc_description" type="string" indexed="true" stored="true" multiValued="true" />
-   <copyField source = "metadata.dc_indexing.description*" dest = "dc_description"/>
+   <copyField source = "metadata.dc_index.description*" dest = "dc_description"/>
 
-   <dynamicField name="metadata.dc_indexing.identifier*"  type="string"  indexed="true"  stored="true"/>
+   <dynamicField name="metadata.dc_index.identifier*"  type="string"  indexed="true"  stored="true"/>
    <field name="dc_identifier" type="string" indexed="true" stored="true" multiValued="true" />
-   <copyField source = "metadata.dc_indexing.identifier*" dest = "dc_identifier"/>
+   <copyField source = "metadata.dc_index.identifier*" dest = "dc_identifier"/>
   
-   <dynamicField name="metadata.dc_indexing.relation*"  type="string"  indexed="true"  stored="true"/>
+   <dynamicField name="metadata.dc_index.relation*"  type="string"  indexed="true"  stored="true"/>
    <field name="dc_relation" type="string" indexed="true" stored="true" multiValued="true" />
-   <copyField source = "metadata.dc_indexing.relation*" dest = "dc_relation"/>
+   <copyField source = "metadata.dc_index.relation*" dest = "dc_relation"/>
 
-   <dynamicField name="metadata.dc_indexing.title_en*"  type="string"  indexed="true"  stored="true"/>
+   <dynamicField name="metadata.dc_index.title_en*"  type="string"  indexed="true"  stored="true"/>
    <field name="dc_title_en" type="string" indexed="true" stored="true" multiValued="true" />
-   <copyField source = "metadata.dc_indexing.title_en*" dest = "dc_title_en"/>
+   <copyField source = "metadata.dc_index.title_en*" dest = "dc_title_en"/>
 
-   <dynamicField name="metadata.dc_indexing.title_de*"  type="string"  indexed="true"  stored="true"/>
+   <dynamicField name="metadata.dc_index.title_de*"  type="string"  indexed="true"  stored="true"/>
    <field name="dc_title_de" type="string" indexed="true" stored="true" multiValued="true" />
-   <copyField source = "metadata.dc_indexing.title_de*" dest = "dc_title_de"/>
+   <copyField source = "metadata.dc_index.title_de*" dest = "dc_title_de"/>
 
-   <dynamicField name="metadata.dc_indexing.title*"  type="string"  indexed="true"  stored="true"/>
+   <dynamicField name="metadata.dc_index.title*"  type="string"  indexed="true"  stored="true"/>
    <field name="dc_title" type="string" indexed="true" stored="true" multiValued="true" />
-   <copyField source = "metadata.dc_indexing.title*" dest = "dc_title"/>
+   <copyField source = "metadata.dc_index.title*" dest = "dc_title"/>
 
-   <dynamicField name="metadata.dc_indexing.publisher*"  type="string"  indexed="true"  stored="true"/>
+   <dynamicField name="metadata.dc_index.publisher*"  type="string"  indexed="true"  stored="true"/>
    <field name="dc_publisher" type="string" indexed="true" stored="true" multiValued="true" />
-   <copyField source = "metadata.dc_indexing.publisher*" dest = "dc_publisher"/>
+   <copyField source = "metadata.dc_index.publisher*" dest = "dc_publisher"/>
 
 
 
