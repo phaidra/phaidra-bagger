@@ -84,6 +84,10 @@ so login/session won't be possible
   "log_level":"debug",
   "bagger_agent_path":"/var/www/bagger/lib/PhaidraBaggerAgent/phaidra_bagger_agent.pl",
   "validate_uwmetadata":"1",
+
+#### compress and decompress metadata on save & load. takes longer but saves a lot of space
+  "enable_bag_compression": "1",
+  
   "defaults": {
     	"metadata_field_language": "de"
    },
@@ -166,6 +170,7 @@ so don't change this unless necessary
 #### config if using solr for search, see wiki for installation instructions
     "solr": {
     	"baseurl": "localhost:8983/solr/my_solr_core",
+    	"enable_indexing": 1,
     	"fields":  [
           { "value": "my_sorl_field1",  "label": "label for my sorl field1"},
           { "value": "my_sorl_field2",  "label": "label for my sorl field2"}
