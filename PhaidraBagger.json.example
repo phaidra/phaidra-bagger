@@ -27,6 +27,8 @@
 
   "validate_uwmetadata":"1",
 
+  "enable_bag_compression": "1",
+
   "defaults": {
 
     	"metadata_field_language": "de"

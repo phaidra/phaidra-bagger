@@ -420,6 +420,13 @@
    <field name="ac_number" type="string" indexed="true" stored="true"/>
    <field name="updated" type="date" indexed="true" stored="true"/>
 
+<fieldType name="text" class="solr.TextField">
+     <analyzer type="index">
+         <tokenizer class="solr.StandardTokenizerFactory"/>
+         <filter class="solr.StandardFilterFactory"/>
+     </analyzer>
+  </fieldType>
+
    <dynamicField name="tags*"  type="text_general"  indexed="true"  stored="true"/>
    <field name="bag_tgs" type="string" indexed="true" stored="true" multiValued="true" />
    <copyField source = "tags*" dest = "bag_tgs"/>
@@ -440,8 +447,8 @@
    <field name="dc_date" type="string" indexed="true" stored="true" multiValued="true" />
    <copyField source = "metadata.dc_index.date*" dest = "dc_date"/>
 
-   <dynamicField name="metadata.dc_index.subject*"  type="text_general"  indexed="true"  stored="true"/>
-   <field name="dc_subject" type="string" indexed="true" stored="true" multiValued="true" />
+   <dynamicField name="metadata.dc_index.subject*"  type="text"  indexed="true"  stored="true"/>
+   <field name="dc_subject" type="text" indexed="true" stored="true" multiValued="true" />
    <copyField source = "metadata.dc_index.subject*" dest = "dc_subject"/>
   
    <dynamicField name="metadata.dc_index.description*"  type="text_general"  indexed="true"  stored="true"/>
