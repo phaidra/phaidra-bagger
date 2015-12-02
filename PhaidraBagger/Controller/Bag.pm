@@ -5,6 +5,7 @@ use warnings;
 use v5.10;
 use Mango::BSON ':bson';
 use Mango::BSON::ObjectID;
+use Mojo::ByteStream qw(b);
 use Mojo::JSON qw(encode_json decode_json);
 use File::Find;
 use Mojo::Util qw(slurp);
@@ -686,6 +687,17 @@ sub load {
 					$bag->{metadata}->{languages} = $self->get_languages();
 				}
 
+        # decompress        
+        if($self->app->config->{enable_bag_compression}){
+          my $decompressed = $self->decompress_bag_uwmetadata($bag->{metadata}->{uwmetadata});  
+          if(defined($decompressed)){
+            $self->app->log->info("[".$self->current_user->{username}."] Decompressing $bagid successful.");
+            $bag->{metadata}->{uwmetadata} = $decompressed->{metadata}->{uwmetadata};            
+          }else{
+            $self->app->log->error("[".$self->current_user->{username}."] Error decompressing $bagid.");
+          }
+        }
+
 				$self->apply_hide_filter_uwmetadata($bag->{metadata}->{uwmetadata});
 				$self->render(json => $bag, status => 200);
 				return;
@@ -808,7 +820,6 @@ sub get_default_template_id_mods {
     }
 }
 
-
 sub save_uwmetadata {
 
 	my $self = shift;
@@ -816,10 +827,151 @@ sub save_uwmetadata {
 
 	$self->app->log->info("[".$self->current_user->{username}."] Saving uwmetadata for bag $bagid");
 
-	my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time, 'metadata.uwmetadata' => $self->req->json->{uwmetadata}} } );
+  my $uwmetadata = $self->req->json->{uwmetadata};
+
+  # compress the json -> only save what's necessary
+  if($self->app->config->{enable_bag_compression}){
+    my $compressed = $self->compress_bag_uwmetadata($uwmetadata);  
+    if(defined($compressed)){
+      $self->app->log->info("[".$self->current_user->{username}."] Compressing $bagid successful.");
+      $uwmetadata = $compressed->{metadata}->{uwmetadata};
+      #$self->app->log->debug("XXXXXXXXXXXXXXXXXXX: ".$self->app->dumper($compressed));
+    }else{
+      $self->app->log->error("[".$self->current_user->{username}."] Error compressing $bagid.");
+    }
+  }
+
+  # fill index fields
+  if(exists($self->app->config->{solr})){
+    if($self->app->config->{solr}->{enable_indexing}){
+      # this is async, we won't wait
+      $self->app->log->info("[".$self->current_user->{username}."] Generating dc_index for $bagid.");
+      $self->index_bag_uwmetadata($bagid, $uwmetadata);      
+    }
+  }
+
+	my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time, 'metadata.uwmetadata' => $uwmetadata } } );
 
 	$self->render(json => { alerts => [] }, status => 200);
 
+}
+
+sub index_bag_uwmetadata {
+
+  my $self = shift;  
+  my $bagid = shift;
+  my $uwmetadata = shift; 
+  
+  my $res = { alerts => [], status => 200 };
+  
+  my $url = Mojo::URL->new;
+  $url->scheme('https');  
+  my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
+  $url->host($base[0]);
+  if(exists($base[1])){
+    $url->path($base[1]."/dc/uwmetadata_2_dc_index");
+  }else{
+    $url->path("/dc/uwmetadata_2_dc_index");
+  }
+
+  my $json_str = b(encode_json({ metadata => { uwmetadata => $uwmetadata } }))->decode('UTF-8');
+  
+  $self->ua->post($url, form => { metadata => $json_str }, sub {
+    my ($ua, $tx) = @_;
+
+    if (my $res = $tx->success) {    
+      $self->app->log->info("Generating dc_index for uwmetadata successful.");
+      my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time, 'metadata.dc_index' => $res->json->{metadata}->{dc_index} } } );      
+    }else {        
+      if(defined($tx->res->json)){
+        if(exists($tx->res->json->{alerts})) {
+          $self->app->log->error("Error generating dc_index for uwmetadata: alerts: ".$self->app->dumper($tx->res->json->{alerts}));        
+        }else{
+          $self->app->log->error("Error generating dc_index for uwmetadata: json: ".$self->app->dumper($tx->res->json));        
+        }
+      }else{
+        $self->app->log->error("Error generating dc_index for uwmetadata: ".$self->app->dumper($tx->error));        
+      }    
+    }
+  });
+  
+    
+}
+
+sub compress_bag_uwmetadata {
+
+  my $self = shift;  
+  my $uwmetadata = shift; 
+  
+  my $res = { alerts => [], status => 200 };
+  
+  my $url = Mojo::URL->new;
+  $url->scheme('https');  
+  my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
+  $url->host($base[0]);
+  if(exists($base[1])){
+    $url->path($base[1]."/uwmetadata/compress");
+  }else{
+    $url->path("/uwmetadata/compress");
+  }
+
+  my $json_str = b(encode_json({ metadata => { uwmetadata => $uwmetadata } }))->decode('UTF-8');
+
+  my $tx = $self->ua->post($url, form => { metadata => $json_str }); 
+ 
+  if (my $res = $tx->success) {    
+    return $res->json;
+  }else {        
+    if(defined($tx->res->json)){
+      if(exists($tx->res->json->{alerts})) {
+        $self->app->log->error("Error compressing uwmetadata: alerts: ".$self->app->dumper($tx->res->json->{alerts}));        
+      }else{
+        $self->app->log->error("Error compressing uwmetadata: json: ".$self->app->dumper($tx->res->json));        
+      }
+    }else{
+      $self->app->log->error("Error compressing uwmetadata: ".$self->app->dumper($tx->error));        
+    }
+    return undef;
+  }
+    
+}
+
+sub decompress_bag_uwmetadata {
+
+  my $self = shift;  
+  my $uwmetadata = shift; 
+  
+  my $res = { alerts => [], status => 200 };
+  
+  my $url = Mojo::URL->new;
+  $url->scheme('https');  
+  my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
+  $url->host($base[0]);
+  if(exists($base[1])){
+    $url->path($base[1]."/uwmetadata/decompress");
+  }else{
+    $url->path("/uwmetadata/decompress");
+  }
+
+  my $json_str = b(encode_json({ metadata => { uwmetadata => $uwmetadata } }))->decode('UTF-8');
+  
+  my $tx = $self->ua->post($url, form => { metadata => $json_str }); 
+ 
+  if (my $res = $tx->success) {
+    return $res->json;
+  }else {        
+    if(defined($tx->res->json)){
+      if(exists($tx->res->json->{alerts})) {
+        $self->app->log->error("Error decompressing uwmetadata: alerts: ".$self->app->dumper($tx->res->json->{alerts}));        
+      }else{
+        $self->app->log->error("Error decompressing uwmetadata: json: ".$self->app->dumper($tx->res->json));        
+      }
+    }else{
+      $self->app->log->error("Error decompressing uwmetadata: ".$self->app->dumper($tx->error));        
+    }
+    return undef;
+  }
+    
 }
 
 sub save_mods {
@@ -1091,7 +1243,7 @@ sub solr_search {
     
     my $init_data = {
        current_user => $self->current_user,
-       fields => $self->app->config->{phaidra}->{fields},
+       fields => $self->app->config->{solr}->{fields},
        thumb_path => $self->url_for($self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path}),
        redmine_baseurl => $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl},
        members => $self->config->{projects}->{$self->current_user->{project}}->{members},

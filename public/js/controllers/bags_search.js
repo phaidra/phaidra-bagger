@@ -82,6 +82,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
                $scope.dublincoreFields.push(field);    
         }
   };
+
    $scope.getQuerySolr = function() {
             
             var sorlQuery = '';
@@ -188,6 +189,17 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
                   }
           }
           return formatedFacet;
+  }
+
+  $scope.showFacet = function (facet) {
+    if(facet){
+      for( var i = 0 ; i < facet.length ; i++ ){
+        if(facet[i].count > 0){
+          return true;
+        }
+      }
+      return false;
+    }
   }
   
  $scope.addFilter = function (type, value) {

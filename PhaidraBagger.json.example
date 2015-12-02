@@ -107,10 +107,29 @@
     },
     
     "solr": {
-    	"baseurl": "localhost:8983/solr/my_solr_core",
+    	"baseurl": "localhost:8983/solr/bagger",
+        "enable_indexing": 1,
     	"fields":  [
-          { "value": "my_sorl_field1",  "label": "label for my sorl field1"},
-          { "value": "my_sorl_field2",  "label": "label for my sorl field2"}
+            { "value": "assignee", "label": "assignee"},
+            { "value": "bagid", "label": "bag id"},
+            { "value": "created", "label": "created"},
+            { "value": "dc_creator", "label": "creator"},
+            { "value": "dc_date", "label": "date"},
+            { "value": "dc_description", "label": "description"},
+            { "value": "folderid", "label": "folder id"},
+            { "value": "dc_identifier", "label": "identifier"},
+            { "value": "label", "label": "label"},
+            { "value": "dc_language", "label": "language"},
+            { "value": "dc_publisher", "label": "publisher"},
+            { "value": "dc_relation", "label": "relation"},
+            { "value": "dc_rights", "label": "rights"},
+            { "value": "status", "label": "status"},
+            { "value": "dc_subject", "label": "subject"},
+            { "value": "tags", "label": "tags"},
+            { "value": "dc_title", "label": "title"},
+            { "value": "dc_title_en", "label": "title english"},
+            { "value": "dc_title_de", "label": "title german"},
+            { "value": "updated", "label": "updated"}
         ]
     },
 
