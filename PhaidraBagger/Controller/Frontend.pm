@@ -29,14 +29,7 @@ sub home {
     if($self->stash('opensignin')){
     	$self->flash({opensignin => 1});
     }
-    
-    my $solrInstalled = 0;
-    my $solrbaseurl = $self->app->config->{phaidra}->{solrbaseurl};
-    if(defined $solrbaseurl and $solrbaseurl ne ""){
-         $solrInstalled = 1;
-    }
-    $self->cookie( solr_installed => $solrInstalled);
-    
+        
     my $init_data = { current_user => $self->current_user };
     $self->stash(init_data => encode_json($init_data));
     $self->stash(init_data_perl => $init_data);   
@@ -450,7 +443,7 @@ sub search_solr_all {
     my $fieldsQuery  = $self->makeSolrFieldsQuery($filter, $ranges, $sortvalue, $sortfield, $allowedStatuses, $project);
     my $createdRange = $self->makeSolrRangesQuery($ranges);
     
-    my $base = $self->app->config->{phaidra}->{solrbaseurl};
+    my $base = $self->app->config->{solr}->{baseurl};
      
     
     my $url =  "http://".$base."/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json";
@@ -494,7 +487,7 @@ sub search_solr {
     my $fieldsQuery =  $self->makeSolrFieldsQuery($filter, $ranges, $sortvalue, $sortfield, $allowedStatuses, $project);
     my $createdRange = $self->makeSolrRangesQuery($ranges);  
       
-    my $base = $self->app->config->{phaidra}->{solrbaseurl};
+    my $base = $self->app->config->{solr}->{baseurl};
  
     my $tx = $self->ua->get("http://".$base."/select?q=".$fieldsQuery." &rows=".$limit."&start=".$from."&facet=true&".$createdRange."&wt=json");
   
