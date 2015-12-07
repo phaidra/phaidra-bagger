@@ -299,7 +299,7 @@ sub my {
     $self->render_later;
 
 	my $coll = $self->mango->db->collection('jobs')
-		->find({ created_by => $self->current_user->{username}, project => $self->current_user->{project}})
+		->find({ project => $self->current_user->{project}})
 		->sort({created => 1})
 		->fields({ _id => 1, name => 1, created => 1, updated => 1, created_by => 1, status => 1, start_at => 1, started_at => 1, finished_at => 1, ingest_instance => 1, add_to_collection => 1, create_collection => 1, created_collection => 1 })
 		->all();

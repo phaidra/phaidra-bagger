@@ -37,6 +37,7 @@ while (defined (my $arg= shift (@ARGV)))
   {
   	if ($arg eq '-fix_5638_bag') { $action = 'fix_5638_bag'; }
   	elsif ($arg eq '-fix_5638_template') { $action = 'fix_5638_template'; }
+  	elsif ($arg eq '-fix_wrong_provenience_date') { $action = 'fix_wrong_provenience_date'; }
   	elsif ($arg eq '-resave_uwmetadata') { $action = 'resave_uwmetadata'; }
   	elsif ($arg eq '-c') { $configpath = shift (@ARGV); }
   	elsif ($arg eq '-f') { $bagidfilepath = shift (@ARGV); }
@@ -105,6 +106,19 @@ switch ($action) {
 		}
 	}
 
+	case 'fix_wrong_provenience_date'	{
+		if($bagid){
+			fix_wrong_provenience_date($bagid);
+		}else{
+			my $i = 0;
+			for my $bagid (@bagids){
+				$i++;
+				$log->info("[$bagid] $i/$bagidscnt");
+				fix_wrong_provenience_date($bagid);
+			}	
+		}
+	}
+
 	case 'resave_uwmetadata'	{
 		my $ua = signin();
 		if($bagid){
@@ -125,6 +139,96 @@ switch ($action) {
 exit(1);
 
 ###########
+
+sub fix_wrong_provenience_date {       
+       my $oid = shift;
+
+
+       my $mango = Mango->new('mongodb://'.$config->{bagger_mongodb}->{username}.':'.$config->{bagger_mongodb}->{password}.'@'.$config->{bagger_mongodb}->{host}.'/'.$config->{bagger_mongodb}->{database});
+
+       my $uwm;
+       
+       my $bag = $mango->db->collection('bags')->find_one({bagid => $oid, project => $config->{project}});
+
+       if(defined($bag)){
+               if($bag->{metadata}){
+                       if($bag->{metadata}->{uwmetadata}){
+                               $log->info("[$oid] metadata found");
+                               $uwm = $bag->{metadata}->{uwmetadata};
+                       }else{
+                               $log->error("[$oid] no uwmetadata");
+                       }
+               }else{
+                       $log->error("[$oid] no metadata");
+               }
+       }else{
+               $log->error("[$oid] bag not found");
+       }               
+       
+       unless($uwm){
+               $log->error("[$oid] error loading uwmetadata");
+               return;
+       }
+       
+       #$log->info("[$oid] \n ".Dumper($uwm)); 
+
+       my $error_found = 1;
+       my $dirty = 0;
+	
+		$log->info("[$oid] fixing dates");      
+
+       my $cnt = 0;    
+       while($error_found){
+               $error_found = 0;
+               $cnt++;
+               if($cnt > 200){
+                       $log->error("[$oid] [$cnt] iteration limit reached");
+                       exit(0);
+               }                               
+               $error_found = get_and_fix_node_with_invalid_date_chars($uwm);  
+               if($error_found){
+                       $dirty = 1;                     
+               }
+       }
+
+       if($dirty){
+               $log->info("[$oid] [$cnt] done, saving changes");                               
+               $mango->db->collection('bags')->update({bagid => $oid},{'$set' => {updated => time, 'metadata.uwmetadata' => $uwm}});           
+       }else{
+               $log->info("[$oid] [$cnt] done, no changes to save");
+       }
+       
+}
+
+sub get_and_fix_node_with_invalid_date_chars {
+       
+       my $metadata = shift;
+       
+       my $ret = 0;
+       foreach my $n (@{$metadata}){
+               
+               if(              
+                       ($n->{xmlns} eq 'http://phaidra.univie.ac.at/XML/metadata/provenience/V1.0' && $n->{xmlname} eq 'date_from') || 
+                       ($n->{xmlns} eq 'http://phaidra.univie.ac.at/XML/metadata/provenience/V1.0' && $n->{xmlname} eq 'date_to')
+               )
+               {                       
+                       if($n->{ui_value} =~ /[^0-9]/g){
+                               $log->info("[$oid] before fix ".$n->{ui_value});        
+                               $n->{ui_value} =~ s/[^0-9]//g;
+                               $log->info("[$oid] after fix ".$n->{ui_value}); 
+                               $ret = 1;
+                       }                       
+               }else{
+                       my $children_size = defined($n->{children}) ? scalar (@{$n->{children}}) : 0;
+                       if($children_size > 0){
+                               $ret = get_and_fix_node_with_invalid_date_chars($n->{children});
+                               last if($ret);
+                       }
+               }
+       }
+       return $ret;
+}
+
 
 sub signin {
 

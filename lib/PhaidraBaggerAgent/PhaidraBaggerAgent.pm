@@ -120,8 +120,8 @@ sub run_job {
 	}
 
 	# check job status
-	if($job->{status} ne 'scheduled' && $job->{status} ne 'finished'){
-		my @alerts = [{ type => 'danger', msg => "Job $jobid not in 'scheduled' or 'finished' status"}];
+	if($job->{status} ne 'suspended' && $job->{status} ne 'scheduled' && $job->{status} ne 'finished'){
+		my @alerts = [{ type => 'danger', msg => "Job $jobid not in suspended, scheduled or finished status"}];
 		$self->{'log'}->error(Dumper(\@alerts));
 		return;
 	}
@@ -379,60 +379,60 @@ sub _ingest_bag {
 
 sub _create_collection {
 
-    my $self = shift;
-    my $pids = shift;
-    my $job = shift;
-    my $ingest_instance = shift;
-    my $username = shift;
-    my $password = shift;
+	my $self = shift;
+	my $pids = shift;
+	my $job = shift;
+	my $ingest_instance = shift;
+	my $username = shift;
+	my $password = shift;
 
-    my $col_pid;
-    my @alerts = ();
+	my $col_pid;
+	my @alerts = ();
 
-    my $data = { };
-    $data->{metadata} = $self->_get_collection_uwmetadata($job, $ingest_instance, $username, $password);
-    unless($data->{metadata}){
-        push(@alerts, { type => 'danger', msg => "Could not create collection metadata" });
-    }else{
+	my $data = { };	
+	$data->{metadata} = $self->_get_collection_uwmetadata($job, $ingest_instance, $username, $password);
+	unless($data->{metadata}){
+		push(@alerts, { type => 'danger', msg => "Could not create collection metadata" });
+	}else{
 
-        foreach my $pid (@{$pids}){
-            push @{$data->{metadata}->{members}}, { pid => $pid };
-        }
+		foreach my $pid (@{$pids}){
+			push @{$data->{metadata}->{members}}, { pid => $pid };
+		}
 
-        my $json = encode_json($data);
+		my $json = encode_json($data);
 
-        my $url = Mojo::URL->new;
-        $url->scheme('https');
-        $url->userinfo("$username:$password");
-        my @base = split('/',$self->{config}->{ingest_instances}->{$ingest_instance}->{apibaseurl});
-        $url->host($base[0]);
-        if(exists($base[1])){
-            $url->path($base[1]."/collection/create");
-        }else{
-            $url->path("/collection/create");
-        }
+		my $url = Mojo::URL->new;
+		$url->scheme('https');
+		$url->userinfo("$username:$password");
+		my @base = split('/',$self->{config}->{ingest_instances}->{$ingest_instance}->{apibaseurl});
+		$url->host($base[0]);
+		if(exists($base[1])){
+			$url->path($base[1]."/collection/create");
+		}else{
+			$url->path("/collection/create");
+		}
 
-          my $tx = $self->{ua}->post($url => form => { metadata => $json });
+	  	my $tx = $self->{ua}->post($url => form => { metadata => $json });
 
-        if (my $res = $tx->success) {
-            return $res->json->{pid};
-        }else {
-            if($tx->res->json){
-                if($tx->res->json->{alerts}){
-                    return ($col_pid, $tx->res->json->{alerts});
-                }
-            }
-            my $err = $tx->error;
-             if ($err->{code}){
-                push(@alerts, { type => 'danger', msg => $err->{code}." response: ".$err->{message} });
-            }else{
-                push(@alerts, { type => 'danger', msg => "Connection error: ".$err->{message} });
-            }
-        }
-    }
+		if (my $res = $tx->success) {
+			return $res->json->{pid};
+		}else {
+			if($tx->res->json){
+				if($tx->res->json->{alerts}){
+					return ($col_pid, $tx->res->json->{alerts});
+				}
+			}
+			my $err = $tx->error;
+		 	if ($err->{code}){
+				push(@alerts, { type => 'danger', msg => $err->{code}." response: ".$err->{message} });
+			}else{
+				push(@alerts, { type => 'danger', msg => "Connection error: ".$err->{message} });
+			}
+		}
+	}
 
-    return ($col_pid, \@alerts);
-} 
+	return ($col_pid, \@alerts);
+}
 
 sub _get_collection_uwmetadata {
 	my $self = shift;
