@@ -48,7 +48,20 @@ angular.module('frontendService', [])
 				method  : 'GET',
 				url     : $('head base').attr('href')+'classifications'
 			});
-		}
-
+		},
+                searchSolr: function(from, limit, filter, ranges, sortvalue, sortfield, allowedStatuses, project){
+                        return $http({
+                                method  : 'GET',
+                                url     : $('head base').attr('href')+'search_solr',
+                                params  : {from: from, limit: limit, filter: filter, ranges: ranges, sortvalue: sortvalue, sortfield: sortfield, allowedStatuses: allowedStatuses, project: project}
+                        });
+                },
+                search_solr_all: function(filter, ranges, sortvalue, sortfield, allowedStatuses, project){
+                        return $http({
+                                method  : 'GET',
+                                url     : $('head base').attr('href')+'search_solr_all',
+                                params  : {filter: filter, ranges: ranges, sortvalue: sortvalue, sortfield: sortfield, allowedStatuses: allowedStatuses, project: project }
+                        });
+                }
 	}
 });

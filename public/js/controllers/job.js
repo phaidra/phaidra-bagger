@@ -8,10 +8,10 @@ app.controller('JobCtrl',  function($scope, $modal, $location, DirectoryService,
 	
 	$scope.totalItems = 0;
     $scope.currentPage = 1;
-    $scope.maxSize = 10;
+    $scope.maxSize = 300;
     $scope.filter = '';
     $scope.from = 0;
-    $scope.limit = 5;
+    $scope.limit = 200;
     $scope.sortfield = '';
     $scope.sortvalue = -1;
             

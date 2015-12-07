@@ -5,6 +5,7 @@ use warnings;
 use v5.10;
 use Mango::BSON ':bson';
 use Mango::BSON::ObjectID;
+use Mojo::ByteStream qw(b);
 use Mojo::JSON qw(encode_json decode_json);
 use File::Find;
 use Mojo::Util qw(slurp);
@@ -31,6 +32,109 @@ sub get_mods_tree {
 	my $res = $cache_model->get_mods_tree($self);
 
 	$self->render( json => $res, status => $res->{status});
+}
+
+sub get_validation_status {
+  my $self = shift;
+  my $bagid = $self->stash('bagid');
+
+  $self->app->log->info("[".$self->current_user->{username}."] Loading validation status $bagid");
+
+  my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, project => $self->current_user->{project}}, {'validation' => 1});
+  unless($bag){
+
+    $self->app->log->error("[".$self->current_user->{username}."] Error loading validation status for bagid [".$bagid."]");
+    $self->render(
+      json => {
+        validation => '',
+        alerts => [{ type => 'danger', msg => "Error loading validation status." }]
+      },
+    status => 500);
+
+  }else{
+    $self->render( json => { validation => $bag->{validation}}, status => 200);
+  }
+}
+
+sub validate {
+  my $self = shift;
+  my $bagid = $self->stash('bagid');
+
+  my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, project => $self->current_user->{project}}, {'metadata.uwmetadata' => 1, 'metadata.mods' => 1});
+  unless($bag){
+
+    $self->app->log->error("[".$self->current_user->{username}."] Error loading metadata for validation for bagid [".$bagid."]");
+    $self->render( json => { validation => '', alerts => [{ type => 'danger', msg => "Error loading metadata for validation." }] }, status => 500);
+    return;
+
+  }else{
+
+    my $errors;
+    my $type;
+    my $metadata;
+    if($bag->{metadata}->{uwmetadata}){
+      $type = 'uwmetadata';
+      $metadata = $bag->{metadata}->{uwmetadata};
+    }elsif($bag->{metadata}->{mods}){
+      $type = 'mods';
+      $metadata = $bag->{metadata}->{mods};
+    }
+     
+    my $res = $self->validate_metadata('uwmetadata', $metadata);
+    unless($res){
+      $self->render( json => { validation => '', alerts => [{ type => 'danger', msg => "Error sending metadata for validation." }] }, status => 500);
+      return;
+    }
+
+    if(exists($res->{alerts})){
+      my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => { validation => { ts => time, errors => $res->{alerts}}} } );
+      $self->render( json => $res, status => 200); 
+      return;
+    }else{
+      $self->render( json => { validation => '', alerts => [{ type => 'danger', msg => "Error sending metadata for validation." }] }, status => 500);
+      return;
+    }
+    
+  }
+
+}
+
+sub validate_metadata {
+
+  my $self = shift;
+  my $type = shift;
+  my $metadata = shift;
+
+  my $url = Mojo::URL->new;
+  $url->scheme('https');  
+  my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
+  $url->host($base[0]);
+  if(exists($base[1])){
+    $url->path($base[1]."/$type/json2xml_validate");
+  }else{
+    $url->path("/$type/json2xml_validate");
+  }
+  $url->query({fix => 1});
+
+  my $json_str = b(encode_json({ metadata => { "$type" => $metadata } }))->decode('UTF-8');
+
+  my $tx = $self->ua->post($url, form => { metadata => $json_str }); 
+ 
+  if (my $res = $tx->success) {    
+    return $res->json;
+  }else {        
+    if(defined($tx->res->json)){      
+      if(exists($tx->res->json->{alerts})) {
+        $self->app->log->error("Validating $type: alerts: ".$self->app->dumper($tx->res->json->{alerts}));        
+      }else{
+        $self->app->log->error("Error validating $type: json: ".$self->app->dumper($tx->res->json));        
+      }
+      return $tx->res->json;
+    }else{
+      $self->app->log->error("Error validating $type: ".$self->app->dumper($tx->error));        
+    }
+    return undef;
+  }
 }
 
 sub import_uwmetadata_xml {
@@ -686,6 +790,17 @@ sub load {
 					$bag->{metadata}->{languages} = $self->get_languages();
 				}
 
+        # decompress        
+        if($self->app->config->{enable_bag_compression}){
+          my $decompressed = $self->decompress_bag_uwmetadata($bag->{metadata}->{uwmetadata});  
+          if(defined($decompressed)){
+            $self->app->log->info("[".$self->current_user->{username}."] Decompressing $bagid successful.");
+            $bag->{metadata}->{uwmetadata} = $decompressed->{metadata}->{uwmetadata};            
+          }else{
+            $self->app->log->error("[".$self->current_user->{username}."] Error decompressing $bagid.");
+          }
+        }
+
 				$self->apply_hide_filter_uwmetadata($bag->{metadata}->{uwmetadata});
 				$self->render(json => $bag, status => 200);
 				return;
@@ -808,18 +923,181 @@ sub get_default_template_id_mods {
     }
 }
 
-
 sub save_uwmetadata {
 
 	my $self = shift;
 	my $bagid = $self->stash('bagid');
 
+  my $res = { alerts => [], status => 200 };
+
 	$self->app->log->info("[".$self->current_user->{username}."] Saving uwmetadata for bag $bagid");
 
-	my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time, 'metadata.uwmetadata' => $self->req->json->{uwmetadata}} } );
+  my $uwmetadata = $self->req->json->{uwmetadata};
 
+  # compress the json -> only save what's necessary
+  if($self->app->config->{enable_bag_compression}){
+    my $compressed = $self->compress_bag_uwmetadata($uwmetadata);  
+    if(defined($compressed)){
+      $self->app->log->info("[".$self->current_user->{username}."] Compressing $bagid successful.");
+      $uwmetadata = $compressed->{metadata}->{uwmetadata};
+      #$self->app->log->debug("XXXXXXXXXXXXXXXXXXX compressed: ".$self->app->dumper($uwmetadata));
+    }else{
+      $self->app->log->error("[".$self->current_user->{username}."] Error compressing $bagid.");
+    }
+  }
+
+    # validate 
+  my $validation;
+  if($self->app->config->{validate_uwmetadata}){
+    my $rs = $self->validate_metadata('uwmetadata', $uwmetadata);
+    if(defined($rs) && exists($rs->{alerts})){
+      $validation = { ts => time, errors => $rs->{alerts}};
+    }else{
+      $self->app->log->error("[".$self->current_user->{username}."] Error sending metadata for validation bagid[$bagid], result:".$self->app->dumper($rs));
+      push @{$res->{alerts}}, { type => 'danger', msg => "Error sending metadata for validation." };
+    }
+  }  
+
+  # fill index fields
+  if(exists($self->app->config->{solr})){
+    if($self->app->config->{solr}->{enable_indexing}){
+      # this is async, we won't wait
+      $self->app->log->info("[".$self->current_user->{username}."] Generating dc_index for $bagid.");
+      $self->index_bag_uwmetadata($bagid, $uwmetadata);      
+    }
+  }
+
+  my $update = { 
+      '$set' => {
+        updated => time, 
+        'metadata.uwmetadata' => $uwmetadata 
+      }
+  };
+  if($validation){
+    $update->{'$set'}->{validation} = $validation;
+  }
+  my $reply = $self->mango->db->collection('bags')->update({ bagid => $bagid, project => $self->current_user->{project} } , $update);
+  
 	$self->render(json => { alerts => [] }, status => 200);
 
+}
+
+sub index_bag_uwmetadata {
+
+  my $self = shift;  
+  my $bagid = shift;
+  my $uwmetadata = shift; 
+  
+  my $res = { alerts => [], status => 200 };
+  
+  my $url = Mojo::URL->new;
+  $url->scheme('https');  
+  my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
+  $url->host($base[0]);
+  if(exists($base[1])){
+    $url->path($base[1]."/dc/uwmetadata_2_dc_index");
+  }else{
+    $url->path("/dc/uwmetadata_2_dc_index");
+  }
+
+  my $json_str = b(encode_json({ metadata => { uwmetadata => $uwmetadata } }))->decode('UTF-8');
+  
+  $self->ua->post($url, form => { metadata => $json_str }, sub {
+    my ($ua, $tx) = @_;
+
+    if (my $res = $tx->success) {    
+      $self->app->log->info("Generating dc_index for uwmetadata successful.");
+      my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time, 'metadata.dc_index' => $res->json->{metadata}->{dc_index} } } );      
+    }else {        
+      if(defined($tx->res->json)){
+        if(exists($tx->res->json->{alerts})) {
+          $self->app->log->error("Error generating dc_index for uwmetadata: alerts: ".$self->app->dumper($tx->res->json->{alerts}));        
+        }else{
+          $self->app->log->error("Error generating dc_index for uwmetadata: json: ".$self->app->dumper($tx->res->json));        
+        }
+      }else{
+        $self->app->log->error("Error generating dc_index for uwmetadata: ".$self->app->dumper($tx->error));        
+      }    
+    }
+  });
+  
+    
+}
+
+sub compress_bag_uwmetadata {
+
+  my $self = shift;  
+  my $uwmetadata = shift; 
+  
+  my $res = { alerts => [], status => 200 };
+  
+  my $url = Mojo::URL->new;
+  $url->scheme('https');  
+  my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
+  $url->host($base[0]);
+  if(exists($base[1])){
+    $url->path($base[1]."/uwmetadata/compress");
+  }else{
+    $url->path("/uwmetadata/compress");
+  }
+
+  my $json_str = b(encode_json({ metadata => { uwmetadata => $uwmetadata } }))->decode('UTF-8');
+
+  my $tx = $self->ua->post($url, form => { metadata => $json_str }); 
+ 
+  if (my $res = $tx->success) {    
+    return $res->json;
+  }else {        
+    if(defined($tx->res->json)){
+      if(exists($tx->res->json->{alerts})) {
+        $self->app->log->error("Error compressing uwmetadata: alerts: ".$self->app->dumper($tx->res->json->{alerts}));        
+      }else{
+        $self->app->log->error("Error compressing uwmetadata: json: ".$self->app->dumper($tx->res->json));        
+      }
+    }else{
+      $self->app->log->error("Error compressing uwmetadata: ".$self->app->dumper($tx->error));        
+    }
+    return undef;
+  }
+    
+}
+
+sub decompress_bag_uwmetadata {
+
+  my $self = shift;  
+  my $uwmetadata = shift; 
+  
+  my $res = { alerts => [], status => 200 };
+  
+  my $url = Mojo::URL->new;
+  $url->scheme('https');  
+  my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
+  $url->host($base[0]);
+  if(exists($base[1])){
+    $url->path($base[1]."/uwmetadata/decompress");
+  }else{
+    $url->path("/uwmetadata/decompress");
+  }
+
+  my $json_str = b(encode_json({ metadata => { uwmetadata => $uwmetadata } }))->decode('UTF-8');
+  
+  my $tx = $self->ua->post($url, form => { metadata => $json_str }); 
+ 
+  if (my $res = $tx->success) {
+    return $res->json;
+  }else {        
+    if(defined($tx->res->json)){
+      if(exists($tx->res->json->{alerts})) {
+        $self->app->log->error("Error decompressing uwmetadata: alerts: ".$self->app->dumper($tx->res->json->{alerts}));        
+      }else{
+        $self->app->log->error("Error decompressing uwmetadata: json: ".$self->app->dumper($tx->res->json));        
+      }
+    }else{
+      $self->app->log->error("Error decompressing uwmetadata: ".$self->app->dumper($tx->error));        
+    }
+    return undef;
+  }
+    
 }
 
 sub save_mods {
@@ -1006,7 +1284,7 @@ sub bags {
 
   $self->stash(init_data => encode_json($init_data));
 
-	$self->render('bags/list');
+	$self->render('bags/listBrowse');
 }
 
 
@@ -1052,7 +1330,7 @@ sub folder_bags_with_query {
 
   $self->stash(init_data => encode_json($init_data));
 
-  $self->render('bags/list');
+  $self->render('bags/listBrowse');
 }
 
 sub folder_bags {
@@ -1062,7 +1340,7 @@ sub folder_bags {
 
   $self->stash(init_data => encode_json($init_data));
 
-	$self->render('bags/list');
+	$self->render('bags/listBrowse');
 }
 
 sub search {
@@ -1083,6 +1361,32 @@ sub search {
 	my ($hits, $coll) = $self->_search($filter, $from, $limit, $sortfield, $sortvalue, $filterfield, $filtervalue);
 	#$self->app->log->debug("XXXXXXXX :".$self->app->dumper($coll));
 	$self->render(json => { items => $coll, hits => $hits, alerts => []}, status => 200);
+}
+
+sub solr_search {
+  
+    my $self = shift;
+    
+    my $init_data = {
+       current_user => $self->current_user,
+       fields => $self->app->config->{solr}->{fields},
+       thumb_path => $self->url_for($self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path}),
+       redmine_baseurl => $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl},
+       members => $self->config->{projects}->{$self->current_user->{project}}->{members},
+       statuses => $self->config->{projects}->{$self->current_user->{project}}->{statuses},
+       restricted_ops => $self->config->{projects}->{$self->current_user->{project}}->{restricted_operations},
+       ingest_instances => $self->config->{ingest_instances}
+    };
+ 
+    $self->stash(
+       navtitle => $init_data->{navtitle},
+       navtitlelink => $init_data->{navtitlelink}
+    );
+
+    $self->stash(init_data => encode_json($init_data));
+    
+    $self->render('bags/listSearch');
+
 }
 
 sub _search {
@@ -1197,7 +1501,7 @@ sub set_attribute {
 			last;
 		}
 	}
-
+	
 	my $reply;
 	if($attribute eq 'tags'){
 		$self->app->log->info("[".$self->current_user->{username}."] Adding $attribute $value to bag $bagid");
@@ -1266,6 +1570,7 @@ sub set_attribute_mass {
 
 	my $reply;
 	if($attribute eq 'tags'){
+                $self->app->log->info("[".$self->current_user->{username}."] Value tags1: $value for bags:".$self->app->dumper($selection));
 		$self->app->log->info("[".$self->current_user->{username}."] Adding $attribute $value for bags:".$self->app->dumper($selection));
 		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, project => $self->current_user->{project}},{ '$set' => {updated => time }, '$addToSet' =>	{ tags => $value }}, { multi => 1 } );
 	}else{
@@ -1301,6 +1606,7 @@ sub unset_attribute_mass {
 
 	my $reply;
 	if($attribute eq 'tags'){
+		$self->app->log->info("[".$self->current_user->{username}."] Value tags2: $value for bags:".$self->app->dumper($selection));
 		$self->app->log->info("[".$self->current_user->{username}."] Removing $attribute $value from bags:".$self->app->dumper($selection));
 		$reply = $self->mango->db->collection('bags')->update({bagid => {'$in' => $selection}, project => $self->current_user->{project}},{ '$set' => {updated => time}, '$pullAll' => { tags => [$value] }}, { multi => 1 }  );
 	}else{

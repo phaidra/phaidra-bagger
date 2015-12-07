@@ -120,8 +120,8 @@ sub run_job {
 	}
 
 	# check job status
-	if($job->{status} ne 'scheduled' && $job->{status} ne 'finished'){
-		my @alerts = [{ type => 'danger', msg => "Job $jobid not in 'scheduled' or 'finished' status"}];
+	if($job->{status} ne 'suspended' && $job->{status} ne 'scheduled' && $job->{status} ne 'finished'){
+		my @alerts = [{ type => 'danger', msg => "Job $jobid not in suspended, scheduled or finished status"}];
 		$self->{'log'}->error(Dumper(\@alerts));
 		return;
 	}
@@ -389,15 +389,17 @@ sub _create_collection {
 	my $col_pid;
 	my @alerts = ();
 
-	my $data = { members => []};
-	foreach my $pid (@{$pids}){
-		push @{$data->{members}}, { pid => $pid };
-	}
-
+	my $data = { };	
 	$data->{metadata} = $self->_get_collection_uwmetadata($job, $ingest_instance, $username, $password);
 	unless($data->{metadata}){
 		push(@alerts, { type => 'danger', msg => "Could not create collection metadata" });
 	}else{
+
+		foreach my $pid (@{$pids}){
+			push @{$data->{metadata}->{members}}, { pid => $pid };
+		}
+
+		my $json = encode_json($data);
 
 		my $url = Mojo::URL->new;
 		$url->scheme('https');
@@ -410,7 +412,7 @@ sub _create_collection {
 			$url->path("/collection/create");
 		}
 
-	  	my $tx = $self->{ua}->post($url => json => $data);
+	  	my $tx = $self->{ua}->post($url => form => { metadata => $json });
 
 		if (my $res = $tx->success) {
 			return $res->json->{pid};

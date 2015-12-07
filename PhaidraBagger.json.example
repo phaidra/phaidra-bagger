@@ -27,6 +27,8 @@
 
   "validate_uwmetadata":"1",
 
+  "enable_bag_compression": "1",
+
   "defaults": {
 
     	"metadata_field_language": "de"
@@ -105,6 +107,33 @@
 		    "redmine_baseurl": "https://redmine.phaidra.org/redmine/"
         }
     },
+    
+    "solr": {
+    	"baseurl": "localhost:8983/solr/bagger",
+        "enable_indexing": 1,
+    	"fields":  [
+            { "value": "assignee", "label": "assignee"},
+            { "value": "bagid", "label": "bag id"},
+            { "value": "created", "label": "created"},
+            { "value": "dc_creator", "label": "creator"},
+            { "value": "dc_date", "label": "date"},
+            { "value": "dc_description", "label": "description"},
+            { "value": "folderid", "label": "folder id"},
+            { "value": "dc_identifier", "label": "identifier"},
+            { "value": "label", "label": "label"},
+            { "value": "dc_language", "label": "language"},
+            { "value": "dc_publisher", "label": "publisher"},
+            { "value": "dc_relation", "label": "relation"},
+            { "value": "dc_rights", "label": "rights"},
+            { "value": "status", "label": "status"},
+            { "value": "dc_subject", "label": "subject"},
+            { "value": "tags", "label": "tags"},
+            { "value": "dc_title", "label": "title"},
+            { "value": "dc_title_en", "label": "title english"},
+            { "value": "dc_title_de", "label": "title german"},
+            { "value": "updated", "label": "updated"}
+        ]
+    },
 
     "ingest_instances": {
         "phaidra-instance": {
@@ -114,7 +143,7 @@
             "local_uwmetadata_tree": "/var/www/bagger/public/uwmetadata/tree.json",
             "local_mods_tree": "/var/www/bagger/public/mods/tree.json",
             "is_default": "1"
-        },
+         },
         "phaidra-instance2": {
             "baseurl": "phaidra-instance2.univie.ac.at",
             "apibaseurl": "services.phaidra-instance2.univie.ac.at/api",

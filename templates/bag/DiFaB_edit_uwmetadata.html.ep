@@ -82,13 +82,16 @@
               <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 
                     <div class="navbar-form navbar-left">
-                      <button ng-disabled="form.$invalid || form_disabled" data-ng-click="saveTemplateAs()" class="btn btn-primary navbar-btn"><span class="glyphicon glyphicon-file"></span> Create template</button>
-                      <select class="form-control" data-ng-model="selectedtemplate" data-ng-change="loadTemplateToBag()" ng-options="template as template.title for template in initdata.templates">
-                        <option value="">Load template...</option>
-                      </select>
-                    </div>
 
-                    <div class="navbar-form navbar-left navbar-bag-status">
+                      <button ng-disabled="form.$invalid || form_disabled" data-ng-click="saveTemplateAs()" class="btn btn-primary navbar-btn"><span class="glyphicon glyphicon-file"></span> Create template</button>
+
+                      <div class="btn-group">
+                        <button class="btn btn-default dropdown-toggle navbar-btn" data-toggle="dropdown">Load template <span class="caret"></span></button>
+                        <ul class="dropdown-menu" role="menu">
+                          <li ng-repeat="template in initdata.templates"><a href="" data-ng-click="loadTemplateToBag(template)">{{template.title}}</a></li>
+                        </ul>
+                      </div>
+
                       <div ng-class="{'btn-group':canSetAttribute('status')}"  data-ng-if="baginfo.status">
                         <button class="btn dropdown-toggle navbar-btn" ng-show="canSetAttribute('status')" data-toggle="dropdown" ng-class="{'btn-danger': (baginfo.status == 'new'), 'btn-warning': (baginfo.status == 'to_check'), 'btn-primary': (baginfo.status == 'checked'), 'btn-success': (baginfo.status == 'to_ingest') }">
                           <span ng-repeat="status in initdata.statuses">
@@ -100,23 +103,23 @@
                           <li ng-repeat="status in initdata.statuses" ng-hide="baginfo.status == status.value"><a href="" data-ng-click="setAttribute(bag, 'status', status.value)">{{status.label}}</a></li>
                         </ul>
                       </div>
-                    </div>
 
-                    <div class="navbar-form navbar-left navbar-bag-assignee">
                       <div ng-class="{'btn-group':canSetAttribute('assignee')}" data-ng-if="baginfo.assignee">
                         <button class="btn btn-default dropdown-toggle navbar-btn" data-toggle="dropdown" ng-show="canSetAttribute('assignee')">
-                        {{getMemberDisplayname(baginfo.assignee)}}
-                        <span class="caret"></span>
+                          {{getMemberDisplayname(baginfo.assignee)}}
+                          <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu" role="menu" ng-show="canSetAttribute('assignee')">
-                        <li ng-repeat="member in initdata.members" ng-hide="baginfo.assignee == member.username"><a href="" data-ng-click="setAttribute(bag, 'assignee', member.username)">{{member.displayname}}</a></li>
+                          <li ng-repeat="member in initdata.members" ng-hide="baginfo.assignee == member.username"><a href="" data-ng-click="setAttribute(bag, 'assignee', member.username)">{{member.displayname}}</a></li>
                         </ul>
                       </div>
+
                     </div>
 
+
                     <div class="navbar-form navbar-right">
-                  <button ng-disabled="form.$invalid || form_disabled" data-ng-click="save()" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-save"></span> Save</button>
-                  </div>
+                      <button ng-disabled="form.$invalid || form_disabled" data-ng-click="save()" class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-save"></span> Save</button>                  
+                    </div>
 
                 </div>
             </nav>
@@ -127,82 +130,82 @@
 
                 <fieldset ng-disabled="form_disabled">
 
-						 <tabset>
-	
-		                    <!-- 1.st level are tabs -->
-		                    <tab  data-ng-repeat="child_lvl_1 in fields | filter:filterHidden" active="child_lvl_1.active" disabled="child_lvl_1.disabled">
-		
-		                          <tab-heading>
-		                            <span phaidra-help phaidra-help-id="{{child_lvl_1.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>{{child_lvl_1.labels.en}}</span>
-		                          </tab-heading>
-		
-		                            <!-- children fields of the tab -->
-		                            <ul data-ng-show="child_lvl_1.children.length">
-		                              <li data-ng-repeat="child_lvl_2 in child_lvl_1.children" data-ng-init="child1 = child_lvl_2; parent1 = child_lvl_1" data-ng-include="'field_renderer.html'" class="form-li"></li>
-		                            </ul>
-		
-		
-											<%# ############# field renderer ########### %>
-				                            <script type="text/ng-template" id="field_renderer.html">
-				
-						                          <div ng-switch="child1.input_type">													
-																											
-						                                <div ng-switch-when="node">
-															
-															  <div ng-if="!child1.hide" class="panel panel-default">
-																				
-								                                <div class="panel-heading" phaidra-help phaidra-help-id="{{child1.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>
-								                                  <h3 class="panel-title pull-left"><span class="grey" ng-show="child1.ordered">{{child1.data_order}}. </span>{{child1.labels.en}}</h3>
-								                                  <span class="btn-group pull-right">
-								                                    <button ng-if="child1.cardinality === '*' || child1.cardinality > '1'" class="btn btn-default" ng-click="addNewElement(child1, parent1)"><span class="glyphicon glyphicon-plus"></span></button>
-								                                    <button ng-if="(child1.cardinality === '*' || child1.cardinality > '1') && canDelete(child1, parent1)" class="btn btn-default" ng-click="deleteElement(child1, parent1)"><span class="glyphicon glyphicon-minus"></span></button>
-								                                    <button class="btn btn-default" ng-click="upElement(child1, parent1)" ng-if="child1.ordered == 1 && canUpElement(child1, parent1)"><span class="glyphicon glyphicon-chevron-up"></span></button>
-								                                    <button class="btn btn-default" ng-click="downElement(child1, parent1)" ng-if="child1.ordered == 1 && canDownElement(child1, parent1)"><span class="glyphicon glyphicon-chevron-down"></span></button>
-								                                  </span>
-								
-								                                  <div class="clearfix"></div>
-								                                </div>
-								
-								                                <div class="panel-body">
-								
-									                                <!-- children fields of the field -->
-									                                <ul data-ng-show="child1.children.length">
-									                                   <li data-ng-repeat="ch in child1.children" data-ng-init="parent1 = child1; child1 = ch" data-ng-include="'field_renderer.html'"></li>
-									                                </ul>
-									
-									                            </div>
-								
-									                            <div class="panel-footer" data-ng-if="child1.xmlname == 'curriculum' && child1.study_name">{{ child1.study_name.en }}</div>
-							
-							                            	</div><!-- panel -->
-						
-						                                </div><!-- switch node -->
-																			
-														
-						                                <div ng-switch-default>
-															
-							                                <div ng-if="!child1.hide" data-ng-hide="child1.hidden" data-ng-init="child = child1; parent = parent1" data-ng-include="'<%= url_for '/views/partials/uwmetadata/' %>' + child1.input_type + '.html'"></div>
-							
-									                        <!-- children fields of the field -->
-									                        <ul data-ng-show="child.children.length">																                        
-									                           <li data-ng-repeat="ch in child1.children" data-ng-init="parent1 = child1; child1 = ch" data-ng-include="'field_renderer.html'"></li>
-									                        </ul>
-							
-							                            </div><!-- switch default -->
-							                            
-							                            
-						                           </div><!-- switch -->
-						
-				
-				                        </script>
-		
-		
-		                      </tab>									
-		
-		                  </tabset>                
-	                  
-	                  </fieldset>
-              		</form>
+             <tabset>
+  
+                        <!-- 1.st level are tabs -->
+                        <tab  data-ng-repeat="child_lvl_1 in fields | filter:filterHidden | orderBy : [ getFieldOrder, getDataOrder ] " active="child_lvl_1.active" disabled="child_lvl_1.disabled">
+    
+                              <tab-heading>
+                                <span phaidra-help phaidra-help-id="{{child_lvl_1.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>{{child_lvl_1.labels.en}}</span>
+                              </tab-heading>
+    
+                                <!-- children fields of the tab -->
+                                <ul data-ng-show="child_lvl_1.children.length">
+                                  <li data-ng-repeat="child_lvl_2 in child_lvl_1.children | orderBy : [ getFieldOrder, getDataOrder ] " data-ng-init="child1 = child_lvl_2; parent1 = child_lvl_1" data-ng-include="'field_renderer.html'" class="form-li"></li>
+                                </ul>
+    
+    
+                      <%# ############# field renderer ########### %>
+                                    <script type="text/ng-template" id="field_renderer.html">
+        
+                                      <div ng-switch="child1.input_type">                         
+                                                      
+                                            <div ng-switch-when="node">
+                              
+                                <div ng-if="!child1.hide" class="panel panel-default">
+                                        
+                                                <div class="panel-heading" phaidra-help phaidra-help-id="{{child1.help_id}}" tooltip-placement="left" tooltip-popup-delay='1500' tooltip-html-unsafe='{{default_helptext}}'>
+                                                  <h3 class="panel-title pull-left"><span class="grey" ng-show="child1.ordered">{{child1.data_order}}. </span>{{child1.labels.en}}</h3>
+                                                  <span class="btn-group pull-right">
+                                                    <button ng-if="child1.cardinality === '*' || child1.cardinality > '1'" class="btn btn-default" ng-click="addNewElement(child1, parent1)"><span class="glyphicon glyphicon-plus"></span></button>
+                                                    <button ng-if="(child1.cardinality === '*' || child1.cardinality > '1') && canDelete(child1, parent1)" class="btn btn-default" ng-click="deleteElement(child1, parent1)"><span class="glyphicon glyphicon-minus"></span></button>
+                                                    <button class="btn btn-default" ng-click="upElement(child1, parent1)" ng-if="child1.ordered == 1 && canUpElement(child1, parent1)"><span class="glyphicon glyphicon-chevron-up"></span></button>
+                                                    <button class="btn btn-default" ng-click="downElement(child1, parent1)" ng-if="child1.ordered == 1 && canDownElement(child1, parent1)"><span class="glyphicon glyphicon-chevron-down"></span></button>
+                                                  </span>
+                
+                                                  <div class="clearfix"></div>
+                                                </div>
+                
+                                                <div class="panel-body">
+                
+                                                  <!-- children fields of the field -->
+                                                  <ul data-ng-show="child1.children.length">
+                                                     <li data-ng-repeat="ch in child1.children | orderBy : [ getFieldOrder, getDataOrder ] " data-ng-init="parent1 = child1; child1 = ch" data-ng-include="'field_renderer.html'"></li>
+                                                  </ul>
+                  
+                                              </div>
+                
+                                              <div class="panel-footer" data-ng-if="child1.xmlname == 'curriculum' && child1.study_name">{{ child1.study_name.en }}</div>
+              
+                                            </div><!-- panel -->
+            
+                                            </div><!-- switch node -->
+                                      
+                            
+                                            <div ng-switch-default>
+                              
+                                              <div ng-if="!child1.hide" data-ng-hide="child1.hidden" data-ng-init="child = child1; parent = parent1" data-ng-include="'<%= url_for '/views/partials/uwmetadata/' %>' + child1.input_type + '.html'"></div>
+              
+                                          <!-- children fields of the field -->
+                                          <ul data-ng-show="child.children.length">                                                       
+                                             <li data-ng-repeat="ch in child1.children | orderBy : [ getFieldOrder, getDataOrder ] " data-ng-init="parent1 = child1; child1 = ch" data-ng-include="'field_renderer.html'"></li>
+                                          </ul>
+              
+                                          </div><!-- switch default -->
+                                          
+                                          
+                                       </div><!-- switch -->
+            
+        
+                                </script>
+    
+    
+                          </tab>                  
+    
+                      </tabset>                
+                    
+                    </fieldset>
+                  </form>
 
                 </div>
 
@@ -221,6 +224,34 @@
                 </tab-heading>
                 <div data-ng-controller="GeoCtrl" data-ng-init="initgeo('<%= $init_data %>')" data-ng-include="'<%= url_for '/views/partials/' %>geo.html'"></div>
               </tab>
+
+          <tab>
+              <tab-heading>
+                <span>Validation 
+                  <span class="glyphicon glyphicon-ok success" data-ng-show="(validation.errors.length == 0) && validation.ts"></span>
+                  <span class="glyphicon glyphicon-exclamation-sign danger" data-ng-show="validation.errors.length && validation.ts"></span>
+                </span>
+              </tab-heading>               
+                                      
+              <div class="panel panel-default">
+               
+                <div class="panel-heading" id="headingVal">
+                  <h3 class="panel-title pull-left">Last validation: {{validation.ts * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</h3>
+                  <span class="btn-group pull-right">
+                    <button class="btn btn-primary" ng-click="validate()">Validate now</button>
+                  </span>
+                  <div class="clearfix"></div>
+                </div>
+              
+                <div role="tabpanel" aria-labelledby="headingVal" ng-show="validation.errors.length">
+                  <div class="panel-body">
+                    <alert ng-repeat="alert in validation.errors" type="alert.type">{{alert.msg}}</alert>            
+                  </div>
+                </div>
+
+              </div>
+
+          </tab>
 
               <tab>
                 <tab-heading>

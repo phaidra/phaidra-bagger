@@ -18,6 +18,21 @@ angular.module('metadataService', [])
 	        });
 	    },
 
+
+	    getValidationStatus: function(bagid) {
+	        return $http({
+	            method  : 'GET',
+	            url     : $('head base').attr('href')+'bag/'+bagid+'/validation_status'
+	        });
+	    },
+
+	    validate: function(bagid) {
+	        return $http({
+	            method  : 'GET',
+	            url     : $('head base').attr('href')+'bag/'+bagid+'/validate'
+	        });
+	    },
+
 		getUwmetadataTree: function() {
 	        return $http({
 	            method  : 'GET',

@@ -10,5 +10,13 @@
         "username": "mongodb_username",
         "password": "mongodb_password",
         "database": "mongodb_db"
+    },
+    "bagger_baseurl": "127.0.0.1:3000",
+    "bagger_username": "user",
+    "bagger_password": "pass",
+    "authentication": {
+        "realm": "Phaidra",
+        "token_header": "X-XSRF-TOKEN",
+        "token_cookie": "XSRF-TOKEN"
     }
 }

@@ -387,3 +387,45 @@ margin-top: 5px;
 .angular-google-map-container { 
 	height: 400px; 
 }
+
+.bags-min-col-width{
+        width: 100px;
+}
+
+
+
+.solr-search-inline-block{
+    display: inline-block;    
+} 
+
+.solr-search-input{
+   width: 100%;
+   height: 35px;
+   margin-left: 12px;
+}
+
+.solr-search-btn{
+   margin: 0px;
+}
+.solr-search-div{
+   padding: 0px;
+}
+.solr-search-div-container{
+   margin-bottom: 10px;
+}
+
+.red{
+   color: #c9302c;
+}
+
+.search-box {
+	margin-bottom: 20px;
+}
+
+.success {
+	color: #449d44;
+}
+
+.danger {
+	color: #c9302c;
+}
