@@ -4,7 +4,7 @@
 
 =head1 fix_bag.pl -fix_5638_bag bagid -c config_path
 
-  -fix_5638_bag bagid -c config_path
+  -fix_5638_bag bagid -c config_path [-bagid <bagid> | -f bagids.txt]
 
 =cut
 
@@ -25,18 +25,23 @@ use Switch;
 use utf8;
 
 my $configpath;
+my $bagidfilepath;
 my $action;
-my $oid;
-my @bags;
+my $bagid;
+my @bagids;
+my $bagidscnt;
 
 while (defined (my $arg= shift (@ARGV)))
 {
   if ($arg =~ /^-/)
   {
-  	if ($arg eq '-fix_5638_bag') { $oid = shift (@ARGV); $action = 'fix_5638_bag'; }
-  	elsif ($arg eq '-fix_5638_template') { $oid = shift (@ARGV); $action = 'fix_5638_template'; }
-  	elsif ($arg eq '-resave_uwmetadata') { $oid = shift (@ARGV); $action = 'resave_uwmetadata'; }
+  	if ($arg eq '-fix_5638_bag') { $action = 'fix_5638_bag'; }
+  	elsif ($arg eq '-fix_5638_template') { $action = 'fix_5638_template'; }
+  	elsif ($arg eq '-resave_uwmetadata') { $action = 'resave_uwmetadata'; }
   	elsif ($arg eq '-c') { $configpath = shift (@ARGV); }
+  	elsif ($arg eq '-f') { $bagidfilepath = shift (@ARGV); }
+  	elsif ($arg eq '-bagid') { $bagid = shift (@ARGV); }
+
 	else { system ("perldoc '$0'"); exit (0); }
   }
 }
@@ -52,24 +57,66 @@ my $config = decode_json($bytes);
 
 my $log = Mojo::Log->new(path => $config->{'log'}->{path}, level => $config->{'log'}->{level});
 
-unless(defined($oid)){
-	$log->error("undefined object id"); 
+if(defined($bagid)){
+	$log->info("-bagid param used - processing only one bag[$bagid]");
+}elsif(defined($bagidfilepath)){
+	$log->info("-f param used - processing bags from file[$bagidfilepath]");
+	open (FILE, $bagidfilepath);
+	while (<FILE>) {        
+        chomp;        
+        my $bagid = $_;        
+        push @bagids, $bagid;              
+	}
+	close (FILE);
+	$bagidscnt = scalar @bagids;
+}else{
+
+	$log->error("no bagid(s) input"); 
 	system ("perldoc '$0'"); 
 	exit(0);
 }
 
+$log->info("Project: ".$config->{project});
+
 switch ($action) {
 	case 'fix_5638_bag'	{		
-		fix_5638('bag');
+		if($bagid){
+			fix_5638($bagid, 'bag');
+		}else{
+			my $i = 0;
+			for my $bagid (@bagids){
+				$i++;
+				$log->info("[$bagid] $i/$bagidscnt");				
+				fix_5638($bagid, 'bag');
+			}	
+		}
 	}
 	
 	case 'fix_5638_template'	{
-		fix_5638('template');
+		if($bagid){
+			fix_5638($bagid, 'template');
+		}else{
+			my $i = 0;
+			for my $bagid (@bagids){
+				$i++;
+				$log->info("[$bagid] $i/$bagidscnt");
+				fix_5638($bagid, 'template');
+			}	
+		}
 	}
 
 	case 'resave_uwmetadata'	{
 		my $ua = signin();
-		resave_uwmetadata($ua);
+		if($bagid){
+			resave_uwmetadata($bagid, $ua);
+		}else{
+			my $i = 0;
+			for my $bagid (@bagids){
+				$i++;
+				$log->info("[$bagid] $i/$bagidscnt");
+				resave_uwmetadata($bagid, $ua);	
+			}
+		}
 	}
 
 	else { print "unknown action\n"; system ("perldoc '$0'"); exit(0); }
@@ -96,19 +143,18 @@ sub signin {
 	my $tx = $ua->get($url); 
 
 	if (my $res = $tx->success) {    
-	  $log->info("[$oid] token ".$tx->res->json->{token});
-	  $log->info("[$oid] cookies ".Dumper($ua->cookie_jar));
+	  #$log->info("token ".$tx->res->json->{token});
+	  #$log->info("cookies ".Dumper($ua->cookie_jar));
 	  return $ua;
 	}else {  
-  	  $log->error("[$oid] Auth failed: ".Dumper($tx->error));        	  
+  	  $log->error("Auth failed: ".Dumper($tx->error));        	  
 	  exit(0);
 	}
 }
 
 sub resave_uwmetadata {
+	my $oid = shift;
 	my $ua = shift;
-
-	$log->info("[$oid] project: ".$config->{project});
 
 	my $mango = Mango->new('mongodb://'.$config->{bagger_mongodb}->{username}.':'.$config->{bagger_mongodb}->{password}.'@'.$config->{bagger_mongodb}->{host}.'/'.$config->{bagger_mongodb}->{database});
 
@@ -123,21 +169,21 @@ sub resave_uwmetadata {
 				$uwm = $bag->{metadata}->{uwmetadata};
 			}else{
 				$log->error("[$oid] no uwmetadata");
-				exit(0);
+				return;
 			}
 		}else{
 			$log->error("[$oid] no metadata");
-			exit(0);
+			return;
 		}
 	}else{
 		$log->error("[$oid] bag not found");
-		exit(0);
+		return;
 	}
 	
 	
 	unless($uwm){
 		$log->error("[$oid] error loading uwmetadata");
-		exit(0);
+		return;
 	}
 	
 	#$log->info("[$oid] \n ".Dumper($uwm));
@@ -169,17 +215,15 @@ sub resave_uwmetadata {
 	  }else{
 	    $log->error("Error compressing uwmetadata: ".Dumper($tx->error));        
 	  }
-	  exit(0);
-	}
-
-	exit(1);
+	  return;
+	}	
 }
 
 sub fix_5638 {
+	my $oid = shift;
 	my $type = shift;
 
 	$log->info("[$oid] type: $type");
-	$log->info("[$oid] project: ".$config->{project});
 
 	my $mango = Mango->new('mongodb://'.$config->{bagger_mongodb}->{username}.':'.$config->{bagger_mongodb}->{password}.'@'.$config->{bagger_mongodb}->{host}.'/'.$config->{bagger_mongodb}->{database});
 
@@ -221,7 +265,7 @@ sub fix_5638 {
 	
 	unless($uwm){
 		$log->error("[$oid] error loading uwmetadata");
-		exit(0);
+		return;
 	}
 	
 	#$log->info("[$oid] \n ".Dumper($uwm));
@@ -272,7 +316,7 @@ sub fix_5638 {
 			$log->error("[$oid] [$cnt] iteration limit reached");
 			exit(0);
 		}				
-		$error_found = get_and_fix_node_with_wrong_date($uwm);	
+		$error_found = get_and_fix_node_with_wrong_date($oid, $uwm);	
 	}
 		
 	# set defaults
@@ -297,7 +341,6 @@ sub fix_5638 {
 	#	$log->info("[$oid] [$cnt] done, no changes to save");
 	#}
 	
-	exit(1);
 }
 
 # find nodes which have a child node of the same type as parent (eg entity as a child of entity)
@@ -330,7 +373,7 @@ sub find_node_with_hierarchy_error {
 }
 
 sub get_and_fix_node_with_wrong_date {
-	
+	my $oid = shift;
 	my $metadata = shift;
 	
 	my $ret = 0;
@@ -349,7 +392,7 @@ sub get_and_fix_node_with_wrong_date {
 		}else{
 			my $children_size = defined($n->{children}) ? scalar (@{$n->{children}}) : 0;
 			if($children_size > 0){
-				$ret = get_and_fix_node_with_wrong_date($n->{children});
+				$ret = get_and_fix_node_with_wrong_date($oid, $n->{children});
 				last if($ret);
 			}
 		}
