@@ -928,6 +928,8 @@ sub save_uwmetadata {
 	my $self = shift;
 	my $bagid = $self->stash('bagid');
 
+  my $res = { alerts => [], status => 200 };
+
 	$self->app->log->info("[".$self->current_user->{username}."] Saving uwmetadata for bag $bagid");
 
   my $uwmetadata = $self->req->json->{uwmetadata};
@@ -938,7 +940,7 @@ sub save_uwmetadata {
     if(defined($compressed)){
       $self->app->log->info("[".$self->current_user->{username}."] Compressing $bagid successful.");
       $uwmetadata = $compressed->{metadata}->{uwmetadata};
-      #$self->app->log->debug("XXXXXXXXXXXXXXXXXXX: ".$self->app->dumper($compressed));
+      #$self->app->log->debug("XXXXXXXXXXXXXXXXXXX compressed: ".$self->app->dumper($uwmetadata));
     }else{
       $self->app->log->error("[".$self->current_user->{username}."] Error compressing $bagid.");
     }
@@ -975,7 +977,7 @@ sub save_uwmetadata {
     $update->{'$set'}->{validation} = $validation;
   }
   my $reply = $self->mango->db->collection('bags')->update({ bagid => $bagid, project => $self->current_user->{project} } , $update);
-
+  
 	$self->render(json => { alerts => [] }, status => 200);
 
 }

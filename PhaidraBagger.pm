@@ -354,7 +354,7 @@ sub startup {
     $autz->route('bag/:bagid/edit') ->via('get')   ->to('bag#edit');
     $autz->route('bag/:bagid') ->via('get')   ->to('bag#load');
     $autz->route('bag/template/:tid') ->via('get')   ->to('bag#load_template');
-    $autz->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');
+    $autz->route('bag/:bagid/uwmetadata') ->via('post')   ->to('bag#save_uwmetadata');    
     $autz->route('bag/:bagid/mods') ->via('post')   ->to('bag#save_mods');
     $autz->route('bag/:bagid/:attribute/:value') ->via('put')   ->to('bag#set_attribute');
     $autz->route('bag/:bagid/:attribute/:value') ->via('delete')   ->to('bag#unset_attribute');

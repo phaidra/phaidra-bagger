@@ -52,7 +52,7 @@ sub signin {
     $self->cookie($self->app->config->{authentication}->{token_cookie} => $res->{token});
 
     $self->app->log->info("Current user: ".$self->app->dumper($self->current_user));
-    $self->render(json => { alerts => $res->{alerts}} , status => $res->{status});
+    $self->render(json => { alerts => $res->{alerts}, token => $res->{token}} , status => $res->{status});
 }
 
 sub signout {

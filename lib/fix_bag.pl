@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 
 =pod
 
@@ -15,11 +15,14 @@ use Data::Dumper;
 use Mango;
 use Mango::BSON ':bson';
 use Mango::BSON::ObjectID;
+use Mojo::UserAgent;
 use Mojo::Util qw(slurp);
 use Mojo::JSON qw(encode_json decode_json);
+use Mojo::ByteStream qw(b);
 use Scalar::Util 'refaddr';
 use Mojo::Log;
 use Switch;
+use utf8;
 
 my $configpath;
 my $action;
@@ -32,6 +35,7 @@ while (defined (my $arg= shift (@ARGV)))
   {
   	if ($arg eq '-fix_5638_bag') { $oid = shift (@ARGV); $action = 'fix_5638_bag'; }
   	elsif ($arg eq '-fix_5638_template') { $oid = shift (@ARGV); $action = 'fix_5638_template'; }
+  	elsif ($arg eq '-resave_uwmetadata') { $oid = shift (@ARGV); $action = 'resave_uwmetadata'; }
   	elsif ($arg eq '-c') { $configpath = shift (@ARGV); }
 	else { system ("perldoc '$0'"); exit (0); }
   }
@@ -63,12 +67,113 @@ switch ($action) {
 		fix_5638('template');
 	}
 
+	case 'resave_uwmetadata'	{
+		my $ua = signin();
+		resave_uwmetadata($ua);
+	}
+
 	else { print "unknown action\n"; system ("perldoc '$0'"); exit(0); }
 }
 
 exit(1);
 
 ###########
+
+sub signin {
+
+	my $url = Mojo::URL->new;
+	$url->scheme('http');  
+	$url->userinfo($config->{bagger_username}.":".$config->{bagger_password});
+	my @base = split('/',$config->{bagger_baseurl});
+	$url->host($base[0]);
+	if(exists($base[1])){
+	  $url->path($base[1]."/signin");
+	}else{
+	  $url->path("/signin");
+	}
+
+	my $ua = Mojo::UserAgent->new;
+	my $tx = $ua->get($url); 
+
+	if (my $res = $tx->success) {    
+	  $log->info("[$oid] token ".$tx->res->json->{token});
+	  $log->info("[$oid] cookies ".Dumper($ua->cookie_jar));
+	  return $ua;
+	}else {  
+  	  $log->error("[$oid] Auth failed: ".Dumper($tx->error));        	  
+	  exit(0);
+	}
+}
+
+sub resave_uwmetadata {
+	my $ua = shift;
+
+	$log->info("[$oid] project: ".$config->{project});
+
+	my $mango = Mango->new('mongodb://'.$config->{bagger_mongodb}->{username}.':'.$config->{bagger_mongodb}->{password}.'@'.$config->{bagger_mongodb}->{host}.'/'.$config->{bagger_mongodb}->{database});
+
+	my $uwm;
+	
+	my $bag = $mango->db->collection('bags')->find_one({bagid => $oid, project => $config->{project}});
+
+	if(defined($bag)){
+		if($bag->{metadata}){
+			if($bag->{metadata}->{uwmetadata}){
+				$log->info("[$oid] uwmetadata found");
+				$uwm = $bag->{metadata}->{uwmetadata};
+			}else{
+				$log->error("[$oid] no uwmetadata");
+				exit(0);
+			}
+		}else{
+			$log->error("[$oid] no metadata");
+			exit(0);
+		}
+	}else{
+		$log->error("[$oid] bag not found");
+		exit(0);
+	}
+	
+	
+	unless($uwm){
+		$log->error("[$oid] error loading uwmetadata");
+		exit(0);
+	}
+	
+	#$log->info("[$oid] \n ".Dumper($uwm));
+
+	my $url = Mojo::URL->new;
+	$url->scheme('http');  
+	my @base = split('/',$config->{bagger_baseurl});
+	$url->host($base[0]);
+	if(exists($base[1])){
+	  $url->path($base[1]."/bag/$oid/uwmetadata");
+	}else{
+	  $url->path("/bag/$oid/uwmetadata");
+	}
+
+#	my $json_str = b(encode_json($uwm))->decode('UTF-8');
+	#my $ua = Mojo::UserAgent->new;
+
+	my $tx = $ua->post($url, json => { uwmetadata => $uwm }); 
+	 
+	if (my $res = $tx->success) {    
+	  $log->info("[$oid] saved");
+	}else {        
+	  if(defined($tx->res->json)){
+	    if(exists($tx->res->json->{alerts})) {
+	      $log->error("Error compressing uwmetadata: alerts: ".Dumper($tx->res->json->{alerts}));        
+	    }else{
+	      $log->error("Error compressing uwmetadata: json: ".Dumper($tx->res->json));        
+	    }
+	  }else{
+	    $log->error("Error compressing uwmetadata: ".Dumper($tx->error));        
+	  }
+	  exit(0);
+	}
+
+	exit(1);
+}
 
 sub fix_5638 {
 	my $type = shift;

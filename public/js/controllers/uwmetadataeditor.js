@@ -53,6 +53,7 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     		$scope.bagid = $scope.initdata.bagid;
 				$scope.bagid = $scope.initdata.bagid;
     		$scope.loadBag();
+        $scope.getValidationStatus();
     	}else{
     		if($scope.initdata.tid){
           $scope.mode = 'template';
@@ -450,6 +451,7 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     	promise.then(
         	function(response) {
         		$scope.alerts = response.data.alerts;
+            $scope.getValidationStatus();
         		$scope.form_disabled = false;
         	}
         	,function(response) {
