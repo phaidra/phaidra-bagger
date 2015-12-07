@@ -150,7 +150,7 @@ sub makeSolrFieldsQuery{
     $filter->{solr_query} = '' if not defined $filter->{solr_query};
     
     if($filter->{solr_field} eq 'created' or $filter->{solr_field} eq 'updated'){
-       #skip
+         #skip
     }else{
          $filter->{solr_query} = $self->escapeSolrSpecialChars($filter->{solr_query});
     }
@@ -177,8 +177,8 @@ sub makeSolrFieldsQuery{
  
     my $fieldsQuery = '';
     my $fieldsQueryHash = {};
-    #accessed over search
-    if($filter->{solr_field} ne "" and $filter->{solr_field} ne 'status'){
+
+    if($filter->{solr_field} ne ""){
            $filter->{solr_query} = "*" if $filter->{solr_query} eq '';
            $fieldsQueryHash->{$filter->{solr_field}} = $filter->{solr_query};
     }
@@ -199,7 +199,7 @@ sub makeSolrFieldsQuery{
             $filter->{tag} = $self->escapeSolrSpecialChars($filter->{tag});
             $fieldsQueryHash->{bag_tgs} = $filter->{tag};
     }
-    #http://localhost:8983/solr/koolcha/select?q=created:[2006-03-06T23:59:59Z%20TO%20*]
+ 
     # ranges for 'created'
     if(defined $ranges->{created}->{year} and not defined $ranges->{created}->{month} and not defined $ranges->{created}->{day}){            
             my $year = $ranges->{created}->{year};
@@ -232,9 +232,10 @@ sub makeSolrFieldsQuery{
             my $day   = $ranges->{updated}->{day};
             $fieldsQueryHash->{updated} = "[".$year."-".$month."-".$day."T00:00:00Z%20TO%20".$year."-".$month."-".$day."T00:00:00Z%2B1DAYS]";
     }
-     
+
     my $i = 1;
     my $doubleQuote = "\"";
+    
     foreach my $key ( keys %{$fieldsQueryHash} ){
              $doubleQuote = "\"";
              if($key eq "created" or $key eq "updated"){
@@ -243,85 +244,28 @@ sub makeSolrFieldsQuery{
              if($fieldsQueryHash->{$key} == "*"){
                    $doubleQuote = "";
              }
-             if($defaulAllStatuses eq ''){
-                    if($i == 1){
-                            $fieldsQuery = $key.":".$doubleQuote.$fieldsQueryHash->{$key}.$doubleQuote;
-                    }else{
-                            $fieldsQuery = $fieldsQuery." AND ".$key.":".$doubleQuote.$fieldsQueryHash->{$key}.$doubleQuote;
-                    }
+             if($i == 1){
+                   $fieldsQuery = $key.":".$doubleQuote.$fieldsQueryHash->{$key}.$doubleQuote;
              }else{
-                   if($i == 1){
-                            $fieldsQuery = $key.":".$doubleQuote.$fieldsQueryHash->{$key}.$doubleQuote." AND (".$defaulAllStatuses.")";
-                   }else{
-                            $fieldsQuery = $fieldsQuery." AND ".$key.":".$doubleQuote.$fieldsQueryHash->{$key}.$doubleQuote." AND (".$defaulAllStatuses.")";
-                   }
+                   $fieldsQuery = $fieldsQuery." AND ".$key.":".$doubleQuote.$fieldsQueryHash->{$key}.$doubleQuote;
              }
+
              $i++;
     }
-    
-    # handled separately because "*" is not 'all' but only filter:"to_check, checked, to_ingest, new"
-    if($filter->{solr_field} eq 'status'){
-            if($fieldsQuery eq ''){
-                  if( $filter->{solr_query} eq '' ){
-                        if($defaulAllStatuses eq ''){
-                               $fieldsQuery = "status:*";
-                        }else{
-                               $fieldsQuery = $defaulAllStatuses;
-                        }
-                        #$fieldsQuery = "status:to_check OR status:checked OR status:to_ingest OR status:new";
-                  }else{
-                       $fieldsQuery = "status:\"".$filter->{solr_query}."\"";
-                  }
-            }else{
-                  if( $filter->{solr_query} eq '' ){
-                          if($defaulAllStatuses eq ''){
-                                  $fieldsQuery = $fieldsQuery." AND status:*";
-                          }else{
-                                  $fieldsQuery = $fieldsQuery." AND (".$defaulAllStatuses.")";
-                          }
-                          #$fieldsQuery = $fieldsQuery." AND (status:to_check OR status:checked OR status:to_ingest OR status:new)";
-                  }else{
-                       $fieldsQuery = $fieldsQuery." AND status:\"".$filter->{solr_query}."\"";
-                  }
-            }
-    }
-    
-    
-    
     
     # search all
     if( $filter->{solr_field} eq "" ){
             $filter->{solr_query} = "*" if $filter->{solr_query} eq '';
             if($fieldsQuery eq ''){
-                  if($defaulAllStatuses eq ''){
-                         if($filter->{solr_query} eq "*"){
-                               $fieldsQuery = "*:*";
-                         }else{
-                               $fieldsQuery = $self->getQuerySearchAllFields($filter->{solr_query});
-                         }
-                        
-                  }else{
-                         if($filter->{solr_query} eq "*"){
-                              $fieldsQuery = $defaulAllStatuses;
-                         }else{
-                               $fieldsQuery = "(".$defaulAllStatuses.") AND (".$self->getQuerySearchAllFields($filter->{solr_query}).")";
-                         }
-                  }
+                   if($filter->{solr_query} eq "*"){
+                          $fieldsQuery = "*:*";
+                   }else{
+                          $fieldsQuery = $self->getQuerySearchAllFields($filter->{solr_query});
+                   }
             }else{
-                  if($defaulAllStatuses eq ''){
-                         if($filter->{solr_query} eq "*"){
-                         }else{
-                               $fieldsQuery = $fieldsQuery." AND (".$self->getQuerySearchAllFields($filter->{solr_query}).")";
-                         }
-                         
-                  }else{
-                         if($filter->{solr_query} eq "*"){
-                             $fieldsQuery = $fieldsQuery." AND (".$defaulAllStatuses.")";
-                         }else{
-                             $fieldsQuery = $fieldsQuery." AND (".$defaulAllStatuses.") AND (".$self->getQuerySearchAllFields($filter->{solr_query}).")"; 
-                         }
-                         
-                  }
+                   if($filter->{solr_query} ne "*"){
+                          $fieldsQuery = $fieldsQuery." AND (".$self->getQuerySearchAllFields($filter->{solr_query}).")";
+                   }
             }
     }
     
@@ -331,6 +275,12 @@ sub makeSolrFieldsQuery{
     }else{
         $fieldsQuery = "(".$fieldsQuery.") AND "."project:".$project;
     }
+    
+    if($defaulAllStatuses ne ''){
+          $fieldsQuery = $fieldsQuery." AND (".$defaulAllStatuses.")";
+    }
+    
+=head1
     
     if($sortfield eq "created"){
            $sortfield = "created";
@@ -345,10 +295,10 @@ sub makeSolrFieldsQuery{
            $sortvalue = "desc";
     }
     
+    $fieldsQuery = $fieldsQuery."&sort=".$sortfield." ".$sortvalue;
 
+=cut
     
-   $fieldsQuery = $fieldsQuery."&sort=".$sortfield." ".$sortvalue;
-
     return $fieldsQuery;
     
 }
@@ -358,8 +308,8 @@ sub getQuerySearchAllFields{
     my $self = shift;
     my $query = shift;
     
-    my $searchAllFields = '';
-    my $fields = $self->app->config->{phaidra}->{fields};
+    my $searchAllFields = '*:*';
+    my $fields = $self->app->config->{solr}->{fields};
    
     my $index = 1;
     foreach (@{$fields}) { 
@@ -373,8 +323,92 @@ sub getQuerySearchAllFields{
          }
     } 
     
+    $self->app->log->debug("searchAllFields12321:",$self->app->dumper($searchAllFields));
+    
     return $searchAllFields;
 }
+
+sub makeSolrRangesQuery_new{
+
+    my $self = shift;
+    my $ranges = shift;
+    my $urlHash = shift;
+    
+    #my $createdRange;
+    if(defined $ranges->{created}->{day}){
+          my $day = $ranges->{created}->{day};
+          my $month = $ranges->{created}->{month};
+          my $year = $ranges->{created}->{year};
+          #without pivot, also in other elsif
+          #$createdRange = "&facet.range={!tag=r1}created&f.created.facet.range.start=".$year."-".$month."-".$day."T00:00:00.000Z&f.created.facet.range.end=".$year."-".$month."-".$day."T00:00:00.000Z%2B1DAYS&f.created.facet.range.gap=%2B1DAY";
+          # Mojo::Parameters->new('foo=bar')->append(foo => ['baz', 'yada'], bar => 23);
+          $urlHash->append("facet.range" => "{!tag=r1}created");
+          $urlHash->append("f.created.facet.range.start" => $year."-".$month."-".$day."T00:00:00.000Z" );
+          $urlHash->append("f.created.facet.range.end" => $year."-".$month."-".$day."T00:00:00.000Z%2B1DAYS" );
+          $urlHash->append("f.created.facet.range.gap" => "%2B1DAY" );
+    }elsif(defined $ranges->{created}->{month}){
+          my $month_start = $ranges->{created}->{month};
+          my $year = $ranges->{created}->{year};
+          #$createdRange = "&facet.range={!tag=r1}created&f.created.facet.range.start=".$year."-".$month_start."-01T00:00:00.000Z&f.created.facet.range.end=".$year."-".$month_start."-01T00:00:00.000Z%2B1MONTHS&f.created.facet.range.gap=%2B1DAY";
+          $urlHash->append("facet.range" => "{!tag=r1}created");
+          $urlHash->append("f.created.facet.range.start" => $year."-".$month_start."-01T00:00:00.000Z" );
+          $urlHash->append("f.created.facet.range.end" => $year."-".$month_start."-01T00:00:00.000Z%2B1MONTHS" );
+          $urlHash->append("f.created.facet.range.gap" => "%2B1DAY" );
+    }elsif(defined $ranges->{created}->{year}){
+          my $year_start = $ranges->{created}->{year};
+          my $year_end = $year_start + 1;
+          #$createdRange = "&facet.range={!tag=r1}created&f.created.facet.range.start=".$year_start."-01-01T00:00:00.000Z&f.created.facet.range.end=".$year_end."-01-01T00:00:00.000Z&f.created.facet.range.gap=%2B1MONTH";
+          $urlHash->append("facet.range" => "{!tag=r1}created");
+          $urlHash->append("f.created.facet.range.start" => $year_start."-01-01T00:00:00.000Z" );
+          $urlHash->append("f.created.facet.range.end" => $year_end."-01-01T00:00:00.000Z" );
+          $urlHash->append("f.created.facet.range.gap" => "%2B1MONTH" );
+    }else{
+          #$createdRange = "&facet.range={!tag=r1}created&f.created.facet.range.start=2007-01-01T00:00:00.000Z&f.created.facet.range.end=NOW/DAY&f.created.facet.range.gap=%2B1YEAR";
+          $urlHash->append("facet.range" => "{!tag=r1}created");
+          $urlHash->append("f.created.facet.range.start" => "2007-01-01T00:00:00.000Z" );
+          $urlHash->append("f.created.facet.range.end" => "NOW/DAY" );
+          $urlHash->append("f.created.facet.range.gap" => "%2B1YEAR" );
+    }
+    
+    #my $updatedRange;
+    if(defined $ranges->{updated}->{day}){
+          my $day = $ranges->{updated}->{day};
+          my $month = $ranges->{updated}->{month};
+          my $year = $ranges->{updated}->{year};
+          #$updatedRange = "&facet.range={!tag=r2}updated&f.updated.facet.range.start=".$year."-".$month."-".$day."T00:00:00.000Z&f.updated.facet.range.end=".$year."-".$month."-".$day."T00:00:00.000Z%2B1DAYS&f.updated.facet.range.gap=%2B1DAY";
+          $urlHash->append("facet.range" => "{!tag=r2}updated");
+          $urlHash->append("f.updated.facet.range.start" => $year."-".$month."-".$day."T00:00:00.000Z" );
+          $urlHash->append("f.updated.facet.range.end" => $year."-".$month."-".$day."T00:00:00.000Z%2B1DAYS" );
+          $urlHash->append("f.updated.facet.range.gap" => "%2B1DAY" );
+    }elsif(defined $ranges->{updated}->{month}){
+          my $month_start = $ranges->{updated}->{month};
+          my $year = $ranges->{updated}->{year};
+          #$updatedRange = "&facet.range={!tag=r2}updated&f.updated.facet.range.start=".$year."-".$month_start."-01T00:00:00.000Z&f.updated.facet.range.end=".$year."-".$month_start."-01T00:00:00.000Z%2B1MONTHS&f.updated.facet.range.gap=%2B1DAY";
+          $urlHash->append("facet.range" => "{!tag=r2}updated");
+          $urlHash->append("f.updated.facet.range.start" => $year."-".$month_start."-01T00:00:00.000Z" );
+          $urlHash->append("f.updated.facet.range.end" => $year."-".$month_start."-01T00:00:00.000Z%2B1MONTHS" );
+          $urlHash->append("f.updated.facet.range.gap" => "%2B1DAY" );
+    }elsif(defined $ranges->{updated}->{year}){
+          my $year_start = $ranges->{updated}->{year};
+          my $year_end = $year_start + 1;
+          #$updatedRange = "&facet.range={!tag=r2}updated&f.updated.facet.range.start=".$year_start."-01-01T00:00:00.000Z&f.updated.facet.range.end=".$year_end."-01-01T00:00:00.000Z&f.updated.facet.range.gap=%2B1MONTH";
+          $urlHash->append("facet.range" => "{!tag=r2}updated");
+          $urlHash->append("f.updated.facet.range.start" => $year_start."-01-01T00:00:00.000Z" );
+          $urlHash->append("f.updated.facet.range.end" => $year_end."-01-01T00:00:00.000Z" );
+          $urlHash->append("f.updated.facet.range.gap" => "%2B1MONTH" );
+    }else{
+          #$updatedRange = "&facet.range={!tag=r2}updated&f.updated.facet.range.start=2007-01-01T00:00:00.000Z&f.updated.facet.range.end=NOW/DAY&f.updated.facet.range.gap=%2B1YEAR";
+          $urlHash->append("facet.range" => "{!tag=r2}updated");
+          $urlHash->append("f.updated.facet.range.start" => "2007-01-01T00:00:00.000Z" );
+          $urlHash->append("f.updated.facet.range.end" => "NOW/DAY" );
+          $urlHash->append("f.updated.facet.range.gap" => "%2B1YEAR" );
+    }
+    
+    #my $range = $createdRange.$updatedRange;
+    
+    return $urlHash;
+}
+
 
 sub makeSolrRangesQuery{
     
@@ -424,6 +458,129 @@ sub makeSolrRangesQuery{
 }
 
 
+
+sub delete_me_later_just_test {
+#sub search_solr_all {
+
+    my $self = shift;        
+    
+        my $url = Mojo::URL->new;
+        $url->scheme('https');          
+        my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
+        $url->host($base[0]);
+        if(exists($base[1])){
+                $url->path($base[1]."/search");
+        }else{
+                $url->path("/search");
+        }
+        
+        my %params;
+        $params{'q'} = 'folcanm4';
+        my $urlHash = Mojo::Parameters->new;
+        $urlHash->append('q' => 'hudakr4');
+        
+        $url->query($urlHash);
+    
+        #$self->app->log->debug($self->app->dumper(\%params));              
+
+        my $token = $self->load_token;
+        
+        $self->ua->get($url => {$self->app->config->{authentication}->{token_header} => $token} => sub {        
+                my ($ua, $tx) = @_;
+
+                if (my $res = $tx->success) {
+                        $self->app->log->debug("xxxx",$self->app->dumper($res->json));
+                        $self->render(json => $res->json, status => 200 );
+                }else {
+                        my ($err, $code) = $tx->error;
+                        if($tx->res->json){       
+                                if(exists($tx->res->json->{alerts})) {
+                                        $self->render(json => { alerts => $tx->res->json->{alerts} }, status =>  $code ? $code : 500);
+                                 }else{
+                                        $self->render(json => { alerts => [{ type => 'danger', msg => $err }] }, status =>  $code ? $code : 500);
+                                 }
+                        }
+                }
+                
+        });     
+    
+}
+
+
+sub search_solr_all_new {
+   
+    my $self = shift;
+
+    my $filter          = $self->param('filter');
+    my $ranges          = $self->param('ranges');
+    my $sortvalue       = $self->param('sortvalue');
+    my $sortfield       = $self->param('sortfield');
+    my $allowedStatuses = $self->param('allowedStatuses');
+    my $project         = $self->param('project');
+    
+    $filter     = encode('UTF-8', $filter, Encode::FB_CROAK);    
+    $filter = decode_json($filter);
+    $ranges = decode_json($ranges);
+     
+    # Mojo::Parameters->new('foo=bar')->append(foo => ['baz', 'yada'], bar => 23);
+    my $urlHash = Mojo::Parameters->new;
+    
+    my $fieldsQuery  = $self->makeSolrFieldsQuery($filter, $ranges, $sortvalue, $sortfield, $allowedStatuses, $project);
+    my $createdRange = $self->makeSolrRangesQuery($ranges);
+    
+   
+    $urlHash->append('q' => $fieldsQuery);
+    #$urlHash->{'q'} = $fieldsQuery;
+    
+    $urlHash = $self->makeSolrRangesQuery_new($ranges, $urlHash);
+    
+    if($sortfield eq "created"){
+           $sortfield = "created";
+    }
+    if($sortfield eq "updated"){
+           $sortfield = "updated";
+    }
+    if($sortvalue eq '1'){
+           $sortvalue = "asc";
+    }else{
+           $sortvalue = "desc";
+    }
+    $urlHash->append('sort' => $sortfield." ".$sortvalue );
+    
+    $self->app->log->debug("urlHash",$self->app->dumper($urlHash));
+    
+    my $base = $self->app->config->{solr}->{baseurl};
+    my $url = Mojo::URL->new;
+    $url->scheme('http'); 
+    $url->host($base);
+    $url->query($urlHash);
+    $self->app->log->debug("url654",$self->app->dumper($url));
+    
+    my $tx = $self->ua->get($url);
+    
+    if (my $res = $tx->success) {
+           $self->render(json => $res->json, status => 200 );
+    } else {
+          my ($err, $code) = $tx->error;
+          if($tx->res->json){       
+                 if(exists($tx->res->json->{alerts})) {
+                         $self->render(json => { alerts => $tx->res->json->{alerts} }, status =>  $code ? $code : 500);
+                 }else{
+                      $self->render(json => { alerts => [{ type => 'danger', msg => $err }] }, status =>  $code ? $code : 500);
+                 }
+          }else{
+                  $self->render(json => { alerts => [{ type => 'danger', msg => $err }] }, status =>  $code ? $code : 500);
+          }
+    }
+    
+    #$urlHash->{'sort'} = $sortfield." ".$sortvalue;
+     
+     
+    #$self->app->log->debug("url12321aa:","http://".$base."/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json");
+
+}
+
+
 sub search_solr_all {
     
     my $self = shift;
@@ -444,11 +601,37 @@ sub search_solr_all {
     my $createdRange = $self->makeSolrRangesQuery($ranges);
     
     my $base = $self->app->config->{solr}->{baseurl};
-     
+      
     
-    my $url =  "http://".$base."/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json";
-    $self->app->log->debug("url12321:",$self->app->dumper($url));
+    
+    
+    
+
+    
+    my $url = Mojo::URL->new;
+    $url->scheme('http'); 
+    $url->host($base);
+    my %params;
+    $params{'q'} = $fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json";
+    $url->query(\%params);
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    #my $url =  "http://".$base."/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json";
+    #$self->app->log->debug("url12321aa:",$self->app->dumper($url));
+    $self->app->log->debug("url12321aa:","http://".$base."/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json");
     my $tx = $self->ua->get("http://".$base."/select?q=".$fieldsQuery."&facet=true&facet.field=status&facet.field=label&facet.field=assignee".$createdRange."&wt=json");    
+    
+    ######## $self->ua->get($url => {$self->app->config->{authentication}->{token_header} => $token} => sub {
+    ####### here ....
+    ###my $token = $self->load_token;
+    ### my $tx = $self->ua->get($url => {$self->app->config->{authentication}->{token_header} => $token});
     
     if (my $res = $tx->success) {
            $self->render(json => $res->json, status => 200 );

@@ -9,6 +9,7 @@
 <div class="container" data-ng-controller="BagsCtrl" data-ng-init="init('<%= $init_data %>')">
 
 %= include 'alerts'
+        <div ng-click="test()">aaaaaaaaaaaaaaaaaaaaaaaaaaaaa</div>
         <nav  id="control-panel" class="navbar navbar-default list-navbar">
 
                         <div class="navbar-header">
@@ -122,6 +123,30 @@
         </nav>
 
    
+   
+   
+   
+   
+   
+   
+   
+   
+
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
         <div class="container-fluid">
 
 
@@ -142,32 +167,59 @@
                   <ng-form id="sorl_input" name="sorl_input" >  
                   
                     <div class="input-group">
-                      
-                      <input ng-show="solr_query_date_flag" name="solrQuery_date" class="form-control" type="text" ng-model="solrQuery_date" placeholder={{placeholder}}  ng-pattern="/\[(\d{4})-(\d{2})-(\d{2})T(\d{2})\:(\d{2})\:(\d{2})Z TO (\d{4})-(\d{2})-(\d{2})T(\d{2})\:(\d{2})\:(\d{2})Z\]/" >
 
-                      <input ng-hide="solr_query_date_flag" name="solrQuery_not_date" class="form-control" type="text" ng-model="solrQuery_not_date" placeholder={{placeholder}}>
+                           <div class="form-group row " ng-show="solr_query_date_flag">
+                                  <div class="col-lg-6">
+                                        <label for="formDOB">Start Date</label>
+                                        <p class="input-group">
+                                                <input type="text" class="form-control" datepicker-popup="{{calendar.dateFormat}}" ng-model="solr_input_date.start" is-open="calendar.opened.start_date" datepicker-options="calendar.dateOptions" close-text="Close" placeholder="Start Date" />
+                                                <span class="input-group-btn">
+                                                            <button type="button" class="btn btn-default" ng-click="calendar.open($event, 'start_date')"><i class="glyphicon glyphicon-calendar"></i></button>
+                                                </span>
+                                        </p>
+                                 </div>
+                                 <div class="col-lg-6">
+                                         <label for="formWinDate">End Date</label>
+                                         <p class="input-group">
+                                                 <input type="text" class="form-control" datepicker-popup="{{calendar.dateFormat}}" ng-model="solr_input_date.end" is-open="calendar.opened.end_date" datepicker-options="calendar.dateOptions" close-text="Close" placeholder="End Date" />
+                                                 <span class="input-group-btn">
+                                                         <button type="button" class="btn btn-default" ng-click="calendar.open($event, 'end_date')"><i class="glyphicon glyphicon-calendar"></i></button>
+                                                 </span>
+                                         </p>
+                                </div>
+                            </div>
+                            <input ng-keyup="hitEnterSolr($event)" ng-hide="solr_query_date_flag" name="solrQuery_not_date" class="form-control" type="text" ng-model="solrQuery_not_date" placeholder={{placeholder}}>
 
-                      <div class="input-group-btn">
+                            <div class="input-group-btn">
 
-                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                          {{solr_field_display}} <span class="caret"></span>
-                        </button>
+                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                    {{solr_field_display}} <span class="caret"></span>
+                            </button>
 
-                        <ul class="dropdown-menu" role="menu">
-                          <li><a href="" data-ng-repeat="field in dublincoreFields | orderBy : label" data-ng-click="setSearchQuery(field.value, field.label)">{{field.label}}</a></li>
-                        </ul>
-
-                        <button data-ng-click="searchQuerySolr()" class="btn btn-danger navbar-btn solr-search-btn solr-search-inline-block"><span class="glyphicon"></span>Search</button>
+                            <ul class="dropdown-menu" role="menu">
+                                    <li><a href="" data-ng-repeat="field in dublincoreFields | orderBy : label" data-ng-click="setSearchQuery(field.value, field.label)">{{field.label}}</a></li>
+                            </ul>
+ 
+                            <button data-ng-click="searchQuerySolr()" class="btn btn-danger navbar-btn solr-search-btn solr-search-inline-block" ><span class="glyphicon"></span>Search</button>
                       </div>
 
-                      <div data-ng-if="pattern_error_display" class="solr-pattern-error-msg red" ng-show="sorl_input.solrQuery_date.$error.pattern">Time range format not maching pattern: [YYYY-MM-DDThh:mm:ssZ TO YYYY-MM-DDThh:mm:ssZ]</div>
-                      <div data-ng-if="pattern_error_display" class="solr-pattern-error-msg red" ng-show="sorl_input.solrQuery_date.$error.pattern">Example: [2010-01-01T00:00:00Z TO 2012-06-01T21:30:00Z]</div>
+
                     </div>
                   
                   </ng-form>  
 
                 </div>
 
+                
+                
+                
+                
+                
+
+                
+                
+                
+                
 
                 <div class="row">       
                   <div class="col-sm-2">     
@@ -208,14 +260,14 @@
                           <li class="list-group-item disabled">Updated</li>
                           <li class="list-group-item" data-ng-repeat="facet in facetRangesUpdated | orderBy : count" data-ng-if="facet.count">
                             <span class="badge">{{facet.count}}</span>
-                            <a data-ng-click="narrowFacetRange('created', 'year', facet.field)" >
+                            <a data-ng-click="narrowFacetRange('updated', 'year', facet.field)" >
                               <span>{{getYear(facet.field)}}</span>
                             </a>
-                            <a data-ng-click="narrowFacetRange('created', 'month', facet.field)"> 
-                              <span data-ng-if="ranges.created.year">- {{getDate(facet.field,'month')}}</span>
+                            <a data-ng-click="narrowFacetRange('updated', 'month', facet.field)"> 
+                              <span data-ng-if="ranges.updated.year">- {{getDate(facet.field,'month')}}</span>
                             </a>      
-                            <a data-ng-click = "narrowFacetRange('created', 'day', facet.field)" > 
-                              <span data-ng-if="ranges.created.month">- {{getDate(facet.field,'day')}}</span>
+                            <a data-ng-click = "narrowFacetRange('updated', 'day', facet.field)" > 
+                              <span data-ng-if="ranges.updated.month">- {{getDate(facet.field,'day')}}</span>
                             </a>
                           </li>
                         </ul>

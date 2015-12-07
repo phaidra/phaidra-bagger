@@ -36,11 +36,33 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
   $scope.ranges = {};
   $scope.facetRangesCreated = [];
   $scope.facetRangesUpdated = [];
-  $scope.pattern_error_display = 0;
   $scope.solr_query_date_flag = 0;
-  $scope.solrQuery_date = "";
   $scope.solrQuery_not_date = "";
-
+  $scope.solr_input_date = {};
+  
+  $scope.test = function () {
+      if(typeof $scope.solr_input_date !== 'undefined'){   
+          if(typeof $scope.solr_input_date.start !== 'undefined' && typeof $scope.solr_input_date.end !== 'undefined'){
+                    var start_year = $scope.solr_input_date.start.getFullYear();
+                    var start_month = $scope.solr_input_date.start.getUTCMonth() + 1;
+                    var start_day = $scope.solr_input_date.start.getUTCDate() + 1;
+                    var end_year = $scope.solr_input_date.end.getFullYear();
+                    var end_month = $scope.solr_input_date.end.getUTCMonth() + 1;
+                    var end_day = $scope.solr_input_date.end.getUTCDate() + 1;
+                    //console.log("start_year:", start_year);
+                    //console.log("start_month:", start_month);
+                    //console.log("start_day:", start_month);
+                    //console.log("end_year:", end_year);
+                    console.log("end_month:", end_month);
+                    //console.log("end_day:", end_day);
+                    if(1 <= start_month && start_month <= 12 && 1 <= end_month && end_month <= 12 && 1 <= start_day && start_day <= 31 && 1 <= end_day && end_day <= 31){  
+                         sorlQuery = '['+start_year+'-'+start_month+'-'+start_day+'T00:00:00Z TO '+end_year+'-'+end_month+'-'+end_day+'T00:00:00Z]';
+                         console.log("solr date22222222:", sorlQuery);
+                    }
+             } 
+     }
+  }
+  
   $scope.init = function (initdata) {
 	
         $scope.initdata = angular.fromJson(initdata);
@@ -83,11 +105,37 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
         }
   };
 
+  
+  $scope.calendar = {
+    opened: {},
+    dateFormat: 'MM/dd/yyyy',
+    dateOptions: {},
+    open: function($event, which) {
+        $event.preventDefault();
+        $event.stopPropagation();
+        $scope.calendar.opened[which] = true;
+    } 
+};
+  
    $scope.getQuerySolr = function() {
             
             var sorlQuery = '';
             if($scope.solr_query_date_flag){
-                 sorlQuery = $scope.solrQuery_date; 
+                   if(typeof $scope.solr_input_date !== 'undefined'){   
+                         if( typeof $scope.solr_input_date.start !== 'undefined' && 
+                             typeof $scope.solr_input_date.end !== 'undefined' &&
+                             $scope.solr_input_date.end !== null &&
+                             $scope.solr_input_date.start !== null
+                           ){
+                               var start_year = $scope.solr_input_date.start.getFullYear();
+                               var start_month = $scope.solr_input_date.start.getUTCMonth() + 1;
+                               var start_day = $scope.solr_input_date.start.getUTCDate() + 1;
+                               var end_year = $scope.solr_input_date.end.getFullYear();
+                               var end_month = $scope.solr_input_date.end.getUTCMonth() + 1;
+                               var end_day = $scope.solr_input_date.end.getUTCDate() + 1;
+                               sorlQuery = '['+start_year+'-'+start_month+'-'+start_day+'T00:00:00Z TO '+end_year+'-'+end_month+'-'+end_day+'T00:00:00Z]';
+                         }
+                   }
             }else{
                  sorlQuery = $scope.solrQuery_not_date;
             }
@@ -99,10 +147,6 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
             if($scope.solr_field == 'All Fields'){
                  delete $scope.solr_field; 
             }
-            
-            // here!!!  search all fields qeury = 2004-12-02T16:39:18 returns all  and qure and field are undefined
-
-            
            
             angular.copy($scope.filter, $scope.filter_send);
 
@@ -113,7 +157,8 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
             if($scope.initdata.statuses){
                   allowedStatuses = angular.toJson($scope.initdata.statuses); 
             }
-
+            console.log('$scope.filter_send;',$scope.filter_send);
+            console.log('$scope.ranges;',$scope.ranges);
             var promise = FrontendService.search_solr_all($scope.filter_send, $scope.ranges, $scope.sortvalue, $scope.sortfield, allowedStatuses, $scope.initdata.current_user.project);
             $scope.loadingTracker.addPromise(promise);
             promise.then(
@@ -223,8 +268,8 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
   $scope.removeFilter = function (type, value) {
           if($scope.filter){                 
                  delete $scope.filter[type];
-                 $scope.solrQuery_not_date = '';
-                 $scope.solrQuery_date = '';
+                 //$scope.solrQuery_not_date = '';
+                 //$scope.solr_input_date = {};
                  $scope.searchQuerySolr(); 
           }
  }
@@ -544,15 +589,18 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
           $scope.solr_field_display = label;
           if(value == 'created' || value == 'updated' || value == 'dc_date') {
                $scope.placeholder = '[YYYY-MM-DDThh:mm:ssZ TO YYYY-MM-DDThh:mm:ssZ]';
-               $scope.pattern_error_display = 1;
                $scope.solr_query_date_flag = 1;
           }else{
                $scope.solr_query_date_flag = 0;
-               $scope.pattern_error_display = 0;
                $scope.placeholder = 'Search';
           }
   }
   
+  $scope.hitEnterSolr = function(evt){
+           if(angular.equals(evt.keyCode,13)){
+                  $scope.searchQuerySolr();
+           }
+  };
   
 });
 
