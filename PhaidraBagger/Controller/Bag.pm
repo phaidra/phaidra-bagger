@@ -977,7 +977,7 @@ sub save_uwmetadata {
     $update->{'$set'}->{validation} = $validation;
   }
   my $reply = $self->mango->db->collection('bags')->update({ bagid => $bagid, project => $self->current_user->{project} } , $update);
-  
+  $self->app->log->info("[".$self->current_user->{username}."] updatedExisting: ".$reply->{updatedExisting});  
 	$self->render(json => { alerts => [] }, status => 200);
 
 }

@@ -185,7 +185,7 @@ sub fix_wrong_provenience_date {
                        $log->error("[$oid] [$cnt] iteration limit reached");
                        exit(0);
                }                               
-               $error_found = get_and_fix_node_with_invalid_date_chars($uwm);  
+               $error_found = get_and_fix_node_with_invalid_date_chars($oid, $uwm);  
                if($error_found){
                        $dirty = 1;                     
                }
@@ -201,7 +201,7 @@ sub fix_wrong_provenience_date {
 }
 
 sub get_and_fix_node_with_invalid_date_chars {
-       
+       my $oid = shift;
        my $metadata = shift;
        
        my $ret = 0;
@@ -221,7 +221,7 @@ sub get_and_fix_node_with_invalid_date_chars {
                }else{
                        my $children_size = defined($n->{children}) ? scalar (@{$n->{children}}) : 0;
                        if($children_size > 0){
-                               $ret = get_and_fix_node_with_invalid_date_chars($n->{children});
+                               $ret = get_and_fix_node_with_invalid_date_chars($oid, $n->{children});
                                last if($ret);
                        }
                }
@@ -233,7 +233,7 @@ sub get_and_fix_node_with_invalid_date_chars {
 sub signin {
 
 	my $url = Mojo::URL->new;
-	$url->scheme('http');  
+	$url->scheme('https');  
 	$url->userinfo($config->{bagger_username}.":".$config->{bagger_password});
 	my @base = split('/',$config->{bagger_baseurl});
 	$url->host($base[0]);
@@ -293,7 +293,7 @@ sub resave_uwmetadata {
 	#$log->info("[$oid] \n ".Dumper($uwm));
 
 	my $url = Mojo::URL->new;
-	$url->scheme('http');  
+	$url->scheme('https');  
 	my @base = split('/',$config->{bagger_baseurl});
 	$url->host($base[0]);
 	if(exists($base[1])){
