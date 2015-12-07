@@ -1450,7 +1450,7 @@ sub _search {
 
 	$cursor
 		->sort({$sortfield => int $sortvalue})
-		->fields({ bagid => 1, status => 1, label => 1, created => 1, updated => 1, project => 1, tags => 1, assignee => 1, alerts => 1, pids => 1, job => 1 })
+		->fields({ bagid => 1, status => 1, label => 1, created => 1, updated => 1, project => 1, tags => 1, assignee => 1, alerts => 1, pids => 1, job => 1, validation => 1 })
 		->skip($from)
 		->limit($limit);
 
