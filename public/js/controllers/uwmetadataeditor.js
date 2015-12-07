@@ -24,6 +24,11 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
 	$scope.bag = [];
 	$scope.bag_info;
 
+  $scope.validation = {
+    ts: 0,
+    errors: []
+  };
+
 	$scope.mode = 'bag';
 
     $scope.fields = [];
@@ -122,6 +127,42 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     	node.value = default_value;
     	node.loaded_value = default_value;
     }
+
+   $scope.getValidationStatus = function() {
+    $scope.form_disabled = true;
+       var promise = MetadataService.getValidationStatus($scope.initdata.bagid);
+       $scope.loadingTracker.addPromise(promise);
+       promise.then(
+        function(response) {
+          $scope.form_disabled = false;
+          $scope.validation = response.data.validation;         
+          $scope.alerts = response.data.alerts;
+        }
+        ,function(response) {
+          $scope.form_disabled = false;
+          $scope.alerts = response.data.alerts;
+         }
+      );
+  }
+
+    $scope.validate = function() {
+     $scope.form_disabled = true;
+       var promise = MetadataService.validate($scope.initdata.bagid);
+       $scope.loadingTracker.addPromise(promise);
+       promise.then(
+          function(response) {
+            $scope.alerts = response.data.alerts; 
+            // safer to ask what was really saved into bag      
+            $scope.getValidationStatus($scope.initdata.bagid);
+            $scope.form_disabled = false;
+          }
+          ,function(response) {
+            $scope.alerts = response.data.alerts;
+            $scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
+            $scope.form_disabled = false;
+          }
+       );
+   }
 
     $scope.loadLanguages = function (){
     	var promise = MetadataService.getLanguages();

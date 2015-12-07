@@ -415,9 +415,17 @@ margin-top: 5px;
 }
 
 .red{
-   color: red;
+   color: #c9302c;
 }
 
 .search-box {
 	margin-bottom: 20px;
+}
+
+.success {
+	color: #449d44;
+}
+
+.danger {
+	color: #c9302c;
 }

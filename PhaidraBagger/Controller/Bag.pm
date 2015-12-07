@@ -34,6 +34,109 @@ sub get_mods_tree {
 	$self->render( json => $res, status => $res->{status});
 }
 
+sub get_validation_status {
+  my $self = shift;
+  my $bagid = $self->stash('bagid');
+
+  $self->app->log->info("[".$self->current_user->{username}."] Loading validation status $bagid");
+
+  my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, project => $self->current_user->{project}}, {'validation' => 1});
+  unless($bag){
+
+    $self->app->log->error("[".$self->current_user->{username}."] Error loading validation status for bagid [".$bagid."]");
+    $self->render(
+      json => {
+        validation => '',
+        alerts => [{ type => 'danger', msg => "Error loading validation status." }]
+      },
+    status => 500);
+
+  }else{
+    $self->render( json => { validation => $bag->{validation}}, status => 200);
+  }
+}
+
+sub validate {
+  my $self = shift;
+  my $bagid = $self->stash('bagid');
+
+  my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, project => $self->current_user->{project}}, {'metadata.uwmetadata' => 1, 'metadata.mods' => 1});
+  unless($bag){
+
+    $self->app->log->error("[".$self->current_user->{username}."] Error loading metadata for validation for bagid [".$bagid."]");
+    $self->render( json => { validation => '', alerts => [{ type => 'danger', msg => "Error loading metadata for validation." }] }, status => 500);
+    return;
+
+  }else{
+
+    my $errors;
+    my $type;
+    my $metadata;
+    if($bag->{metadata}->{uwmetadata}){
+      $type = 'uwmetadata';
+      $metadata = $bag->{metadata}->{uwmetadata};
+    }elsif($bag->{metadata}->{mods}){
+      $type = 'mods';
+      $metadata = $bag->{metadata}->{mods};
+    }
+     
+    my $res = $self->validate_metadata('uwmetadata', $metadata);
+    unless($res){
+      $self->render( json => { validation => '', alerts => [{ type => 'danger', msg => "Error sending metadata for validation." }] }, status => 500);
+      return;
+    }
+
+    if(exists($res->{alerts})){
+      my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => { validation => { ts => time, errors => $res->{alerts}}} } );
+      $self->render( json => $res, status => 200); 
+      return;
+    }else{
+      $self->render( json => { validation => '', alerts => [{ type => 'danger', msg => "Error sending metadata for validation." }] }, status => 500);
+      return;
+    }
+    
+  }
+
+}
+
+sub validate_metadata {
+
+  my $self = shift;
+  my $type = shift;
+  my $metadata = shift;
+
+  my $url = Mojo::URL->new;
+  $url->scheme('https');  
+  my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
+  $url->host($base[0]);
+  if(exists($base[1])){
+    $url->path($base[1]."/$type/json2xml_validate");
+  }else{
+    $url->path("/$type/json2xml_validate");
+  }
+  $url->query({fix => 1});
+
+  my $json_str = b(encode_json({ metadata => { "$type" => $metadata } }))->decode('UTF-8');
+
+  my $tx = $self->ua->post($url, form => { metadata => $json_str }); 
+ 
+  if (my $res = $tx->success) {    
+    return $res->json;
+  }else {        
+    if(defined($tx->res->json)){      
+      if(exists($tx->res->json->{alerts})) {
+        $self->app->log->error("Validating $type: alerts: ".$self->app->dumper($tx->res->json->{alerts}));        
+      }else{
+        $self->app->log->error("Error validating $type: json: ".$self->app->dumper($tx->res->json));        
+      }
+      return $tx->res->json;
+    }else{
+      $self->app->log->error("Error validating $type: ".$self->app->dumper($tx->error));        
+    }
+    return undef;
+  }
+}
+
 sub import_uwmetadata_xml {
   my $self = shift;
   my $res = { alerts => [], status => 200 };
@@ -841,6 +944,18 @@ sub save_uwmetadata {
     }
   }
 
+    # validate 
+  my $validation;
+  if($self->app->config->{validate_uwmetadata}){
+    my $rs = $self->validate_metadata('uwmetadata', $uwmetadata);
+    if(defined($rs) && exists($rs->{alerts})){
+      $validation = { ts => time, errors => $rs->{alerts}};
+    }else{
+      $self->app->log->error("[".$self->current_user->{username}."] Error sending metadata for validation bagid[$bagid], result:".$self->app->dumper($rs));
+      push @{$res->{alerts}}, { type => 'danger', msg => "Error sending metadata for validation." };
+    }
+  }  
+
   # fill index fields
   if(exists($self->app->config->{solr})){
     if($self->app->config->{solr}->{enable_indexing}){
@@ -850,7 +965,16 @@ sub save_uwmetadata {
     }
   }
 
-	my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {updated => time, 'metadata.uwmetadata' => $uwmetadata } } );
+  my $update = { 
+      '$set' => {
+        updated => time, 
+        'metadata.uwmetadata' => $uwmetadata 
+      }
+  };
+  if($validation){
+    $update->{'$set'}->{validation} = $validation;
+  }
+  my $reply = $self->mango->db->collection('bags')->update({ bagid => $bagid, project => $self->current_user->{project} } , $update);
 
 	$self->render(json => { alerts => [] }, status => 200);
 
