@@ -164,6 +164,7 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
             promise.then(
                 function(response) {
                         $scope.alerts = response.data.alerts;
+                        console.log('response.data searchQuerySolr',response.data);
                         $scope.totalItems = response.data.response.numFound;
                         $scope.facetFieldsStatus = $scope.formatFacets(response.data.facet_counts.facet_fields.status);
                         $scope.facetFieldsAssignee = $scope.formatFacets(response.data.facet_counts.facet_fields.assignee);
