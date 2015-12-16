@@ -8,6 +8,8 @@ use Mango::BSON::ObjectID;
 use Mojo::Home;
 use Mojo::JSON qw(encode_json decode_json);
 use File::Find;
+use utf8;
+
 use POSIX qw(strftime);
 use lib "lib";
 my $home = Mojo::Home->new;
@@ -22,32 +24,34 @@ sub import {
 	my $res = { alerts => [], status => 200 };
 
 	my $projectconfig = $self->app->config->{projects}->{$self->current_user->{project}};
+	
 	my $basepath = $projectconfig->{folders}->{in};
-
+	
 	my $folders = $self->hashdir($basepath);
-
-	$self->app->log->info($self->app->dumper($folders));
-
+        $self->app->log->info('import folders:',$self->app->dumper($folders));
 	foreach my $folder (keys %{$folders}){
-		$self->app->log->info("Importing folder $folder");
-
+                $self->app->log->info("Importing folder $folder");
 		my $folderpath = $basepath;
 
 		$folderpath .= '/' unless substr($folderpath, -1) eq '/';
 		$folderpath .= $folder;
-
+		
 		$self->app->log->info("Importing folder, folderpath $folderpath");
 
 		# folder name + project name is the folder id
 		my $folderid = $self->current_user->{project}.$folder;
+		
 		# clean folder id of special chars
 		$folderid =~ s/\W//g;
-	    my $found = $self->mango->db->collection('folders')->find_one({folderid => $folderid, project => $self->current_user->{project}});
+                $folderid =~ s/[^a-zA-Z0-9 _]//g;
+                
+	        my $found = $self->mango->db->collection('folders')->find_one({folderid => $folderid, project => $self->current_user->{project}});
 
 		if(defined($found->{folderid})){
 			push @{$res->{alerts}}, "Not inserting folder $folder, already exists with folderid ".$found->{folderid};
-		}else{
+		}else{			
 			my $reply = $self->mango->db->collection('folders')->insert({ folderid => $folderid, name => $folder, project => $self->current_user->{project}, path => $folderpath, status => 'active', created => time, updated => time } );
+			
 			my $oid = $reply->{oid};
 			if($oid){
 				push @{$res->{alerts}}, "Importing folder $folderid [oid: $oid]";
@@ -64,6 +68,8 @@ sub import {
 			my $bagid = $folderid."_".$file;
 			# clean file id of special chars
 			$bagid =~ s/\W//g;
+			$bagid =~ s/[^a-zA-Z0-9 _]//g;
+			
 			my $foundfile = $self->mango->db->collection('bags')->find_one({bagid => $bagid, project => $self->current_user->{project}});
 
 			if(defined($foundfile->{folderid})){
@@ -158,9 +164,11 @@ sub generate_thumbnail {
 }
 
 sub folders {
+    
     my $self = shift;
-	my $thumb_path = $self->url_for($self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path});
-	my $redmine_baseurl = $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl};
+    
+    my $thumb_path = $self->url_for($self->config->{projects}->{$self->current_user->{project}}->{thumbnails}->{url_path});
+    my $redmine_baseurl = $self->config->{projects}->{$self->current_user->{project}}->{redmine_baseurl};
     my $init_data = { current_user => $self->current_user, thumb_path => $thumb_path, redmine_baseurl => $redmine_baseurl};
     $self->stash(init_data => encode_json($init_data));
 
@@ -169,7 +177,7 @@ sub folders {
 
 sub get_folders {
     my $self = shift;
-
+    
     $self->render_later;
 
 	my $cursor = $self->mango->db->collection('folders')
@@ -201,17 +209,19 @@ sub deactivate_folder {
 }
 
 sub hashdir {
-	my $self = shift;
-		my $dir = shift;
-		opendir my $dh, $dir or die $!;
-		my $tree = {}->{$dir} = {};
-		while( my $file = readdir($dh) ) {
-				next if $file =~ m[^\.{1,2}$];
-				my $path = $dir .'/' . $file;
-				$tree->{$file} = $self->hashdir($path), next if -d $path;
-				push @{$tree->{'.'}}, $file;
-		}
-		return $tree;
+        
+        my $self = shift;
+	my $dir = shift;
+	opendir my $dh, $dir or die $!;
+	my $tree = {}->{$dir} = {};
+	while( my $file = readdir($dh) ) {
+			next if $file =~ m[^\.{1,2}$];
+			utf8::decode($file);
+			my $path = $dir .'/' . $file;
+			$tree->{$file} = $self->hashdir($path), next if -d $path;
+			push @{$tree->{'.'}}, $file;
+	}
+	return $tree;
 }
 
 

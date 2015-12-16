@@ -8,9 +8,7 @@ use Mojo::JSON qw(encode_json decode_json);
 use PhaidraBagger::Model::Cache;
 use base 'Mojolicious::Controller';
 
-
 use Encode qw(decode encode);
-use URI::Escape;
 
 
 sub chillin {

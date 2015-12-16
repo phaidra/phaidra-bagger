@@ -31,7 +31,7 @@
 	<table class="table">
 	  <thead>
 	  <tr>
-	  	<th>Folder</th>
+	    <th>Folder</th>
 	    <th>Created</th>		
 	    <th data-ng-if="current_user.role == 'manager'"><button ng-disabled="form_disabled" data-ng-click="runImport()" class="btn btn-primary navbar-btn"><span class="glyphicon glyphicon-import"></span> Run import</button></th>
 	  </tr>

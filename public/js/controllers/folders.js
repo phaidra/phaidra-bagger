@@ -16,9 +16,11 @@ app.controller('FoldersCtrl',  function($scope, $http, $modal, $location, promis
     	$scope.alerts.splice(index, 1);
     };
 
-	$scope.init = function (initdata) {
-		$scope.initdata = angular.fromJson(initdata);
-		$scope.current_user = $scope.initdata.current_user;
+    $scope.init = function (initdata) {
+	
+        console.log('init');
+        $scope.initdata = angular.fromJson(initdata);
+	$scope.current_user = $scope.initdata.current_user;
     	$scope.getFolderList();
     };
 
@@ -41,7 +43,8 @@ app.controller('FoldersCtrl',  function($scope, $http, $modal, $location, promis
      }
 
      $scope.getFolderList = function() {
-	     var promise = $http({
+	     console.log('getFolderList');
+             var promise = $http({
 	        method  : 'GET',
 		    url     : $('head base').attr('href')+'folders/list'
 		 });
@@ -50,6 +53,7 @@ app.controller('FoldersCtrl',  function($scope, $http, $modal, $location, promis
 	      	function(response) {
 	      		$scope.alerts = response.data.alerts;
 	      		$scope.items = response.data.items;
+                        console.log('getFolderList response',response.data);
 	      	}
 	      	,function(response) {
 	      		$scope.alerts = response.data.alerts;
