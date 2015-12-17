@@ -85,6 +85,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
           if($scope.settings.user == null){
               $scope.settings.user = {};
           }
+          console.log('int settings:', $scope.settings);
           $scope.getProjectClasses();
           $scope.getUwmfields();
           $scope.form_disabled = false;
@@ -105,6 +106,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
           $scope.alerts = response.data.alerts;
           $scope.uwmfields.user = response.data.tree;
           angular.copy(response.data.tree, $scope.uwmfields.project);
+          console.log('uwmfields:',$scope.uwmfields);
           $scope.applyVisibleFieldsSettings();
           $scope.form_disabled = false;
         }
@@ -127,9 +129,15 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
 
   $scope.saveSettings = function(type){
 
-    $scope.settings[type].visible_uwmfields = [];
-    $scope.saveVisibleFieldsSettingsRec($scope.uwmfields[type], type);
-
+   
+    console.log('aaaaa2',$scope.settings.project.members);
+    if(type != 'members'){
+            $scope.settings[type] =  $scope.settings.project.members;
+            $scope.settings[type].visible_uwmfields = [];
+            $scope.saveVisibleFieldsSettingsRec($scope.uwmfields[type], type);
+       
+    }
+    console.log('aaaaa',$scope.settings[type]);
     $scope.form_disabled = true;
     var promise = FrontendService.saveSettings(type, $scope.settings[type]);
     $scope.loadingTracker.addPromise(promise);
@@ -164,6 +172,25 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
     $scope.getProjectClasses();
   }
 
+  $scope.removeMemberFromConfig = function(index){
+     console.log('removeMemberFromConfig before',$scope.settings.project.members);
+     console.log('removeMemberFromConfig before',$scope.settings.members);
+     console.log('removeMemberFromConfig index',index);
+    
+    if(typeof $scope.settings.members == 'undefined'){
+      console.log('removeMemberFromConfig not deleting');
+      $scope.settings['members'] = [];
+    }else{
+      console.log('removeMemberFromConfig deleting');
+      $scope.settings.project.members.splice(index, 1);
+      //$scope.settings.members.splice(index, 1);
+    }
+    $scope.saveSettings('members');
+     console.log('removeMemberFromConfig after',$scope.settings.members);
+     console.log('removeMemberFromConfig after',$scope.settings.project.members);
+    //$scope.getProjectClasses();
+  }
+  
   $scope.getProjectClasses = function(index){
     $scope.form_disabled = true;
     var promise = FrontendService.getClassifications();

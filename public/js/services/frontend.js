@@ -26,12 +26,14 @@ angular.module('frontendService', [])
 		},
 
 		saveSettings: function(type, settings){
-			var data = {};
+			console.log('settings123',settings);
+                        var data = {};
 			data[type+'_settings'] = settings;
 			return $http({
 				method  : 'POST',
 				url     : $('head base').attr('href')+'settings/',
-				data    : data
+				//data    : data
+				data    : {data: data}
 			});
 		},
 

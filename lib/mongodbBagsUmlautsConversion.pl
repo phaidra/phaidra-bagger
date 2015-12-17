@@ -66,10 +66,8 @@ while (my $doc = $dataset->next) {
         
         my $fixedLabel = decode("utf-8-de", $doc->{label});
         utf8::upgrade($fixedLabel);
-                
+        
         $collection->update({"_id" => $doc->{'_id'}}, {'$set' => {
-                                                                  #'folderid' => $fixedFolderid, 
-                                                                  #'bagid' => $fixedBagid,
                                                                   'file'  => $fixedFile,
                                                                   'label' => $fixedLabel
                                                                  }});

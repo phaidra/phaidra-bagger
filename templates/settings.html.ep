@@ -134,8 +134,23 @@
 							  <dt>Display name</dt>
 							  <dd>{{member.displayname}}</dd>
 							  <dt>Username</dt>
-							  <dd>{{member.username}}</dd>
-
+							  <dd>
+							      {{member.username}}
+							      <span class="btn-group pull-right class-panel-buttons">
+                                                                   <button class="btn btn-primary" ng-click="removeMemberFromConfig($index)"><span class="glyphicon glyphicon-minus-sign"></span> Remove</button>
+                                                              </span>
+                                                             
+                                                              <span class="btn-group pull-right class-panel-buttons margin-right-10px">
+                                                                   <button class="btn btn-primary" ng-click="editMemberConfig($index)"><span class="glyphicon"></span> Edit</button>
+                                                              </span>
+							  
+							  </dd>
+							  <dt>
+							
+                                                          </dt>
+                                                           <dd>
+                                                        
+                                                          </dd>
 							</dl>
 						</div>
 					</div>
