@@ -73,6 +73,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
     promise.then(
         function(response) {
           $scope.alerts = response.data.alerts;
+	  //console.log('loadSettings:',response.data);
           $scope.settings = response.data.settings;
           if($scope.settings.project['included_classifications']){
             var included_classifications = {};
@@ -131,26 +132,45 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
 
    
     console.log('aaaaa2',$scope.settings.project.members);
-    if(type != 'members'){
-            $scope.settings[type] =  $scope.settings.project.members;
-            $scope.settings[type].visible_uwmfields = [];
-            $scope.saveVisibleFieldsSettingsRec($scope.uwmfields[type], type);
+    if(type == 'members'){
+            
+            //$scope.settings[type] =  $scope.settings.project.members;
+         //$scope.settings[type].visible_uwmfields = [];
+         //console.log('uwmfields111:',$scope.uwmfields[type]);
+	 //$scope.saveVisibleFieldsSettingsRec($scope.uwmfields[type], type);
+	    
+	 console.log('aaaaa11',$scope.settings.project.members);
+         $scope.form_disabled = true;
+         var promise = FrontendService.saveSettings(type, $scope.settings.project.members);
+         $scope.loadingTracker.addPromise(promise);
+         promise.then(
+           function(response) {
+             $scope.form_disabled = false;
+             $scope.alerts = response.data.alerts;
+           }
+           ,function(response) {
+             $scope.form_disabled = false;
+             $scope.alerts = response.data.alerts;
+             }
+         );
        
+    }else{
+         console.log('aaaaa',$scope.settings[type]);
+         $scope.form_disabled = true;
+         var promise = FrontendService.saveSettings(type, $scope.settings[type]);
+         $scope.loadingTracker.addPromise(promise);
+         promise.then(
+           function(response) {
+             $scope.form_disabled = false;
+             $scope.alerts = response.data.alerts;
+           }
+           ,function(response) {
+             $scope.form_disabled = false;
+             $scope.alerts = response.data.alerts;
+             }
+         );
+      
     }
-    console.log('aaaaa',$scope.settings[type]);
-    $scope.form_disabled = true;
-    var promise = FrontendService.saveSettings(type, $scope.settings[type]);
-    $scope.loadingTracker.addPromise(promise);
-    promise.then(
-      function(response) {
-        $scope.form_disabled = false;
-        $scope.alerts = response.data.alerts;
-      }
-      ,function(response) {
-        $scope.form_disabled = false;
-        $scope.alerts = response.data.alerts;
-        }
-    );
   };
 
   $scope.addClassToConfig = function(uri){
@@ -183,12 +203,23 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
     }else{
       console.log('removeMemberFromConfig deleting');
       $scope.settings.project.members.splice(index, 1);
-      //$scope.settings.members.splice(index, 1);
+      if(typeof $scope.settings.members !== 'undefined'){
+	   $scope.settings.members.splice(index, 1);
+      }
+      
     }
     $scope.saveSettings('members');
      console.log('removeMemberFromConfig after',$scope.settings.members);
      console.log('removeMemberFromConfig after',$scope.settings.project.members);
     //$scope.getProjectClasses();
+  }
+  
+  $scope.editMemberConfig = function(index){
+    
+      var modalInstance = $modal.open({
+            templateUrl: $('head base').attr('href')+'views/modals/edit_project_member.html',
+            controller: EditMemberModalCtrl
+      });
   }
   
   $scope.getProjectClasses = function(index){
@@ -349,6 +380,11 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
 	    $translate.use(langKey);
 	 };
 });
+
+
+var EditMemberModalCtrl = function ($scope, $modalInstance, FrontendService, promiseTracker) {
+  
+};
 
 var SigninModalCtrl = function ($scope, $modalInstance, DirectoryService, FrontendService, promiseTracker) {
 

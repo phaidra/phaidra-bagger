@@ -91,6 +91,24 @@ sub save {
         $self->app->log->debug('project_settings_mongo1234:',$self->app->dumper($project_settings_mongo));
        
        
+        #if(defined $data->{members_settings} || defined $data->{blabli_settings}){
+        if(defined $data->{members_settings}){
+                $self->app->log->info("[".$self->current_user->{username}."] Saving member settings of user ".$self->current_user->{username}." on project ".$self->current_user->{project});
+
+                my $reply = $self->mango->db->collection('project.settings')->update({ 
+                                                                                    #username => $self->current_user->{username}, 
+                                                                                    project => $self->current_user->{project}},
+                                                                                            {'$set' => { 
+                                                                                                         #username => $self->current_user->{username}, 
+                                                                                                         #project => $self->current_user->{project}, 
+                                                                                                         updated => time, 
+                                                                                                         settings => $project_settings_mongo->{settings}
+                                                                                                        }}, 
+                                                                                                                  {upsert => 1}
+                                                                                  );
+        }
+        
+        
         
         
         
