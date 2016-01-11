@@ -129,7 +129,6 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
 
   $scope.saveSettings = function(type){
 
-   
     console.log('aaaaa2',$scope.settings.project.members);
     if(type != 'members'){
             $scope.settings[type] =  $scope.settings.project.members;
@@ -146,10 +145,10 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
         $scope.form_disabled = false;
         $scope.alerts = response.data.alerts;
       }
-      ,function(response) {
+     ,function(response) {
         $scope.form_disabled = false;
         $scope.alerts = response.data.alerts;
-        }
+      }
     );
   };
 
