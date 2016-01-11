@@ -4,7 +4,7 @@ var app = angular.module('frontendApp', ['ngAnimate', 'ngSanitize', 'ui.bootstra
 app.config(function(uiGmapGoogleMapApiProvider) {
     uiGmapGoogleMapApiProvider.configure({
   //      key: <%= $config->{google_maps_api_key} %>,
-    	key:'AIzaSyBWE_bAtgkm1RuWkrW7jBrYV1JBiPUZDAs',
+        key:'AIzaSyBWE_bAtgkm1RuWkrW7jBrYV1JBiPUZDAs',
         v: '3.17',
         libraries: 'weather,geometry,visualization'
     });
@@ -73,7 +73,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
     promise.then(
         function(response) {
           $scope.alerts = response.data.alerts;
-	  //console.log('loadSettings:',response.data);
+          //console.log('loadSettings:',response.data);
           $scope.settings = response.data.settings;
           if($scope.settings.project['included_classifications']){
             var included_classifications = {};
@@ -137,9 +137,9 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
             //$scope.settings[type] =  $scope.settings.project.members;
          //$scope.settings[type].visible_uwmfields = [];
          //console.log('uwmfields111:',$scope.uwmfields[type]);
-	 //$scope.saveVisibleFieldsSettingsRec($scope.uwmfields[type], type);
-	    
-	 console.log('aaaaa11',$scope.settings.project.members);
+         //$scope.saveVisibleFieldsSettingsRec($scope.uwmfields[type], type);
+            
+         console.log('aaaaa11',$scope.settings.project.members);
          $scope.form_disabled = true;
          var promise = FrontendService.saveSettings(type, $scope.settings.project.members);
          $scope.loadingTracker.addPromise(promise);
@@ -204,7 +204,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
       console.log('removeMemberFromConfig deleting');
       $scope.settings.project.members.splice(index, 1);
       if(typeof $scope.settings.members !== 'undefined'){
-	   $scope.settings.members.splice(index, 1);
+           $scope.settings.members.splice(index, 1);
       }
       
     }
@@ -377,8 +377,8 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
     };
 
      $scope.setLang = function(langKey) {
-	    $translate.use(langKey);
-	 };
+            $translate.use(langKey);
+         };
 });
 
 
