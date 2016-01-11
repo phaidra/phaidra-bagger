@@ -1,0 +1,36 @@
+
+
+<div class="modal modal-ingest">
+	<div class="modal-dialog modal-ingest-dialog">
+		
+		<div class="modal-content">
+			<div class="modal-header">
+				<h4 class="modal-title"><span class="glyphicon glyphicon-pencil"></span> Edit Project Member <img class="load-spinner" ng-show="loadingTracker.active()" ng-src="{{baseurl+'/img/ajax-loader.gif'}}"></h4>
+			</div>
+		
+			<div class="modal-body">
+				<div class="container-fluid">
+					<data-ng-form name="form" novalidate role="form">
+						<fieldset data-ng-disabled="form_disabled">
+						
+						        <div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.role.$dirty && form.role.$invalid]">
+										<label class="control-label" for="role">Role:</label>
+										<input type="text" class="form-control" name="role" id="role" ng-required="1" ng-model="modaldata.role" ng-keyup="hitEnterSave($event)" required>
+							</div>
+							<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.displayname.$dirty && form.displayname.$invalid]">
+										<label class="control-label" for="displayname">Display Name:</label>
+										<input type="text" class="form-control" name="displayname" id="displayname" ng-required="1" ng-model="modaldata.displayname" ng-keyup="hitEnterSave($event)" required>
+							</div>
+							<!--
+							<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.username.$dirty && form.username.$invalid]">
+										<label class="control-label" for="username">Username:</label>
+										<input type="text" class="form-control" name="username" id="username" ng-required="1" ng-model="modaldata.username" ng-keyup="hitEnterSave($event)" required>
+							</div>
+	                                                 -->
+						</fieldset>
+					</data-ng-form>					
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
