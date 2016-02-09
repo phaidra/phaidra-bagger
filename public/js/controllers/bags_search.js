@@ -40,6 +40,8 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
   $scope.solrQuery_not_date = "";
   $scope.solr_input_date = {};
   
+  
+  /*
   $scope.test = function () {
       if(typeof $scope.solr_input_date !== 'undefined'){   
           if(typeof $scope.solr_input_date.start !== 'undefined' && typeof $scope.solr_input_date.end !== 'undefined'){
@@ -62,6 +64,8 @@ app.controller('BagsCtrl',  function($scope, $modal, $location, $timeout, Direct
              } 
      }
   }
+  */
+  
   
   $scope.init = function (initdata) {
 	

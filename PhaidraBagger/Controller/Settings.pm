@@ -82,16 +82,50 @@ sub save {
         my $project_settings = $self->req->json->{project_settings};
         my $user_settings = $self->req->json->{user_settings};
 
-        
+
         
         my $project_settings_mongo = $self->mango->db->collection('project.settings')->find_one({project => $self->current_user->{project}});
+        my $user_settings_mongo = $self->mango->db->collection('user.settings')->find_one({project => $self->current_user->{project} , username => $self->current_user->{username}});
+        
+        #$self->app->log->debug('project_settings_mongo12345:',$self->app->dumper($project_settings_mongo));
+        #$self->app->log->debug('user_settings_mongo12345:',$self->app->dumper($user_settings_mongo));
+        
         if(defined $data->{members_settings}){
                 $project_settings_mongo->{settings}->{members} = $data->{members_settings}; 
         }
-        $self->app->log->debug('project_settings_mongo1234:',$self->app->dumper($project_settings_mongo));
+        
+        #$self->app->log->debug('project_settings_mongo1234:',$self->app->dumper($project_settings_mongo));
+        if(defined $data->{project_settings}){
+               #$project_settings_mongo->{settings}->{members} = $data->{members_settings};
+               $project_settings_mongo->{settings}->{default_assignee} = $data->{project_settings}->{default_assignee};
+               $project_settings_mongo->{settings}->{classifications} = $data->{project_settings}->{classifications};
+               $project_settings_mongo->{settings}->{visible_uwmfields} = $data->{project_settings}->{visible_uwmfields};
+               $project_settings_mongo->{settings}->{default_template} = $data->{project_settings}->{default_template};
+               #...
+        }
+        if(defined $data->{user_settings}){
+              $user_settings_mongo->{settings}->{visible_uwmfields} = $data->{user_settings}->{visible_uwmfields};
+              $user_settings_mongo->{settings}->{default_template}  = $data->{user_settings}->{default_template};
+        }
        
        
         #if(defined $data->{members_settings} || defined $data->{blabli_settings}){
+        #project
+        if(defined $data->{project_settings}){
+                $self->app->log->info("[".$self->current_user->{username}."] Saving project settings settings of user ".$self->current_user->{username}." on project ".$self->current_user->{project});
+
+                my $reply = $self->mango->db->collection('project.settings')->update({ 
+                                                                                    #username => $self->current_user->{username}, 
+                                                                                    project => $self->current_user->{project}},
+                                                                                            {'$set' => { 
+                                                                                                         #username => $self->current_user->{username}, 
+                                                                                                         #project => $self->current_user->{project}, 
+                                                                                                         updated => time, 
+                                                                                                         settings => $project_settings_mongo->{settings}
+                                                                                                        }}, 
+                                                                                                                  {upsert => 1}
+                                                                                  );
+        }
         if(defined $data->{members_settings}){
                 $self->app->log->info("[".$self->current_user->{username}."] Saving member settings of user ".$self->current_user->{username}." on project ".$self->current_user->{project});
 
@@ -111,8 +145,8 @@ sub save {
         
         
         
-        
-        if($user_settings){
+        if(defined $data->{user_settings}){
+        #if($user_settings){
                 $self->app->log->info("[".$self->current_user->{username}."] Saving settings of user ".$self->current_user->{username}." on project ".$self->current_user->{project});
 
                 my $reply = $self->mango->db->collection('user.settings')->update({ 
@@ -122,7 +156,7 @@ sub save {
                                                                                                          username => $self->current_user->{username}, 
                                                                                                          project => $self->current_user->{project}, 
                                                                                                          updated => time, 
-                                                                                                         settings => $user_settings
+                                                                                                         settings => $user_settings_mongo->{settings}
                                                                                                         }}, 
                                                                                                                   {upsert => 1}
                                                                                   );

@@ -1,5 +1,4 @@
-app.controller('BaginfoCtrl',  function($scope) {
-
+app.controller('BaginfoCtrl',  function($scope, promiseTracker) {
 
 
 });

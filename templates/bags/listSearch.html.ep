@@ -9,7 +9,7 @@
 <div class="container" data-ng-controller="BagsCtrl" data-ng-init="init('<%= $init_data %>')">
 
 %= include 'alerts'
-        <div ng-click="test()">aaaaaaaaaaaaaaaaaaaaaaaaaaaaa</div>
+        <!--  <div ng-click="test()">aaaaaaaaaaaaaaaaaaaaaaaaaaaaa</div>  -->
         <nav  id="control-panel" class="navbar navbar-default list-navbar">
 
                         <div class="navbar-header">
@@ -122,26 +122,6 @@
 
         </nav>
 
-   
-   
-   
-   
-   
-   
-   
-   
-   
-
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
    
    
    

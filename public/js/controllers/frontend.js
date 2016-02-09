@@ -33,6 +33,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
   $scope.initdata = '';
   $scope.current_user = '';
 
+  
   $scope.uwmfields = {
       user: [],
       project: []
@@ -73,8 +74,11 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
     promise.then(
         function(response) {
           $scope.alerts = response.data.alerts;
-          //console.log('loadSettings:',response.data);
-          $scope.settings = response.data.settings;
+          console.log('loadSettings:',response.data);
+          $scope.settings = response.data.settings;          
+          
+          delete $scope.settings.members;
+          console.log('xxxxxxx', $scope.settings);
           if($scope.settings.project['included_classifications']){
             var included_classifications = {};
             for (var i = 0; i < $scope.settings.project.included_classifications.length; ++i) {
@@ -131,12 +135,16 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
   $scope.saveSettings = function(type){
 
    
+    console.log('saveSettings type',type);      
+          
     console.log('aaaaa2',$scope.settings.project.members);
+    //default_assignee
     if(type == 'members'){
             
-            //$scope.settings[type] =  $scope.settings.project.members;
+         //$scope.settings[type] =  $scope.settings.project.members;
          //$scope.settings[type].visible_uwmfields = [];
          //console.log('uwmfields111:',$scope.uwmfields[type]);
+        
          //$scope.saveVisibleFieldsSettingsRec($scope.uwmfields[type], type);
             
          console.log('aaaaa11',$scope.settings.project.members);
@@ -148,14 +156,27 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
              $scope.form_disabled = false;
              $scope.alerts = response.data.alerts;
            }
-           ,function(response) {
+          ,function(response) {
              $scope.form_disabled = false;
              $scope.alerts = response.data.alerts;
-             }
+           }
          );
-       
+      
+      
     }else{
-         console.log('aaaaa',$scope.settings[type]);
+         
+         console.log('default_template before save1',$scope.settings.project.default_template);
+         console.log('default_template before save2',$scope.settings.user.default_template); 
+            
+         $scope.settings[type].visible_uwmfields = [];
+         $scope.saveVisibleFieldsSettingsRec($scope.uwmfields[type], type);
+         
+         if($scope.settings.project.members){
+                 if($scope.settings.project.members.selected){
+                           $scope.settings[type].default_assignee = $scope.settings.project.members.selected.username;
+                 }
+         }
+         console.log('settings before save',$scope.settings);
          $scope.form_disabled = true;
          var promise = FrontendService.saveSettings(type, $scope.settings[type]);
          $scope.loadingTracker.addPromise(promise);
@@ -175,7 +196,7 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
 
   $scope.addClassToConfig = function(uri){
     if(typeof $scope.settings.project.classifications == 'undefined'){
-      $scope.settings.project['classifications'] = [];
+            $scope.settings.project['classifications'] = [];
     }
     $scope.settings.project.classifications.push(uri);
     $scope.saveSettings('project');
@@ -184,43 +205,54 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
 
   $scope.removeClassFromConfig = function(index){
     if(typeof $scope.settings.project.classifications == 'undefined'){
-      $scope.settings.project['classifications'] = [];
+          $scope.settings.project['classifications'] = [];
     }else{
-      $scope.settings['project'].classifications.splice(index, 1);
+          $scope.settings['project'].classifications.splice(index, 1);
     }
     $scope.saveSettings('project');
     $scope.getProjectClasses();
   }
 
   $scope.removeMemberFromConfig = function(index){
-     console.log('removeMemberFromConfig before',$scope.settings.project.members);
-     console.log('removeMemberFromConfig before',$scope.settings.members);
-     console.log('removeMemberFromConfig index',index);
-    
-    if(typeof $scope.settings.members == 'undefined'){
-      console.log('removeMemberFromConfig not deleting');
-      $scope.settings['members'] = [];
+          
+    if(typeof $scope.settings.project.members == 'undefined'){
+         $scope.settings.project.members = [];
     }else{
-      console.log('removeMemberFromConfig deleting');
-      $scope.settings.project.members.splice(index, 1);
-      if(typeof $scope.settings.members !== 'undefined'){
-           $scope.settings.members.splice(index, 1);
-      }
-      
+         $scope.settings.project.members.splice(index, 1);      
     }
     $scope.saveSettings('members');
-     console.log('removeMemberFromConfig after',$scope.settings.members);
-     console.log('removeMemberFromConfig after',$scope.settings.project.members);
-    //$scope.getProjectClasses();
+
   }
-  
-  $scope.editMemberConfig = function(index){
+   
+  $scope.editMemberConfig = function(index, member_data){
     
-      var modalInstance = $modal.open({
+       var modalInstance = $modal.open({
             templateUrl: $('head base').attr('href')+'views/modals/edit_project_member.html',
-            controller: EditMemberModalCtrl
+            controller: EditMemberModalCtrl,
+            scope: $scope,
+            resolve: {
+                            username: function(){
+                                   return member_data.username;
+                                  },
+                            role: function(){
+                                   return member_data.role;
+                                  },
+                            displayname: function(){
+                                   return member_data.displayname;
+                                  }
+                    }
       });
   }
+  
+   $scope.addMemberConfig = function(){
+    
+        console.log('addMemberConfig:');
+       var modalInstance = $modal.open({
+            templateUrl: $('head base').attr('href')+'views/modals/add_project_member.html',
+            controller: AddMemberModalCtrl,
+            scope: $scope
+      });
+   }
   
   $scope.getProjectClasses = function(index){
     $scope.form_disabled = true;
@@ -284,8 +316,8 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
 
   $scope.checkTreeSanity = function (field, type) {
     if(field.children){
-      // if parent is unchecked then all the children should be unchecked
-      $scope.setIncludeRec(field.children, field.include);
+        // if parent is unchecked then all the children should be unchecked
+        $scope.setIncludeRec(field.children, field.include);
     }
 
     // if some child is checked, then parent have to be checked
@@ -382,9 +414,125 @@ app.controller('FrontendCtrl', function($scope, $window, $modal, $log, $translat
 });
 
 
-var EditMemberModalCtrl = function ($scope, $modalInstance, FrontendService, promiseTracker) {
-  
+
+var AddMemberModalCtrl = function ($scope, $modalInstance, $http, FrontendService, promiseTracker) {
+       
+        $scope.selected_role;
+        $scope.new_displayname;
+        $scope.searchMembers = [];
+        $scope.selected_member = {};
+        
+        $scope.refreshMembers = function(query) {
+               
+             var promise = FrontendService.getUsers(query);
+             $scope.loadingTracker.addPromise(promise);
+             promise.then(
+                   function(response) { 
+                           $scope.alerts = response.data.alerts;
+                           $scope.form_disabled = false;
+                           console.log('refreshMembers', response.data);
+                           if(response.data.accounts){
+                                    if(response.data.accounts.constructor === Array){
+                                            $scope.searchMembers = response.data.accounts;   
+                                    }
+                           }
+                   }
+                  ,function(response) {
+                           console.log('refreshMembers', response.data); 
+                           $scope.alerts = response.data.alerts;
+                           $scope.alerts.unshift({type: 'danger', msg: "Error code "+response.status});
+                           $scope.form_disabled = false;
+                   }
+             );
+        }
+       
+
+        $scope.save = function (new_displayname) {
+            
+            console.log('new_displayname', new_displayname);
+            console.log('selected_member', $scope.selected_member.selected.uid);
+            console.log('selected_role', $scope.selected_role);
+
+            if(!$scope.settings.project.members){
+                   $scope.settings.project.members = []; 
+            }
+            var newMember = {};
+            newMember.username = $scope.selected_member.selected.uid;
+            newMember.displayname = new_displayname;
+            newMember.role = $scope.selected_role;
+            $scope.settings.project.members.push(newMember);
+            
+            $scope.saveSettings('members');
+            $modalInstance.dismiss('OK');
+            
+        }
+        
+        $scope.setMembersRole = function (new_role) {
+             $scope.selected_role = new_role;
+        };
+        
+        $scope.cancel = function () {
+            $modalInstance.dismiss('Save');
+        };
+    
+        $scope.hitEnter = function(evt){
+              if(angular.equals(evt.keyCode,13)){
+                  //$scope.deleteAllBookmark();
+                  $modalInstance.dismiss('OK');
+              }
+        }; 
+        
+}
+
+var EditMemberModalCtrl = function ($scope, $modalInstance, promiseTracker, username, role, displayname) {
+        
+     
+    $scope.selected_role = role;
+    $scope.new_displayname = displayname;
+    
+    $scope.setMembersRole = function (new_role) {
+             console.log('role username', new_role, username);
+             for (var i = 0; i < $scope.settings.project.members.length; ++i) {
+                  if(typeof $scope.settings.project.members[i].username != 'undefined' ){
+                         if($scope.settings.project.members[i].username == username){
+                               $scope.settings.project.members[i].role = new_role;
+                               $scope.selected_role = new_role;
+                         }
+                  }
+             }
+             console.log('setMembersRole', $scope.settings);
+             console.log('selected_role',$scope.selected_role);
+    };
+
+       
+    
+    $scope.save = function (new_displayname) {
+            
+            
+            console.log('new_displayname', new_displayname);
+            for (var i = 0; i < $scope.settings.project.members.length; ++i) {
+                  if(typeof $scope.settings.project.members[i].username != 'undefined' ){
+                         if($scope.settings.project.members[i].username == username){
+                               $scope.settings.project.members[i].displayname = new_displayname;
+                         }
+                  }
+            }
+            $scope.saveSettings('members');
+            $modalInstance.dismiss('OK');
+    }
+    
+    $scope.cancel = function () {
+        $modalInstance.dismiss('Save');
+    };
+    
+    $scope.hitEnter = function(evt){
+           if(angular.equals(evt.keyCode,13)){
+                  //$scope.deleteAllBookmark();
+                  $modalInstance.dismiss('OK');
+           }
+   }; 
 };
+
 
 var SigninModalCtrl = function ($scope, $modalInstance, DirectoryService, FrontendService, promiseTracker) {
 

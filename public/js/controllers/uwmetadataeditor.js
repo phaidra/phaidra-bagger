@@ -45,14 +45,13 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     $scope.init = function (initdata) {
     	$scope.initdata = angular.fromJson(initdata);
     	$scope.current_user = $scope.initdata.current_user;
-    	$scope.bagid = $scope.initdata.bagid;
-			$scope.baginfo = $scope.initdata.baginfo;
+    	//$scope.bagid = $scope.initdata.bagid;
+	$scope.baginfo = $scope.initdata.baginfo;
 
     	if($scope.initdata.bagid){
-        $scope.mode = 'bag';
+                $scope.mode = 'bag';
     		$scope.bagid = $scope.initdata.bagid;
-				$scope.bagid = $scope.initdata.bagid;
-    		$scope.loadBag();
+                $scope.loadBag();
         $scope.getValidationStatus();
     	}else{
     		if($scope.initdata.tid){
@@ -97,6 +96,9 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
 				return $scope.fields.length;
 		};
 
+                           
+     
+     
     $scope.getBack2BagsLink = function (){
     	if($scope.initdata.current_bags_query){
     		if($scope.initdata.current_bags_query.filter){
@@ -435,6 +437,7 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     			$scope.languages = response.data.metadata.languages;
     			$scope.fields = response.data.metadata.uwmetadata;
     			$scope.bag = response.data;
+                        console.log('bag123:',$scope.bag);
     			$scope.load_init();
     		}
     		,function(response) {

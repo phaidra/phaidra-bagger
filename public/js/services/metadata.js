@@ -166,6 +166,19 @@ angular.module('metadataService', [])
 		        method  : 'GET',
 		        url     : $('head base').attr('href')+'bag/'+bagid+'/mods/classifications'
 		    });
-		}
+		},
+                getRightsObject: function(bagid) {
+                    return $http({
+                        method  : 'GET',
+                        url     : $('head base').attr('href')+'bag/'+bagid+'/rights'
+                    });
+                },
+                saveRightsObject: function(bagid, rights) {
+                    return $http({
+                        method  : 'post',
+                        url     : $('head base').attr('href')+'bag/'+bagid+'/rights',
+                        data    : { rights: rights }
+                    });
+               }
 	}
 });

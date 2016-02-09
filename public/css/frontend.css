@@ -429,3 +429,14 @@ margin-top: 5px;
 .danger {
 	color: #c9302c;
 }
+.capitalize {
+        text-transform: capitalize;
+}
+
+.add-project-fieldset {
+      margin-bottom: 20px;       
+}
+
+.long-file-name-icon-chrome-bug-fix{
+        max-width: none;
+}

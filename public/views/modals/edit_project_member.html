@@ -14,20 +14,40 @@
 						<fieldset data-ng-disabled="form_disabled">
 						
 						        <div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.role.$dirty && form.role.$invalid]">
-										<label class="control-label" for="role">Role:</label>
-										<input type="text" class="form-control" name="role" id="role" ng-required="1" ng-model="modaldata.role" ng-keyup="hitEnterSave($event)" required>
+										<label class="control-label" for="role">Change Role:</label>
+										<!--<input type="text" class="form-control" name="role" id="role" ng-required="1" ng-model="modaldata.role" ng-keyup="hitEnterSave($event)" required>-->
+										<div class="btn-group">
+                                                                                      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                                                                           <div data-ng-if="!selected_role">Please select</div>
+                                                                                           <div  class="capitalize" data-ng-if="selected_role">{{selected_role}}</div>
+                                                                                      </button>
+                                                                                      <ul class="dropdown-menu" role="menu">
+                                                                                         <li><a href="" data-ng-click="setMembersRole('member')">Member</a></li>
+                                                                                         <li><a href="" data-ng-click="setMembersRole('manager')">Manager</a></li>
+                                                                                      </ul>
+                                                                                </div>
 							</div>
-							<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.displayname.$dirty && form.displayname.$invalid]">
-										<label class="control-label" for="displayname">Display Name:</label>
-										<input type="text" class="form-control" name="displayname" id="displayname" ng-required="1" ng-model="modaldata.displayname" ng-keyup="hitEnterSave($event)" required>
+							
+                                                      
+							<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.new_displayname.$dirty && form.new_displayname.$invalid]">
+										<label class="control-label" for="new_displayname">Change Display Name:</label>
+										<input ng-model="new_displayname" type="text" class="form-control" name="new_displayname" id="new_displayname" ng-required="1"  ng-keyup="hitEnterSave($event)" required>
 							</div>
-							<!--
-							<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.username.$dirty && form.username.$invalid]">
-										<label class="control-label" for="username">Username:</label>
-										<input type="text" class="form-control" name="username" id="username" ng-required="1" ng-model="modaldata.username" ng-keyup="hitEnterSave($event)" required>
-							</div>
-	                                                 -->
+
 						</fieldset>
+                             
+                             
+
+                            
+                            
+						         <div class="row">       
+                                                                <div class="col-md-12">                                 
+                                                                        <div >
+                                                                                <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
+                                                                                <button type="button" class="btn btn-primary" ng-click="save(new_displayname)" ng-disabled="(form.$dirty && form.$invalid)  || form_disabled">Save</button>
+                                                                        </div>
+                                                                </div>
+                                                        </div>
 					</data-ng-form>					
 				</div>
 			</div>

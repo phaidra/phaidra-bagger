@@ -24,8 +24,8 @@ sub check {
 	}
 
 	my $init_data = { current_user => $self->current_user };
-  $self->stash(init_data => encode_json($init_data));
-  return 1;
+        $self->stash(init_data => encode_json($init_data));
+        return 1;
 }
 
 sub signin {
@@ -51,7 +51,7 @@ sub signin {
     # set token cookie, we are currently not using this, but if js would like to access api directly it needs the token
     $self->cookie($self->app->config->{authentication}->{token_cookie} => $res->{token});
 
-    $self->app->log->info("Current user: ".$self->app->dumper($self->current_user));
+    #$self->app->log->info("Current user: ".$self->app->dumper($self->current_user));
     $self->render(json => { alerts => $res->{alerts}, token => $res->{token}} , status => $res->{status});
 }
 
@@ -60,6 +60,8 @@ sub signout {
 
 	my $current_user = $self->current_user;
 
+	$self->app->log->info("singout current user:".$current_user);
+	
 	# delete from cache
 	$self->app->chi->remove($current_user->{username});
 

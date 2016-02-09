@@ -1,0 +1,67 @@
+
+
+<div class="modal modal-ingest">
+        <div class="modal-dialog modal-ingest-dialog">
+                
+                <div class="modal-content">
+                        <div class="modal-header">
+                                <h4 class="modal-title"><span class="glyphicon glyphicon-pencil"></span> Add Project Member <img class="load-spinner" ng-show="loadingTracker.active()" ng-src="{{baseurl+'/img/ajax-loader.gif'}}"></h4>
+                        </div>
+                
+                        <div class="modal-body">
+                                <div class="container-fluid">
+                                        <data-ng-form name="form" novalidate role="form">
+                                                <fieldset class='add-project-fieldset' data-ng-disabled="form_disabled">
+                                                
+                                                        <div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.role.$dirty && form.role.$invalid]">
+                                                                                <label class="control-label" for="role">Role:</label>
+                                                                                <div class="btn-group">
+                                                                                      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                                                                           <div data-ng-if="!selected_role">Please select</div>
+                                                                                           <div  class="capitalize" data-ng-if="selected_role">{{selected_role}}</div>
+                                                                                      </button>
+                                                                                      <ul class="dropdown-menu" role="menu">
+                                                                                           <li><a href="" data-ng-click="setMembersRole('member')">Member</a></li>
+                                                                                           <li><a href="" data-ng-click="setMembersRole('manager')">Manager</a></li>
+                                                                                      </ul>
+                                                                                </div>
+                                                        </div>
+                                                        
+                                                      
+                                                        <div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.new_displayname.$dirty && form.new_displayname.$invalid]">
+                                                                                <label class="control-label" for="new_displayname">Display Name:</label>
+                                                                                <input ng-model="new_displayname" type="text" class="form-control" name="new_displayname" id="new_displayname" ng-required="1"  ng-keyup="hitEnterSave($event)" required>
+                                                        </div>
+                                                        
+                                                        <label class="control-label" for="user">User:</label>
+                                                        <ui-select 
+                                                                  ng-model="selected_member.selected"
+                                                                  theme="bootstrap"
+                                                                  ng-disabled="disabled"
+                                                                  reset-search-input="false"
+                                                                  style="width: 300px;">
+                                                                  <ui-select-match placeholder="Enter a member name...">{{$select.selected.value}}</ui-select-match>
+                                                                            <ui-select-choices repeat="searchMember in searchMembers track by $index"
+                                                                                    refresh="refreshMembers($select.search)"
+                                                                                    refresh-delay="0">
+                                                                                    <div ng-bind-html="searchMember.value | highlight: $select.search"></div>
+                                                                           </ui-select-choices>
+                                                       </ui-select>
+
+                                       
+                                                </fieldset>
+
+                                                         <div class="row">       
+                                                                <div class="col-md-12">                                 
+                                                                        <div >
+                                                                                <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
+                                                                                <button type="button" class="btn btn-primary" ng-click="save(new_displayname)" ng-disabled="(form.$dirty && form.$invalid)  || form_disabled">Save</button>
+                                                                        </div>
+                                                                </div>
+                                                        </div>
+                                        </data-ng-form>                                 
+                                </div>
+                        </div>
+                </div>
+        </div>
+</div>

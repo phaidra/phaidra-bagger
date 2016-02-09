@@ -28,6 +28,7 @@
 							<thead>
 								<tr>
 									<th>Job ID</th>
+									<th>Ingest instance</th>
 									<th>Finished at</th>
 									<th>PID</th>
 								</tr>
@@ -35,8 +36,9 @@
 							<tbody>
 								<tr data-ng-repeat="job in bag.jobs">
 									<td>{{job.jobid}}</td>
+									<td>{{job.ingest_instance}}</td>
 									<td>{{job.finished_at * 1000 | date:'dd.MM.yyyy HH:mm:ss'}}</td>
-									<td>{{job.pid}}</td>
+									<td><a  data-ng-href="https://{{job.instance_url}}/view/{{job.pid}}" >{{job.pid}}</a></td>
 								</tr>
 							</tbody>
 						</table>

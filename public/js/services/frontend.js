@@ -64,6 +64,20 @@ angular.module('frontendService', [])
                                 url     : $('head base').attr('href')+'search_solr_all',
                                 params  : {filter: filter, ranges: ranges, sortvalue: sortvalue, sortfield: sortfield, allowedStatuses: allowedStatuses, project: project }
                         });
-                }
+                },
+                getUsers: function(query){
+                        return $http({
+                                method  : 'GET',
+                                url     : $('head base').attr('href')+'get_users/',
+                                params  : { query: query }
+                        });
+                },
+                getFacultyIdFromDepatment: function(depatmentId){
+                        return $http({
+                                method  : 'GET',
+                                url     : $('head base').attr('href')+'get_faculty_id_from_department',
+                                params  : { id: depatmentId }
+                        });
+                },
 	}
 });

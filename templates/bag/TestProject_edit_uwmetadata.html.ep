@@ -225,7 +225,7 @@
 		            <tab-heading>
 		            	<span>Info</span>
 		            </tab-heading>
-		            <div data-ng-controller="BaginfoCtrl" data-ng-include="'<%= url_for '/views/partials/' %>baginfo.html'"></div>
+		            <div data-ng-controller="BaginfoCtrl" data-ng-init="initbaginfo('<%= $init_data %>')" data-ng-include="'<%= url_for '/views/partials/' %>baginfo.html'"></div>
 		          </tab>
 
 				</tabset>

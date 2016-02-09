@@ -768,39 +768,41 @@ sub load {
 
 					my $tid = $self->get_default_template_id();
 					if($tid){
-			            my $oid = Mango::BSON::ObjectID->new($tid);
-			            my $tmplt = $self->mango->db->collection('templates')->find_one({_id => $oid});
-			            $self->app->log->info("[".$self->current_user->{username}."] Loaded default template '".$tmplt->{title}."' [$tid]");
-			            # init
-			            $bag->{metadata} = undef unless($bag->{metadata});
-			            $bag->{metadata}->{uwmetadata} = $tmplt->{uwmetadata};
-			            $bag->{metadata}->{languages} = $self->get_languages();
-		          	}else{
-		          		my $cache_model = PhaidraBagger::Model::Cache->new;
-						my $rs = $cache_model->get_uwmetadata_tree($self);
-		            	# init
-		  				$bag->{metadata} = undef unless($bag->{metadata});
-		    		  	if($rs->{status} eq 200){
-		    		   		$bag->{metadata}->{uwmetadata} = $rs->{tree};
-		    		   		$bag->{metadata}->{languages} = $rs->{languages};
-		    		   	}
-		          	}
-
+			                       my $oid = Mango::BSON::ObjectID->new($tid);
+			                       my $tmplt = $self->mango->db->collection('templates')->find_one({_id => $oid});
+			                       $self->app->log->info("[".$self->current_user->{username}."] Loaded default template '".$tmplt->{title}."' [$tid]");
+			                       # init
+			                       $bag->{metadata} = undef unless($bag->{metadata});
+			                       $bag->{metadata}->{uwmetadata} = $tmplt->{uwmetadata};
+			                       $bag->{metadata}->{languages} = $self->get_languages();
+		          	        }else{
+		          		       my $cache_model = PhaidraBagger::Model::Cache->new;
+					       my $rs = $cache_model->get_uwmetadata_tree($self);
+		            	               # init
+		  			       $bag->{metadata} = undef unless($bag->{metadata});
+		    		  	       if($rs->{status} eq 200){
+		    		   		    $bag->{metadata}->{uwmetadata} = $rs->{tree};
+		    		   		    $bag->{metadata}->{languages} = $rs->{languages};
+		    		   	       }
+		          	        }
 				}else{
 					$bag->{metadata}->{languages} = $self->get_languages();
 				}
 
-        # decompress        
-        if($self->app->config->{enable_bag_compression}){
-          my $decompressed = $self->decompress_bag_uwmetadata($bag->{metadata}->{uwmetadata});  
-          if(defined($decompressed)){
-            $self->app->log->info("[".$self->current_user->{username}."] Decompressing $bagid successful.");
-            $bag->{metadata}->{uwmetadata} = $decompressed->{metadata}->{uwmetadata};            
-          }else{
-            $self->app->log->error("[".$self->current_user->{username}."] Error decompressing $bagid.");
-          }
-        }
-
+                               # decompress        
+                               if($self->app->config->{enable_bag_compression}){
+                                       my $decompressed = $self->decompress_bag_uwmetadata($bag->{metadata}->{uwmetadata});  
+                                       if(defined($decompressed)){
+                                                $self->app->log->info("[".$self->current_user->{username}."] Decompressing $bagid successful.");
+                                                $bag->{metadata}->{uwmetadata} = $decompressed->{metadata}->{uwmetadata};            
+                                       }else{
+                                            $self->app->log->error("[".$self->current_user->{username}."] Error decompressing $bagid.");
+                                      }
+                                }
+				
+				$bag  = $self->get_jobs_data($bag);
+				#$self->app->log->debug("yyyyyyyyyyyyyyyyyy:bag ".$self->app->dumper($bag));
+				
 				$self->apply_hide_filter_uwmetadata($bag->{metadata}->{uwmetadata});
 				$self->render(json => $bag, status => 200);
 				return;
@@ -814,15 +816,15 @@ sub load {
 				unless($bag->{metadata}->{mods}){
 					my $tid = $self->get_default_template_id_mods();
 					if($tid){
-			            my $oid = Mango::BSON::ObjectID->new($tid);
-			            my $tmplt = $self->mango->db->collection('templates')->find_one({_id => $oid});
-			            $self->app->log->info("[".$self->current_user->{username}."] Loaded default template '".$tmplt->{title}."' [$tid]");
-			            # init
-			            $bag->{metadata} = undef unless($bag->{metadata});
-			            $bag->{metadata}->{mods} = $tmplt->{mods};
-		          	}else{
-						$bag->{metadata}->{mods} = $res->{tree};
-		          	}
+			                      my $oid = Mango::BSON::ObjectID->new($tid);
+			                      my $tmplt = $self->mango->db->collection('templates')->find_one({_id => $oid});
+			                      $self->app->log->info("[".$self->current_user->{username}."] Loaded default template '".$tmplt->{title}."' [$tid]");
+			                      # init
+			                      $bag->{metadata} = undef unless($bag->{metadata});
+			                      $bag->{metadata}->{mods} = $tmplt->{mods};
+		          	        }else{
+				              $bag->{metadata}->{mods} = $res->{tree};
+		          	        }
 				}
 
 				my $mods_model = PhaidraBagger::Model::Mods->new;
@@ -839,6 +841,8 @@ sub load {
 				$bag->{metadata}->{vocabularies_mapping} = $res->{vocabularies_mapping};
 				$bag->{metadata}->{languages} = $self->get_languages();
 
+				$bag  = $self->get_jobs_data($bag);
+				
 				$self->apply_hide_filter_mods($bag->{metadata}->{mods});
 				$self->render(
 					json => $bag,
@@ -876,6 +880,100 @@ sub load {
 	}
 
 }
+
+sub get_jobs_data{
+
+   my $self = shift;
+   my $bag = shift;
+   
+
+   my @jobs_data;
+   if(defined $bag->{jobs}){
+         foreach my $job (@{$bag->{jobs}}){
+                if(defined $job->{jobid}){
+                      my $job_data = $self->get_job_data( $job->{jobid});
+                      $job->{ingest_instance} = $job_data->{ingest_instance};
+                      if(defined  $job_data->{ingest_instance}){
+                             if(defined   $self->config->{ingest_instances}->{$job_data->{ingest_instance}}){
+                                       $job->{instance_url} = $self->config->{ingest_instances}->{$job_data->{ingest_instance}}->{baseurl};
+                             }
+                      }
+                      
+                }
+         }
+   }
+   #$self->app->log->debug("XXXXXXXX get_jobs_data bag:".$self->app->dumper($bag));
+   
+   return $bag;
+}
+
+sub get_job_data{
+   
+   my $self = shift;
+   my $jobid = shift;
+
+   my $oid = Mango::BSON::ObjectID->new($jobid);
+   my $job = $self->mango->db->collection('jobs')->find_one({_id => $oid});
+   
+   return $job;
+
+}
+
+sub get_rights{
+        
+        my $self = shift;
+       
+        my $bagid = $self->stash('bagid');
+        
+        $self->app->log->debug("bagid543:".$bagid);
+        
+        my $rights;
+   
+        my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, project => $self->current_user->{project}});
+
+        if(not defined $bag){
+                $self->app->log->error("[".$self->current_user->{username}."] [get_rights ]Error loading bag from mongoDb ".$bagid);
+                $self->render(
+                        json => {
+                                alerts => [{ type => 'danger', msg => "Error loading bag with id ".$bagid }]
+                        },
+                status => 500);
+        }else{
+                $self->render(json => $bag, status => 200);
+        }
+            
+     
+}
+
+sub post_rights{
+        
+    my $self = shift;
+    
+    my $payload = $self->req->json;
+    my $rights = $payload->{'rights'};
+    my $bagid = $self->stash('bagid');
+
+    my $bag = $self->mango->db->collection('bags')->find_one({bagid => $bagid, project => $self->current_user->{project}});
+    if(not defined $bag){
+                $self->app->log->error("[".$self->current_user->{username}."] Error loading bag from mongoDb ".$bagid);
+                $self->render(
+                        json => {
+                                alerts => [{ type => 'danger', msg => "Error loading bag with id ".$bagid }]
+                        },
+                status => 500);
+    }else{
+                $bag->{metadata}->{rights} = $rights->{metadata}->{rights};
+                my $reply = $self->mango->db->collection('bags')->update({bagid => $bagid, project => $self->current_user->{project}},{ '$set' => {metadata => $bag->{metadata} }} );
+                my $successful;
+                $successful->{"msg"}  = "Rights for $bagid saved successfuly";
+                $successful->{"type"} = "success";
+                my $json = {};
+                $json->{"alerts"} = [];
+                push($json->{"alerts"},$successful); 
+                $self->render(json => $json, status => 200 );
+    }
+}
+
 
 sub get_default_template_id {
     my $self = shift;
@@ -1257,12 +1355,16 @@ sub edit {
 	   	}
     }
 
-    #$self->app->log->debug("XXXXXXXX :".$self->app->dumper($init_data));
-
+    
+    #$self->app->log->debug("XXXXXXXXXXX:".$self->app->dumper($init_data));
+    
     $self->stash(init_data => encode_json($init_data));
 
 	$self->render('bag/'.$self->current_user->{project}.'_edit_'.$init_data->{editor_mode});
 }
+
+
+
 
 sub bags {
   my $self = shift;

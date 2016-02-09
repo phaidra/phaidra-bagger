@@ -58,7 +58,7 @@
 						<div class="panel-body">
 
 							<dl class="dl-horizontal" >
-								<dt>Default template</dt>
+								<dt>Default template1</dt>
 								<dd>
 									<ui-select ng-model="settings.user.default_template" theme="bootstrap" class="settings-select">
 								    	<ui-select-match placeholder="None">{{$select.selected.title}}</ui-select-match>
@@ -112,8 +112,24 @@
 							  <dd>{{settings.project.folders.in}}</dd>
 
 							  <dt>Default assignee</dt>
-							  <dd>{{defaultAssigneeDisplayName()}}</dd>
+							  <dd>
+							      {{defaultAssigneeDisplayName()}}
+                                        
+                           
 
+							  </dd>
+                                                          <dt>Change Default assignee</dt>
+                                                          <dd>
+                                                             <ui-select class="add-to-bookmark-margin-top" ng-model="settings.project.members.selected" theme="bootstrap"  style="min-width: 300px;">
+                                                                  <ui-select-match placeholder="Please select default assignee:">{{$select.selected.displayname}}</ui-select-match>
+                                                                      <ui-select-choices repeat="member in settings.project.members">
+                                                                          <div ng-bind-html="member.displayname | highlight: $select.search"></div>
+                                                                          <small>
+                                                                             
+                                                                          </small>
+                                                                      </ui-select-choices>
+                                                            </ui-select>
+							  </dd>
 							</dl>
 						</div>
 					</div>
@@ -125,6 +141,7 @@
 					</div>
 					<div id="collapseMembers" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingMembers">
 						<div class="panel-body">
+						   	<div><a class="right" role="menuitem"  href="" data-ng-click="addMemberConfig()"><i class="glyphicon glyphicon-plus"></i></a></div>
 						   	<dl class="dl-horizontal dl-settings" data-ng-repeat="member in settings.project.members">
 
 						   	  <dt class="settings-role">Role</dt>
@@ -141,7 +158,7 @@
                                                               </span>
                                                              
                                                               <span class="btn-group pull-right class-panel-buttons margin-right-10px">
-                                                                   <button class="btn btn-primary" ng-click="editMemberConfig($index)"><span class="glyphicon"></span> Edit</button>
+                                                                   <button class="btn btn-primary" ng-click="editMemberConfig($index, member)"><span class="glyphicon"></span> Edit</button>
                                                               </span>
 							  
 							  </dd>
@@ -202,7 +219,7 @@
 						<div class="panel-body" >
 
 							<dl class="dl-horizontal" >
-              <dt>Default template</dt>
+              <dt>Default template2</dt>
               <dd>
                 <ui-select ng-model="settings.project.default_template" theme="bootstrap" class="settings-select">
                     <ui-select-match placeholder="None">{{$select.selected.title}}</ui-select-match>

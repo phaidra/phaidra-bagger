@@ -117,12 +117,15 @@ sub startup {
 			# if the user is not in configuration -> wiederschauen
 			my $is_in_config = 0;
 			foreach my $p (keys %{$self->app->config->{projects}}){
+				#$self->app->log->debug("projects:",$self->app->dumper($p));
 				foreach my $u (@{$self->app->config->{projects}->{$p}->{members}}){
+					#$self->app->log->debug("usernames:",$self->app->dumper($u->{username}));
 					if($u->{username} eq $username){
 						$is_in_config = 1; last;
 					}
 				}
 			}
+			
 			unless ($is_in_config){
 				$self->app->log->error("User $username not found in any project");
 				return undef;
@@ -144,8 +147,11 @@ sub startup {
 			  		my $session = $self->stash('mojox-session');
 					$session->load;
 					unless($session->sid){
+					#unless($session->data('token')){
 						$session->create;
+						#$self->app->log->debug("authentication session->create",$session->sid);
 					}
+					#$self->app->log->debug("saving token!!");
 					$self->save_token($token);
 
 			  		$self->app->log->info("User $username successfuly authenticated");
@@ -183,6 +189,7 @@ sub startup {
                                 'log' => $self->log
                         ),
                         transport => MojoX::Session::Transport::Cookie->new(name => 'b_'.$config->{installation_id}),
+                        #transport => 'cookie',
                         expires_delta => $config->{session_expiration},
                         ip_match      => 1
         }
@@ -193,6 +200,7 @@ sub startup {
 
 		my $session = $self->stash('mojox-session');
 		$session->load;
+
 		if($session->sid){
 			# we need mojox-session only for signed-in users
 			if($self->signature_exists){
@@ -214,43 +222,59 @@ sub startup {
 	$self->hook('after_dispatch' => sub {
 		my $self = shift;
 		my $json = $self->res->json;
-		if($json){
-			if($json->{alerts}){
-				if(scalar(@{$json->{alerts}}) > 0){
-					$self->app->log->debug("Alerts:\n".$self->dumper($json->{alerts}));
-				}
-			}
+		if(defined $json){
+		        if($json){
+			        if($json->{alerts}){
+				        if(scalar(@{$json->{alerts}}) > 0){
+					       $self->app->log->debug("Alerts:\n".$self->dumper($json->{alerts}));
+				        }
+			        }
+		        }
+	
+		}else{
+		     $self->app->log->debug("[after_dispatch] Alerts:Result JSON is not defined\n");
 		}
 	});
 
 	$self->sessions->default_expiration($config->{session_expiration});
 	# 0 if the ui is not running on https, otherwise the cookies won't be sent and session won't work
-	$self->sessions->secure($config->{secure_cookies});
+	#$self->sessions->secure($config->{secure_cookies});
+	$self->sessions->secure(0);
 	$self->sessions->cookie_name('a_'.$config->{installation_id});
 
     $self->helper(save_token => sub {
     	my $self = shift;
-		my $token = shift;
+	my $token = shift;
 
-		my $session = $self->stash('mojox-session');
-		$session->load;
-		unless($session->sid){
-			$session->create;
-		}
+	my $session = $self->stash('mojox-session');
+	$session->load;
+	#unless($session->sid){
+	unless($session->data('token')){
+		$session->create;
+		#$self->app->log->debug("save_token session->create",$session->sid);
+	}
 
-		$session->data(token => $token);
+	$session->data(token => $token);
     });
 
     $self->helper(load_token => sub {
     	my $self = shift;
 
     	my $session = $self->stash('mojox-session');
-		$session->load;
-		unless($session->sid){
-			return undef;
-		}
+	$session->load;
+	#$self->app->log->debug("session token:",$self->app->dumper($session->data('token')));
+	#$self->app->log->debug("session sid:",$self->app->dumper($session->sid));
+	#$self->app->log->debug("session data:",$self->app->dumper($session->data));
+	#$self->app->log->debug("session:",$self->app->dumper($session));
+	#$self->app->log->debug("session _id:",$self->app->dumper($session->_id));
+	
+	unless($session->sid){
+	#unless($session->data('token')){
+	        #$self->app->log->debug("load_token sid is undefined!!!!!");
+		return undef;
+	}
 
-		return $session->data('token');
+	return $session->data('token');
     });
 
   	# init I18N
@@ -358,18 +382,21 @@ sub startup {
     $autz->route('bag/:bagid/mods') ->via('post')   ->to('bag#save_mods');
     $autz->route('bag/:bagid/:attribute/:value') ->via('put')   ->to('bag#set_attribute');
     $autz->route('bag/:bagid/:attribute/:value') ->via('delete')   ->to('bag#unset_attribute');
-	$autz->route('bag/:bagid/geo') ->via('get')   ->to('bag#get_geo');
-	$autz->route('bag/:bagid/geo') ->via('post')   ->to('bag#save_geo');
-	$autz->route('bag/:bagid/mods/classifications') ->via('get')   ->to('bag#get_mods_classifications');
-	$autz->route('bag/:bagid/validate') ->via('get')   ->to('bag#validate');
-	$autz->route('bag/:bagid/validation_status') ->via('get')   ->to('bag#get_validation_status');
+    $autz->route('bag/:bagid/geo') ->via('get')   ->to('bag#get_geo');
+    $autz->route('bag/:bagid/geo') ->via('post')   ->to('bag#save_geo');
+    $autz->route('bag/:bagid/mods/classifications') ->via('get')   ->to('bag#get_mods_classifications');
+    $autz->route('bag/:bagid/validate') ->via('get')   ->to('bag#validate');
+    $autz->route('bag/:bagid/validation_status') ->via('get')   ->to('bag#get_validation_status');
 
-	$autz->route('bag/uwmetadata/tree') ->via('get') ->to('bag#get_uwmetadata_tree');
-	$autz->route('bag/mods/tree') ->via('get') ->to('bag#get_mods_tree');
+    $autz->route('bag/:bagid/rights')                    ->via('get')    ->to('bag#get_rights');
+    $autz->route('bag/:bagid/rights')                    ->via('post')   ->to('bag#post_rights');
+	
+    $autz->route('bag/uwmetadata/tree') ->via('get') ->to('bag#get_uwmetadata_tree');
+    $autz->route('bag/mods/tree') ->via('get') ->to('bag#get_mods_tree');
 
     #$autz->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
 
-	$autz->route('job')                        ->via('put')    ->to('job#create');
+    $autz->route('job')                        ->via('put')    ->to('job#create');
     $autz->route('job/:jobid')                 ->via('post')   ->to('job#save');
     $autz->route('job/:jobid')                 ->via('get')    ->to('job#load');
     $autz->route('job/:jobid')                 ->via('delete') ->to('job#delete');
@@ -394,9 +421,13 @@ sub startup {
     $autz->route('log') ->via('get')   ->to('log#log');
     $autz->route('log/events') ->via('get')   ->to('log#events');
 
-    $autz->route('search_solr')     ->via('get')   ->to('frontend#search_solr');
-    $autz->route('search_solr_all')     ->via('get')   ->to('frontend#search_solr_all');
-   
+    $autz->route('search_solr')                    ->via('get')   ->to('frontend#search_solr');
+    $autz->route('search_solr_all')                ->via('get')   ->to('frontend#search_solr_all');
+    
+    $autz->route('get_users/:query')               ->via('get')   ->to('frontend#get_users');
+    $autz->route('get_users/')                     ->via('get')   ->to('frontend#get_users');
+    $autz->route('get_faculty_id_from_department') ->via('get')   ->to('frontend#get_faculty_id_from_department');
+
     
     return $self;
 }
