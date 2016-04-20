@@ -232,7 +232,7 @@ sub startup {
 		        }
 	
 		}else{
-		     $self->app->log->debug("[after_dispatch] Alerts:Result JSON is not defined\n");
+		     #$self->app->log->debug("[after_dispatch] Alerts:Result JSON is not defined\n");
 		}
 	});
 
@@ -397,7 +397,9 @@ sub startup {
     #$autz->route('bag/:bagid/uwmetadata') ->via('get')   ->to('bag#get_uwmetadata');
 
     $autz->route('job')                        ->via('put')    ->to('job#create');
+    $autz->route('update_metadata_job')		   ->via('put')    ->to('job#create_update_metadata_job');
     $autz->route('job/:jobid')                 ->via('post')   ->to('job#save');
+    $autz->route('update_metadata_job/:jobid') ->via('post')   ->to('job#save_update_metadata_job');
     $autz->route('job/:jobid')                 ->via('get')    ->to('job#load');
     $autz->route('job/:jobid')                 ->via('delete') ->to('job#delete');
     $autz->route('job/:jobid/bags')            ->via('post')   ->to('job#bags');

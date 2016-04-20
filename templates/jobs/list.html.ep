@@ -16,6 +16,7 @@
 	  <thead>
 	  <tr>
 	    <th>Name</th>
+	    <th>Type</th>
 	    <th>Status</th>
 	    <th>Instance</th>
 	    <th>Created by</th>
@@ -32,6 +33,7 @@
 	  <tbody>
 	  <tr ng-repeat="job in jobs| filter:filterinput | orderBy:'updated':true">
 	    <td><a href="<%= url_for '/job/' %>{{job._id}}/view">{{job.name}}</a></td>
+	    <td>{{job.type}}</td>
 	    <td ng-class="{'job-running': job.status == 'running'}">{{job.status}}</td>
 	    <td>{{job.ingest_instance}}</td>
 	    <td>{{getMemberDisplayname(job.created_by)}}</td>

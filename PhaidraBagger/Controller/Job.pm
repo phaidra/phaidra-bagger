@@ -131,6 +131,27 @@ sub save {
 	$self->render(json => { alerts => [] }, status => 200);
 }
 
+sub save_update_metadata_job {
+
+	my $self = shift;
+	my $jobid = $self->stash('jobid');
+	my $jobdata = $self->req->json->{jobdata};
+	my $start_at = $jobdata->{start_at};
+	if($start_at =~ /^[0-9]+$/g){
+		$start_at = int $start_at;
+		$start_at = int ($start_at/1000);
+	}else{
+  		$start_at = str2time($jobdata->{start_at});
+	}
+	$self->app->log->info("[".$self->current_user->{username}."] Saving update metadata job $jobid");
+
+	my $oid = Mango::BSON::ObjectID->new($jobid);
+
+	my $reply = $self->mango->db->collection('jobs')->update({_id => $oid},{ '$set' => { name => $jobdata->{name},  updated => time, status => 'scheduled', start_at => $start_at } } );
+
+	$self->render(json => { alerts => [] }, status => 200);
+}
+
 sub toggle_run {
 
 	my $self = shift;
@@ -204,6 +225,57 @@ sub delete {
 }
 
 
+sub create_update_metadata_job {
+	my $self = shift;
+
+	my $res = { alerts => [], status => 200 };
+
+	my $selection = $self->req->json->{selection};
+	my $jobdata = $self->req->json->{jobdata};
+
+    my $start_at = str2time($jobdata->{start_at});
+
+	$self->app->log->info("[".$self->current_user->{username}."] Creating metadata update job ".$self->app->dumper($jobdata));
+
+	my $reply = $self->mango->db->collection('jobs')->insert({ name => $jobdata->{name}, type => 'metadata_update', created => time, updated => time, project => $self->current_user->{project}, created_by => $self->current_user->{username}, status => 'scheduled', start_at => $start_at, finished_at => '', ingest_job => Mango::BSON::ObjectID->new($jobdata->{ingest_job}->{_id}), current_run => 1});
+
+	my $jobid = $reply->{oid};
+	if($jobid){
+		$self->app->log->info("[".$self->current_user->{username}."] Created metadata update job ".$jobdata->{name}." [$jobid]");
+	}else{
+		$self->render(json => { alerts => [{ type => 'danger', msg => "Saving metadata update job ".$jobdata->{name}." failed" }] }, status => 500);
+		return;
+	}
+
+	my $sel_size = scalar @{$selection};
+	if($sel_size < 50){
+		# save the jobid to bags
+		$self->app->log->info("[".$self->current_user->{username}."] Saving metadata update job [".$jobdata->{name}." / $jobid] to $sel_size bags:\n".$self->app->dumper($selection));
+		my $reply = $self->_create_update_metatada_job_update_bag($jobid, $selection);
+	}else{
+		# save the jobid to bags in chunks
+		$self->app->log->info("[".$self->current_user->{username}."] Selection too big, saving metadata update job [".$jobdata->{name}."] to $sel_size bags in chunks");
+		my $reply;
+		my @subselection;
+		my $subsel_size;
+		while($sel_size > 0){
+
+			push @subselection, shift @{$selection};
+
+			$sel_size = scalar @{$selection};
+			$subsel_size = scalar @subselection;
+
+			if($subsel_size eq 50 || ($sel_size eq 0 && $subsel_size > 0)){
+				$self->app->log->info("[".$self->current_user->{username}."] Saving metadata update job [".$jobdata->{name}."] to a chunk of $subsel_size bags ($sel_size bags left)");
+				$reply = $self->_create_update_metatada_job_update_bag($jobid, \@subselection);
+			}
+		}
+
+	}
+
+	$self->render(json => { alerts => [] }, status => 200);
+}
+
 sub create {
 	my $self = shift;
 
@@ -216,7 +288,7 @@ sub create {
 
 	$self->app->log->info("[".$self->current_user->{username}."] Creating job ".$self->app->dumper($jobdata));
 
-	my $reply = $self->mango->db->collection('jobs')->insert({ name => $jobdata->{name}, add_to_collection => $jobdata->{add_to_collection}, create_collection => $jobdata->{create_collection}, created => time, updated => time, project => $self->current_user->{project}, created_by => $self->current_user->{username}, status => 'scheduled', start_at => $start_at, finished_at => '', ingest_instance => $jobdata->{ingest_instance}} );
+	my $reply = $self->mango->db->collection('jobs')->insert({ name => $jobdata->{name}, type => 'ingest', add_to_collection => $jobdata->{add_to_collection}, create_collection => $jobdata->{create_collection}, created => time, updated => time, project => $self->current_user->{project}, created_by => $self->current_user->{username}, status => 'scheduled', start_at => $start_at, finished_at => '', ingest_instance => $jobdata->{ingest_instance}} );
 
 	my $jobid = $reply->{oid};
 	if($jobid){
@@ -260,7 +332,7 @@ sub _create_job_update_bag {
 	my $jobid = shift;
 	my $bags = shift;
 
-	return 	$self->mango->db->collection('bags')->update(
+	return	$self->mango->db->collection('bags')->update(
 		{ bagid => {'$in' => $bags } },
 		{
 			'$set'=> {
@@ -272,6 +344,31 @@ sub _create_job_update_bag {
 		  			started_at => '',
 		  			finished_at => '',
 		  			pid => ''
+				}
+			}
+		},
+		{ multi => 1 }
+	);
+
+}
+
+sub _create_update_metatada_job_update_bag {
+	my $self = shift;
+	my $jobid = shift;
+	my $bags = shift;
+
+	return	$self->mango->db->collection('bags')->update(
+		{ bagid => {'$in' => $bags } },
+		{
+			'$set'=> {
+				updated => time,
+			},
+			'$push' => {
+				jobs => {
+		  			jobid => $jobid,
+		  			started_at => '',
+		  			finished_at => '',
+		  			last_finished_run => 0
 				}
 			}
 		},
@@ -301,7 +398,7 @@ sub my {
 	my $coll = $self->mango->db->collection('jobs')
 		->find({ project => $self->current_user->{project}})
 		->sort({created => 1})
-		->fields({ _id => 1, name => 1, created => 1, updated => 1, created_by => 1, status => 1, start_at => 1, started_at => 1, finished_at => 1, ingest_instance => 1, add_to_collection => 1, create_collection => 1, created_collection => 1 })
+		->fields({ _id => 1, name => 1, created => 1, updated => 1, created_by => 1, status => 1, start_at => 1, started_at => 1, finished_at => 1, ingest_instance => 1, add_to_collection => 1, create_collection => 1, created_collection => 1, ingest_job => 1, type => 1 })
 		->all();
 
 	unless(defined($coll)){

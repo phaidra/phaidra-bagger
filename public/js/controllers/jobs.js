@@ -150,7 +150,20 @@ app.controller('JobsCtrl',  function($scope, $interval, $modal, $location, Direc
  };
 
  $scope.editIngestJob = function (job) {
+
+	if(job.type == 'metadata_update'){
 	  var modalInstance = $modal.open({
+          templateUrl: $('head base').attr('href')+'views/modals/edit_mdupdate_job.html',
+          controller: EditIngestJobModalCtrl,
+          scope: $scope,
+		  resolve: {
+		      job: function(){
+			    return job;
+			  }
+		  }
+	  });
+	}else{
+		var modalInstance = $modal.open({
           templateUrl: $('head base').attr('href')+'views/modals/edit_ingest_job.html',
           controller: EditIngestJobModalCtrl,
           scope: $scope,
@@ -160,6 +173,8 @@ app.controller('JobsCtrl',  function($scope, $interval, $modal, $location, Direc
 			  }
 		  }
 	  });
+	}
+
   }
 
   $scope.getMemberDisplayname = function (username) {
@@ -211,6 +226,30 @@ var EditIngestJobModalCtrl = function ($scope, $modalInstance, FrontendService, 
 		$scope.form_disabled = true;
 
 		var promise = JobService.save($scope.job._id, $scope.modaldata);
+
+		$scope.loadingTracker.addPromise(promise);
+		promise.then(
+			function(response) {
+				$scope.form_disabled = false;
+				$scope.alerts = response.data.alerts;
+				$modalInstance.close();
+				$scope.refreshResults();
+			}
+			,function(response) {
+				$scope.form_disabled = false;
+				$scope.alerts = response.data.alerts;
+				$modalInstance.close();
+	        }
+	    );
+		return;
+
+	};
+
+	$scope.saveUpdateMetadataJob = function () {
+
+		$scope.form_disabled = true;
+
+		var promise = JobService.save_update_metadata_job($scope.job._id, $scope.modaldata);
 
 		$scope.loadingTracker.addPromise(promise);
 		promise.then(

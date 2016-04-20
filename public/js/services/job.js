@@ -10,6 +10,14 @@ angular.module('jobService', [])
 	    	});
 	    },
 
+	    save_update_metadata_job: function(jobid, jobdata){
+	    	return $http({
+	    		method  : 'POST',
+	    		url     : $('head base').attr('href')+'update_metadata_job/'+jobid,
+	    		data    : { jobdata: jobdata }
+	    	});
+	    },
+
 		remove: function(jobid){
 			return $http({
 				method  : 'DELETE',
@@ -44,7 +52,16 @@ angular.module('jobService', [])
 				method  : 'POST',
 				url     : $('head base').attr('href')+'job/'+jobid+'/toggle_run'
 			});
+		},
+
+		createMetadataUpdateJob: function(selection, jobdata){
+			return $http({
+				method  : 'PUT',
+				url     : $('head base').attr('href')+'update_metadata_job',
+				data    : { selection: selection, jobdata: jobdata }
+			});
 		}
+
 
 	}
 });

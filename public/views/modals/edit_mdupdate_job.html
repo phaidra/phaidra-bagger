@@ -1,9 +1,11 @@
-<div class="modal modal-ingest" ng-init="ingestModalInit()">
+
+
+<div class="modal modal-ingest">
 	<div class="modal-dialog modal-ingest-dialog">
 		
 		<div class="modal-content">
 			<div class="modal-header">
-				<h4 class="modal-title"><span class="glyphicon glyphicon-asterisk"></span> Create new ingest job <img class="load-spinner" ng-show="loadingTracker.active()" ng-src="{{baseurl+'/img/ajax-loader.gif'}}"></h4>
+				<h4 class="modal-title"><span class="glyphicon glyphicon-pencil"></span> Edit metadata update job <img class="load-spinner" ng-show="loadingTracker.active()" ng-src="{{baseurl+'/img/ajax-loader.gif'}}"></h4>
 			</div>
 		
 			<div class="modal-body">
@@ -31,28 +33,12 @@
 							</div>
 							
 							<div class="row">
-								<div class="col-md-6">
+								<div class="col-md-12">
 									<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.name.$dirty && form.name.$invalid]">
 										<label class="control-label" for="name">Name:</label>
 										<input type="text" class="form-control" name="name" id="name" ng-required="1" ng-model="modaldata.name" ng-keyup="hitEnterSave($event)" required>
-									</div>
-									<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.instance.$dirty && form.instance.$invalid]">
-										<label class="control-label" for="name">Phaidra instance:</label>
-										<select class="form-control" name="instance" id="instance" ng-required="1" ng-model="modaldata.ingest_instance" ng-keyup="hitEnterSave($event)" required ng-options="key as value.baseurl for (key, value) in initdata.ingest_instances" ></select>
-									</div>
-								</div>
-								<div class="col-md-6">
-									<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.add_to_collection.$dirty && form.add_to_collection.$invalid]">
-										<label class="control-label" for="name">Add to existing collection:</label>
-										<input type="text" class="form-control" name="add_to_collection" id="add_to_collection" placeholder="PID" ng-model="modaldata.add_to_collection" ng-keyup="hitEnterSave($event)" >
-									</div>
-									<div class="form-group input-group-lg" ng-class="{true: 'has-error'}[form.create_collection.$dirty && form.create_collection.$invalid]">
-										<div class="checkbox checkbox-primary ingest-coll-checkbox">
-											<input type="checkbox" id="coll_checkbox" name="create_collection" data-ng-model="modaldata.create_collection">
-											<label for="coll_checkbox"><strong>Create new collection</strong></label>
-										</div>
-									</div>								
-								</div>
+									</div>									
+								</div>								
 							</div>
 							
 						
@@ -60,7 +46,7 @@
 								<div class="col-md-12">					
 									<div class="modal-footer">
 										<button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
-										<button type="button" class="btn btn-primary" ng-click="createJob()" ng-disabled="(form.$dirty && form.$invalid) || form.$pristine || form_disabled">Save</button>
+										<button type="button" class="btn btn-primary" ng-click="saveUpdateMetadataJob()" ng-disabled="(form.$dirty && form.$invalid) || form.$pristine || form_disabled">Save</button>
 									</div>
 								</div>
 							</div>

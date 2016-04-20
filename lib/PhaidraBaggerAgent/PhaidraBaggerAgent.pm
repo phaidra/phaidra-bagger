@@ -9,6 +9,7 @@ use Data::Dumper;
 use File::Find;
 use FileHandle; #https://groups.google.com/forum/#!msg/mojolicious/y9J88fboW50/Qu-LEpCjtWwJ
 use Mojo::Util qw(slurp);
+use Mojo::ByteStream qw(b);
 use Mojo::JSON qw(encode_json decode_json);
 use Mojo::Log;
 use Mojo::UserAgent;
@@ -142,12 +143,16 @@ sub run_job {
 		return;
 	}
 
-	my $ingest_instance = $job->{ingest_instance};
-
-	$self->_init_pafdb($ingest_instance);
-
+	my $ingest_instance;
+	my $type = $job->{type};
+	my $current_run = $job->{current_run};
+	
 	# update activity - running jobid
-	$self->_update_activity("running", "ingesting job $jobid");
+	unless($type eq 'metadata_update'){		
+		$ingest_instance = $job->{ingest_instance};
+		$self->_init_pafdb($ingest_instance);
+		$self->_update_activity("running", "ingesting job $jobid");
+	}
 
 	# update job status
 	$self->{jobs_coll}->update({'_id' => MongoDB::OID->new(value => $jobid)},{'$set' => {"updated" => time, "status" => 'running', "started_at" => time}});
@@ -162,9 +167,11 @@ sub run_job {
 			status => 1,
 			path => 1,
 			metadata => 1,
-			project => 1
+			project => 1,
+			jobs => 1	
 		}
 	);
+
 
 	my $i = 0;
 	my @pids;
@@ -184,37 +191,42 @@ sub run_job {
 				last;
 		}
 
-		my $folderid = $bag->{folderid};
+		my $path;
+		my $file;
+		my $filepath;
+		unless($type eq 'metadata_update'){
+			my $folderid = $bag->{folderid};
 
-		# cache folders in a hash
-		unless(exists($folders->{$folderid})){
-			my $folders_coll = $self->{baggerdb}->get_collection('folders');
-			my $folder = $folders_coll->find_one({'folderid' => $folderid});
-			$folders->{$folderid} = $folder;
-		}
+			# cache folders in a hash
+			unless(exists($folders->{$folderid})){
+				my $folders_coll = $self->{baggerdb}->get_collection('folders');
+				my $folder = $folders_coll->find_one({'folderid' => $folderid});
+				$folders->{$folderid} = $folder;
+			}
 
-		my $path = $folders->{$folderid}->{path};
-		my $file = $bag->{file};
-		my $filepath = $path;
-		$filepath .= '/' unless substr($path, -1) eq '/';
-		$filepath .= $file;
+			$path = $folders->{$folderid}->{path};
+			$file = $bag->{file};
+			$filepath = $path;
+			$filepath .= '/' unless substr($path, -1) eq '/';
+			$filepath .= $file;
 
-		# check if file exist
-		unless(-f $filepath){
-			my @alerts = [{ type => 'danger', msg => "Bag [".$bag->{bagid}."]: File $filepath does not exist"}];
-			$self->{'log'}->error(Dumper(\@alerts));
-			# save error to bag
-			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => \@alerts}});
-			next;
-		}
+			# check if file exist
+			unless(-f $filepath){
+				my @alerts = [{ type => 'danger', msg => "Bag [".$bag->{bagid}."]: File $filepath does not exist"}];
+				$self->{'log'}->error(Dumper(\@alerts));
+				# save error to bag
+				$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => \@alerts}});
+				next;
+			}
 
-		# check if file is readable
-		unless(-r $filepath){
-			my @alerts = [{ type => 'danger', msg => "Bag [".$bag->{bagid}."]: File $filepath is not readable"}];
-			$self->{'log'}->error(Dumper(\@alerts));
-			# save error to bag
-			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => \@alerts}});
-			next;
+			# check if file is readable
+			unless(-r $filepath){
+				my @alerts = [{ type => 'danger', msg => "Bag [".$bag->{bagid}."]: File $filepath is not readable"}];
+				$self->{'log'}->error(Dumper(\@alerts));
+				# save error to bag
+				$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => \@alerts}});
+				next;
+			}
 		}
 
 		# check if there are metadata
@@ -226,55 +238,115 @@ sub run_job {
 			next;
 		}
 
+		my $update_pid;
+		my $update_instance;
+		if($type eq 'metadata_update'){
+			# check if there is pid			
+			for my $bagjob (@{$bag->{jobs}}){
+				if($bagjob->{jobid} eq $job->{ingest_job}){
+					$update_pid = $bagjob->{pid};
+					last;
+				}
+			}
+			unless($update_pid){
+				my @alerts = [{ type => 'danger', msg => "Bag [".$bag->{bagid}."] has no pid to update in the specified ingest job (".$job->{ingest_job}.")"}];
+				$self->{'log'}->error(Dumper(\@alerts));
+				# save error to bag
+				$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => \@alerts}});
+				next;
+			}
+
+			# get instance
+			my $ingest_job = $self->{jobs_coll}->find_one({'_id' => $job->{ingest_job}});
+			$update_instance = $ingest_job->{ingest_instance};
+			$self->_init_pafdb($update_instance);
+		}
+
 		# update activity - running jobid and bagid
-		$self->_update_activity("running", "ingesting job $jobid bag ".$bag->{bagid});
-		# update bag-job start_at and clean alerst
+		if($type eq 'metadata_update'){
+			$self->_update_activity("running", "update metadata job $jobid bag ".$bag->{bagid});
+		}else{
+			$self->_update_activity("running", "ingesting job $jobid bag ".$bag->{bagid});
+		}
+
+		# update bag-job start_at and clean alerts
 		my @alerts = ();
 		$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project} },{'$set' => {'jobs.$.started_at' => time, 'jobs.$.alerts' => \@alerts}});
 
-		my $b = $self->{bags_coll}->find_one({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}}, {'jobs.$.pid' => 1});
-		my $current_job = @{$b->{jobs}}[0];
-		if($current_job->{pid}){
-			my @alerts = [{ type => 'info', msg => "Bag [".$bag->{bagid}."] already imported in this job, skipping"}];
-			$self->{'log'}->info(Dumper(\@alerts));
-			# save error to bag
-			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => \@alerts}});
-			next;
-		}
-
-		# ingest bag
-		my ($pid, $alerts) = $self->_ingest_bag($filepath, $bag, $ingest_instance, $username, $password);
-		# update alerts
-		if(defined($alerts)){
-			if(scalar @{$alerts} > 0){
-				$self->{'log'}->info(Dumper(\@alerts));
-				$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => $alerts}});
+		my $current_job;
+		for my $bagjob (@{$bag->{jobs}}){
+			if($bagjob->{jobid} eq $jobid){
+				$current_job = $bagjob;
+				last;
 			}
 		}
-		$self->{'log'}->info("Ingested bagid[".$bag->{bagid}."] pid[$pid]") if(defined($pid));
+		#my $b = $self->{bags_coll}->find_one({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}}, {'jobs.$.pid' => 1});
+		#my $current_job = @{$b->{jobs}}[0];
 
-		if($pid){
-			push @pids, $pid;
+		if($type eq 'metadata_update'){	
 
-			# update bag-job pid and ts
-			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.pid' => $pid, 'jobs.$.finished_at' => time}});
+			if($current_job->{last_finished_run} >= $current_run){
+				my @alerts = [{ type => 'info', msg => "Pid [$update_pid] already updated in this job, skipping"}];
+				$self->{'log'}->info(Dumper(\@alerts));
+				next;
+			}
 
-			# add to collection?
-			if($job->{add_to_collection}){
-				$self->{'log'}->info("Adding ".$bag->{bagid}."/$pid to collection ".$job->{add_to_collection});
-				my $add_coll_alerts = $self->_add_to_collection($job->{add_to_collection}, $pid,  $ingest_instance, $username, $password);
-				if($add_coll_alerts){
-					foreach my $a (@{$add_coll_alerts}){
-						push @{$alerts}, $a;
-					}
+			my ($success, $alerts) = $self->_update_metadata($bag, $update_pid, $update_instance, $username, $password);
+			# update alerts
+			if(defined($alerts)){
+				if(scalar @{$alerts} > 0){
+					$self->{'log'}->info(Dumper(\@alerts));
+					$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => $alerts}});
 				}
 			}
 
+			if($success){
+				$self->{'log'}->info("Updated metadata bagid[".$bag->{bagid}."] pid[$update_pid]");
+				$self->{events_coll}->insert({ts_iso => $self->ts_iso(),event => 'metadata_update_finished',e => time,pid => $update_pid});
+			}
+			# update bag-job last_finished_run and ts
+			$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.last_finished_run' => $current_run, 'jobs.$.finished_at' => time}});			
+
+			
+		}else{
+
+			if($current_job->{pid}){
+				my @alerts = [{ type => 'info', msg => "Bag [".$bag->{bagid}."] already imported in this job, skipping"}];
+				$self->{'log'}->info(Dumper(\@alerts));
+				next;
+			}
+
+			# ingest bag
+			my ($pid, $alerts) = $self->_ingest_bag($filepath, $bag, $ingest_instance, $username, $password);
+			# update alerts
+			if(defined($alerts)){
+				if(scalar @{$alerts} > 0){
+					$self->{'log'}->info(Dumper(\@alerts));
+					$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.alerts' => $alerts}});
+				}
+			}
+			$self->{'log'}->info("Ingested bagid[".$bag->{bagid}."] pid[$pid]") if(defined($pid));
+
+			if($pid){
+				push @pids, $pid;	
+
+				# update bag-job pid and ts
+				$self->{bags_coll}->update({bagid => $bag->{bagid}, 'jobs.jobid' => $jobid, project => $job->{project}},{'$set' => {'jobs.$.pid' => $pid, 'jobs.$.finished_at' => time}});
+
+				# add to collection?
+				if($job->{add_to_collection}){
+					$self->{'log'}->info("Adding ".$bag->{bagid}."/$pid to collection ".$job->{add_to_collection});
+					my $add_coll_alerts = $self->_add_to_collection($job->{add_to_collection}, $pid,  $ingest_instance, $username, $password);
+					if($add_coll_alerts){
+						foreach my $a (@{$add_coll_alerts}){
+							push @{$alerts}, $a;
+						}
+					}
+				}
+			}
+			# insert event
+			$self->{events_coll}->insert({ts_iso => $self->ts_iso(),event => 'bag_ingest_finished',e => time,pid => $pid});
 		}
-
-
-		# insert event
-		$self->{events_coll}->insert({ts_iso => $self->ts_iso(),event => 'bag_ingest_finished',e => time,pid => $pid});
 
 		$self->{'log'}->info("[$i/$count] Done ".$bag->{bagid});
 	}
@@ -286,25 +358,27 @@ sub run_job {
 		"alerts" => []
 	);
 
-	my $coll_pid;
-	my $coll_alerts;
-	# create collection?
-	if($job->{create_collection}){
-		if(scalar @pids > 0){
-			($coll_pid, $coll_alerts) = $self->_create_collection(\@pids, $job, $ingest_instance, $username, $password);
-		}else{
-			push @{$jobdata{alerts}}, { type => 'danger', msg => "Job collection not created - no objects created by the last run"};
+	unless($type eq 'metadata_update'){	
+		my $coll_pid;
+		my $coll_alerts;
+		# create collection?
+		if($job->{create_collection}){
+			if(scalar @pids > 0){
+				($coll_pid, $coll_alerts) = $self->_create_collection(\@pids, $job, $ingest_instance, $username, $password);
+			}else{
+				push @{$jobdata{alerts}}, { type => 'danger', msg => "Job collection not created - no objects created by the last run"};
+			}
 		}
-	}
 
-	if($coll_pid){
-		$jobdata{created_collection} = $coll_pid;
-	}
+		if($coll_pid){
+			$jobdata{created_collection} = $coll_pid;
+		}
 
-	if($coll_alerts){
-		push @{$jobdata{alerts}}, { type => 'danger', msg => "Could not create job collection"};
-		foreach my $a (@{$coll_alerts}){
-			push @{$jobdata{alerts}}, $a;
+		if($coll_alerts){
+			push @{$jobdata{alerts}}, { type => 'danger', msg => "Could not create job collection"};
+			foreach my $a (@{$coll_alerts}){
+				push @{$jobdata{alerts}}, $a;
+			}
 		}
 	}
 
@@ -315,7 +389,11 @@ sub run_job {
 	$self->{'log'}->info("Finished job ".$jobid);
 
 	# update activity - finished
-	$self->_update_activity("finished", "ingesting job $jobid");
+	if($type eq 'metadata_update'){	
+		$self->_update_activity("finished", "update metadata job $jobid");
+	}else{
+		$self->_update_activity("finished", "ingesting job $jobid");
+	}
 }
 
 sub _ingest_bag {
@@ -352,6 +430,65 @@ sub _ingest_bag {
 		file => { file => $filepath },
 		# we won't send the mimetype, currently we will rely on the magic in api
 	});
+
+  	if (my $res = $tx->success) {
+    	$pid = $res->json->{pid};
+	}else{
+
+		if($tx->res->json){
+			if($tx->res->json->{alerts}){
+				return ($pid, $tx->res->json->{alerts});
+			}
+		}
+
+		my $err = $tx->error;
+		if ($err->{code}){
+			push(@alerts, { type => 'danger', msg => $err->{code}." response: ".$err->{message} });
+		}else{
+			push(@alerts, { type => 'danger', msg => "Connection error: ".$err->{message} });
+		}
+
+		$self->{'log'}->error(Dumper(\@alerts));
+
+	}
+
+	return ($pid, \@alerts);
+}
+
+sub _update_metadata {
+
+	my $self = shift;	
+	my $bag = shift;
+	my $update_pid = shift;
+	my $update_instance = shift;
+	my $username = shift;
+	my $password = shift;
+
+	my $pid;
+	my @alerts = ();
+
+	$self->{'log'}->info("Update pid[$update_pid] bag[".$bag->{bagid}."] instance[$update_instance]");
+
+	my $url = Mojo::URL->new;
+	$url->scheme('https');
+	$url->userinfo("$username:$password");
+	my @base = split('/',$self->{config}->{ingest_instances}->{$update_instance}->{apibaseurl});
+	$url->host($base[0]);
+	if(exists($base[1])){
+		$url->path($base[1]."/object/$update_pid/metadata");
+	}else{
+		$url->path("/object/$update_pid/metadata");
+	}
+
+	my $json = encode_json({metadata => $bag->{'metadata'}});
+
+	$self->{'log'}->info("pre decode:\n".$json);
+
+	$json = b($json)->decode('UTF-8');
+
+	$self->{'log'}->info("post decode:\n".$json);
+
+	my $tx = $self->{ua}->post($url => form => { metadata => $json });
 
   	if (my $res = $tx->success) {
     	$pid = $res->json->{pid};
