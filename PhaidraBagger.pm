@@ -144,14 +144,6 @@ sub startup {
 			  		# save token
 			  		my $token = $tx->res->cookie($self->app->config->{authentication}->{token_cookie})->value;
 
-			  		my $session = $self->stash('mojox-session');
-					$session->load;
-					unless($session->sid){
-					#unless($session->data('token')){
-						$session->create;
-						#$self->app->log->debug("authentication session->create",$session->sid);
-					}
-					#$self->app->log->debug("saving token!!");
 					$self->save_token($token);
 
 			  		$self->app->log->info("User $username successfuly authenticated");
@@ -203,7 +195,7 @@ sub startup {
 
 		if($session->sid){
 			# we need mojox-session only for signed-in users
-			if($self->signature_exists){
+			if($self->is_user_authenticated){
 				$session->extend_expires;
 				$session->flush;
 			}else{
