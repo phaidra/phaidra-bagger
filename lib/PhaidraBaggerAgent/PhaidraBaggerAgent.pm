@@ -482,11 +482,11 @@ sub _update_metadata {
 
 	my $json = encode_json({metadata => $bag->{'metadata'}});
 
-	$self->{'log'}->info("pre decode:\n".$json);
+	#$self->{'log'}->info("pre decode:\n".$json);
 
 	$json = b($json)->decode('UTF-8');
 
-	$self->{'log'}->info("post decode:\n".$json);
+	#$self->{'log'}->info("post decode:\n".$json);
 
 	my $tx = $self->{ua}->post($url => form => { metadata => $json });
 
