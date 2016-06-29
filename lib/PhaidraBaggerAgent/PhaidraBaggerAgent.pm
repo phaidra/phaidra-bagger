@@ -21,6 +21,10 @@ use lib $FindBin::Bin;
 use MongoDB::MongoClient;
 use Sys::Hostname;
 
+$ENV{MOJO_MAX_MESSAGE_SIZE} = 107374182400;
+$ENV{MOJO_INACTIVITY_TIMEOUT} = 6000;
+$ENV{MOJO_HEARTBEAT_TIMEOUT} = 6000;
+
 my $folders;
 
 sub new {

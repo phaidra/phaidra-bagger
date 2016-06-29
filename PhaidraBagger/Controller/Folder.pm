@@ -137,7 +137,19 @@ sub generate_thumbnail {
 		if( $? == -1 ){
 		  $self->app->log->error("failed to convert file $filepath to png: $!");
 		}
-
+		
+		# sometimes conert seems to return two images instead of one, postfixed -0 and -1
+		# in that case, take the former one and delete the latter
+		my $thumb_c_path_0 = $thumb_dir_path."c_".$bagid.'_1-0.png';
+		my $thumb_c_path_1 = $thumb_dir_path."c_".$bagid.'_1-1.png';
+		if(-e $thumb_c_path_0){
+			$self->app->log->info("found $thumb_c_path_0, renaming to $thumb_c_path");
+			system("mv '$thumb_c_path_0' '$thumb_c_path'");
+			if(-e $thumb_c_path_1){
+				$self->app->log->info("found $thumb_c_path_1, deleting");
+				unlink 	$thumb_c_path_1  or $self->app->log->error("failed to delete $thumb_c_path_1: $!");;
+			}
+		}
 		$generate_from_path = $thumb_c_path;
 	}
 
