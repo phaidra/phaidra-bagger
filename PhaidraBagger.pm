@@ -13,7 +13,7 @@ use PhaidraBagger::Model::Session::Store::Mongo;
 
 $ENV{MOJO_MAX_MESSAGE_SIZE} = 1073741824;
 $ENV{MOJO_INACTIVITY_TIMEOUT} = 600;
-$ENV{MOJO_HEARTBEAT_TIMEOUT} = 600;
+$ENV{MOJO_HEARTBEAT_TIMEOUT} = 21600;
 
 # This method will run once at server start
 sub startup {

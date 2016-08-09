@@ -86,13 +86,11 @@
 
                       <button ng-disabled="form.$invalid || form_disabled" data-ng-click="saveTemplateAs()" class="btn btn-primary navbar-btn"><span class="glyphicon glyphicon-file"></span> Create template</button>
 
-                      <div class="btn-group">
-                        <button class="btn btn-default dropdown-toggle navbar-btn" data-toggle="dropdown">Load template <span class="caret"></span></button>
-                        <ul class="dropdown-menu" role="menu">
-                          <li ng-repeat="template in initdata.templates"><a href="" data-ng-click="loadTemplateToBag(template)">{{template.title}}</a></li>
-                        </ul>
-                      </div>
 
+                      <select class="form-control" style="width: 250px;" data-ng-model="selectedtemplate" data-ng-change="loadTemplateToBag()" ng-options="template as template.title for template in initdata.templates">
+                        <option value="">Load template...</option>
+                      </select>
+                
                       <div ng-class="{'btn-group':canSetAttribute('status')}"  data-ng-if="baginfo.status">
                         <button class="btn dropdown-toggle navbar-btn" ng-show="canSetAttribute('status')" data-toggle="dropdown" ng-class="{'btn-danger': (baginfo.status == 'new'), 'btn-warning': (baginfo.status == 'to_check'), 'btn-primary': (baginfo.status == 'checked'), 'btn-success': (baginfo.status == 'to_ingest') }">
                           <span ng-repeat="status in initdata.statuses">
