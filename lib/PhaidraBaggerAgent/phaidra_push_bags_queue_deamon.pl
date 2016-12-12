@@ -15,11 +15,6 @@ my $processorScriptPath = File::Spec->catfile( @{$currentDir->{dirs}}, 'phaidra_
 print $processorScriptPath, "\n";
 
 
-# /home/michal/Documents/code/area42/user/mf/angularjs/bagger/bagger/lib/PhaidraBaggerAgent/phaidra_push_bags_queue_processor.pl
-# /home/michal/Documents/code/area42/user/mf/angularjs/bagger/bagger/lib/PhaidraBaggerAgent/phaidra_push_bags_queue_processor.pl
-
-#$processorScriptPath = '/home/michal/Documents/code/area42/user/mf/phaidra-push/lib/PhaidraPushAgent/test3.pl';
-
 exit Daemon::Control->new(
     name        => "Phaidra-push Jobs Agent",
     lsb_start   => '$syslog $remote_fs',
