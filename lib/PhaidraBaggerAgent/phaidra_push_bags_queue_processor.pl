@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-push_queue_processor.pl
+phaidra_push_bags_queue_processor.pl
 
 
 =head1 DESCRIPTION
