@@ -7,6 +7,7 @@ use Mojo::Log;
 use Mojolicious::Plugin::I18N;
 use Mojolicious::Plugin::Authentication;
 use Mojolicious::Plugin::Session;
+#use Mojolicious::Plugin::Charset;  #michal
 use Mojo::Loader;
 use lib "lib/phaidra_directory";
 use PhaidraBagger::Model::Session::Store::Mongo;
@@ -58,7 +59,7 @@ sub startup {
 
 	    		my $login_data;
 
-	    		my $url = Mojo::URL->new;
+	    		        my $url = Mojo::URL->new;
 				$url->scheme('https');
 				$url->userinfo($self->app->config->{directory_user}->{username}.":".$self->app->config->{directory_user}->{password});
 				my @base = split('/',$self->app->config->{phaidra}->{apibaseurl});
@@ -97,7 +98,7 @@ sub startup {
 		          $self->config->{projects}->{$login_data->{project}} = $project_settings->{settings};
 		        }
 
-				$self->app->log->info("Loaded user: ".$self->app->dumper($login_data));
+			$self->app->log->info("Loaded user: ".$self->app->dumper($login_data));
 	    		$self->app->chi->set($username, $login_data, '1 day');
 	    		# keep this here, the set method may change the structure a bit so we better read it again
 	    		$login_data = $self->app->chi->get($username);
@@ -164,7 +165,6 @@ sub startup {
 
 		},
 	});
-
 	$self->attr(_mango => sub { return Mango->new('mongodb://'.$config->{mongodb}->{username}.':'.$config->{mongodb}->{password}.'@'.$config->{mongodb}->{host}.'/'.$config->{mongodb}->{database}) });
 	$self->helper(mango => sub { return shift->app->_mango});
 
