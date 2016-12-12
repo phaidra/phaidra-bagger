@@ -762,9 +762,9 @@ sub load {
 		my $md_type;
 		if($bag->{metadata}){
 
-			if($bag->{metadata}->{uwmetadata}){
-
-				if(!@{$bag->{metadata}->{uwmetadata}}){
+			if(exists($bag->{metadata}->{uwmetadata})){
+				
+				if(($bag->{metadata}->{uwmetadata} eq '') || (!@{$bag->{metadata}->{uwmetadata}})){
 
 					my $tid = $self->get_default_template_id();
 					if($tid){

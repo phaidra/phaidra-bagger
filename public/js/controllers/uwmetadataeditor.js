@@ -15,8 +15,7 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
 	$scope.initdata = '';
 	$scope.current_user = '';
 	$scope.current_bags_query = '';
-
-	$scope.selectedtemplate = '';
+	
 	$scope.templatetitle = '';
 	$scope.tid = '';
 
@@ -437,7 +436,6 @@ app.controller('UwmetadataeditorCtrl',  function($scope, $modal, $location, Dire
     			$scope.languages = response.data.metadata.languages;
     			$scope.fields = response.data.metadata.uwmetadata;
     			$scope.bag = response.data;
-                        console.log('bag123:',$scope.bag);
     			$scope.load_init();
     		}
     		,function(response) {
