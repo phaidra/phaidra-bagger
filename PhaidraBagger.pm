@@ -7,7 +7,7 @@ use Mojo::Log;
 use Mojolicious::Plugin::I18N;
 use Mojolicious::Plugin::Authentication;
 use Mojolicious::Plugin::Session;
-#use Mojolicious::Plugin::Charset;  #michal
+#use Mojolicious::Plugin::Charset;  #michal 
 use Mojo::Loader;
 use lib "lib/phaidra_directory";
 use PhaidraBagger::Model::Session::Store::Mongo;
