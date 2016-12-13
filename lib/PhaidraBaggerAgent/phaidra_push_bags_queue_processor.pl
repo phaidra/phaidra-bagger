@@ -34,17 +34,6 @@ use PhaidraBaggerAgent;
 
 my $sleepIntervalSeconds = 5;
 
-###my $configPhaidraPush;
-# $configPhaidraPush = '/home/michal/Documents/code/area42/user/mf/phaidra-push/PhaidraPush.json';
-# TODO fix this in deamon too!!!!!
-###while (defined (my $arg= shift (@ARGV))){
-###     if ($arg =~ /^-/){
-###           if ($arg eq '-c') { $configPhaidraPush = shift (@ARGV); }
-###           else { system ("perldoc '$0'"); exit (0); }
-###     }
-###}
-
-
 my $currentDir             = Path::Class::File->new(abs_path($0))->dir();
 my $configPushJobsAgent    = File::Spec->catfile( @{$currentDir->{dirs}}, 'PhaidraBaggerAgent.json' );
 
