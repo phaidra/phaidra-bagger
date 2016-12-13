@@ -34,23 +34,28 @@ use PhaidraBaggerAgent;
 
 my $sleepIntervalSeconds = 5;
 
-my $configPhaidraPush;
-
-while (defined (my $arg= shift (@ARGV))){
-     if ($arg =~ /^-/){
-           if ($arg eq '-c') { $configPhaidraPush = shift (@ARGV); }
-           else { system ("perldoc '$0'"); exit (0); }
-     }
-}
+###my $configPhaidraPush;
+# $configPhaidraPush = '/home/michal/Documents/code/area42/user/mf/phaidra-push/PhaidraPush.json';
+# TODO fix this in deamon too!!!!!
+###while (defined (my $arg= shift (@ARGV))){
+###     if ($arg =~ /^-/){
+###           if ($arg eq '-c') { $configPhaidraPush = shift (@ARGV); }
+###           else { system ("perldoc '$0'"); exit (0); }
+###     }
+###}
 
 
 my $currentDir             = Path::Class::File->new(abs_path($0))->dir();
 my $configPushJobsAgent    = File::Spec->catfile( @{$currentDir->{dirs}}, 'PhaidraBaggerAgent.json' );
 
+my $last_one               = pop @{$currentDir->{dirs}};
+$last_one                  = pop @{$currentDir->{dirs}};
+my $configPathBagger             = File::Spec->catfile( @{$currentDir->{dirs}}, 'PhaidraBagger.json' );
+
 
 my $json_text = do {
-   open(my $json_fh, "<:encoding(UTF-8)", $configPhaidraPush )
-      or die("Can't open \$configPhaidraPush\": $!\n");
+   open(my $json_fh, "<:encoding(UTF-8)", $configPathBagger )
+      or die("Can't open \$configPathBagger\": $!\n");
    local $/;
    <$json_fh>
 };
@@ -59,14 +64,14 @@ my $config = $json->decode($json_text);
 
 
 my $client = MongoDB::Connection->new( 
-    host     =>     $config->{phaidra}->{mongodb}->{host},
-    port     =>     $config->{phaidra}->{mongodb}->{port},
-    username =>     $config->{phaidra}->{mongodb}->{username},
-    password =>     $config->{phaidra}->{mongodb}->{password},
-    db_name  =>     $config->{phaidra}->{mongodb}->{database}
+    host     =>     $config->{mongodb}->{host},
+    port     =>     $config->{mongodb}->{port},
+    username =>     $config->{mongodb}->{username},
+    password =>     $config->{mongodb}->{password},
+    db_name  =>     $config->{mongodb}->{database}
 );
 
-my $collectionJobs = $client->ns( $config->{phaidra}->{mongodb}->{database}.'.'.'jobs' );
+my $collectionJobs = $client->ns( $config->{mongodb}->{database}.'.'.'jobs' );
 
 while (1) {
      my $agent = PhaidraBaggerAgent->new( $configPushJobsAgent );

@@ -24,6 +24,7 @@ exit Daemon::Control->new(
     #path       => '/etc/init.d/apim-harvester',
     program     => "$processorScriptPath",
     #program_args => [ '--debug' ], for debugging the harvester
+    #program_args => [ '--debug' ], for debugging the harvester
     pid_file    => '/tmp/phaidraPushJobAgent.pid',
     stderr_file => '/tmp/phaidraPushJobAgent.out',
     stdout_file => '/tmp/phaidraPushJobAgent.out',
